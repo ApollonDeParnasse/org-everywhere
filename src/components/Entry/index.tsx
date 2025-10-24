@@ -1,47 +1,49 @@
-import React, { PureComponent, Fragment } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import React, { PureComponent, Fragment } from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
 
-import { Route, Switch, Redirect, withRouter } from 'react-router-dom';
+import { Route, Switch, Redirect, withRouter } from "react-router-dom";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import { List, Set } from 'immutable';
-import _ from 'lodash';
-import classNames from 'classnames';
+import { List, Set } from "immutable";
+import _ from "lodash";
+import classNames from "classnames";
 
-import { changelogHash, STATIC_FILE_PREFIX } from '../../lib/org_utils';
-import PrivacyPolicy from '../PrivacyPolicy';
-import HeaderBar from '../HeaderBar';
-import FileBrowser from '../FileBrowser';
-import LoadingIndicator from '../LoadingIndicator';
-import OrgFile from '../OrgFile';
-import Settings from '../Settings';
-import KeyboardShortcutsEditor from '../KeyboardShortcutsEditor';
-import CaptureTemplatesEditor from '../CaptureTemplatesEditor';
-import FileSettingsEditor from '../FileSettingsEditor';
+import { changelogHash, STATIC_FILE_PREFIX } from "../../lib/org_utils";
+import PrivacyPolicy from "../PrivacyPolicy";
+import HeaderBar from "../HeaderBar";
+import FileBrowser from "../FileBrowser";
+import LoadingIndicator from "../LoadingIndicator";
+import OrgFile from "../OrgFile";
+import Settings from "../Settings";
+import KeyboardShortcutsEditor from "../KeyboardShortcutsEditor";
+import CaptureTemplatesEditor from "../CaptureTemplatesEditor";
+import FileSettingsEditor from "../FileSettingsEditor";
 
-import * as syncBackendActions from '../../actions/sync_backend';
-import * as orgActions from '../../actions/org';
-import * as baseActions from '../../actions/base';
-import { loadTheme } from '../../lib/color';
+import * as syncBackendActions from "../../actions/sync_backend";
+import * as orgActions from "../../actions/org";
+import * as baseActions from "../../actions/base";
+import { loadTheme } from "../../lib/color";
 
 class Entry extends PureComponent {
   constructor(props) {
     super(props);
 
     _.bindAll(this, [
-      'renderChangelogFile',
-      'renderSampleFile',
-      'renderFileBrowser',
-      'renderFile',
-      'setChangelogUnseenChanges',
+      "renderChangelogFile",
+      "renderSampleFile",
+      "renderFileBrowser",
+      "renderFile",
+      "setChangelogUnseenChanges",
     ]);
   }
 
   componentDidMount() {
     this.setChangelogUnseenChanges();
-    this.props.filesToLoad.forEach((path) => this.props.syncBackend.downloadFile(path));
+    this.props.filesToLoad.forEach((path) =>
+      this.props.syncBackend.downloadFile(path),
+    );
     this.props.filesToSync.forEach((path) => this.props.org.sync({ path }));
   }
 
@@ -98,11 +100,11 @@ class Entry extends PureComponent {
 
   renderFileBrowser({
     match: {
-      params: { path = '' },
+      params: { path = "" },
     },
   }) {
     if (!!path) {
-      path = '/' + path;
+      path = "/" + path;
     }
 
     return <FileBrowser path={path} />;
@@ -114,7 +116,7 @@ class Entry extends PureComponent {
     },
   }) {
     if (!!path) {
-      path = '/' + path;
+      path = "/" + path;
     }
     if (
       this.props.path &&
@@ -122,7 +124,7 @@ class Entry extends PureComponent {
       this.props.path !== path
     ) {
       this.props.org.sync({ path: this.props.path });
-      return <Redirect push to={'/file' + this.props.path} />;
+      return <Redirect push to={"/file" + this.props.path} />;
     } else {
       return (
         <OrgFile
@@ -154,11 +156,13 @@ class Entry extends PureComponent {
 
     loadTheme(theme, colorScheme);
 
-    const pendingCapturePath = !!pendingCapture && `/file${pendingCapture.get('capturePath')}`;
-    const shouldRedirectToCapturePath = pendingCapturePath && pendingCapturePath !== pathname;
+    const pendingCapturePath =
+      !!pendingCapture && `/file${pendingCapture.get("capturePath")}`;
+    const shouldRedirectToCapturePath =
+      pendingCapturePath && pendingCapturePath !== pathname;
 
-    const className = classNames('App entry-container', {
-      'entry-container--large-font': fontSize === 'Large',
+    const className = classNames("App entry-container", {
+      "entry-container--large-font": fontSize === "Large",
     });
 
     return (
@@ -168,29 +172,49 @@ class Entry extends PureComponent {
 
         {isAuthenticated &&
           ([
-            'keyboard_shortcuts_editor',
-            'settings',
-            'capture_templates_editor',
-            'file_settings_editor',
-            'sample',
+            "keyboard_shortcuts_editor",
+            "settings",
+            "capture_templates_editor",
+            "file_settings_editor",
+            "sample",
           ].includes(activeModalPage) ? (
             <Fragment>
-              {activeModalPage === 'keyboard_shortcuts_editor' && <KeyboardShortcutsEditor />}
-              {activeModalPage === 'capture_templates_editor' && <CaptureTemplatesEditor />}
-              {activeModalPage === 'file_settings_editor' && <FileSettingsEditor />}
+              {activeModalPage === "keyboard_shortcuts_editor" && (
+                <KeyboardShortcutsEditor />
+              )}
+              {activeModalPage === "capture_templates_editor" && (
+                <CaptureTemplatesEditor />
+              )}
+              {activeModalPage === "file_settings_editor" && (
+                <FileSettingsEditor />
+              )}
             </Fragment>
           ) : (
             <Switch>
-              {shouldRedirectToCapturePath && <Redirect to={pendingCapturePath} />}
+              {shouldRedirectToCapturePath && (
+                <Redirect to={pendingCapturePath} />
+              )}
               <Route path="/privacy-policy" exact component={PrivacyPolicy} />
               <Route path="/file/:path+" render={this.renderFile} />
               <Route path="/files/:path*" render={this.renderFileBrowser} />
-              <Route path="/sample" exact={true} render={this.renderSampleFile} />
-              <Route path="/changelog" exact={true} render={this.renderChangelogFile} />
+              <Route
+                path="/sample"
+                exact={true}
+                render={this.renderSampleFile}
+              />
+              <Route
+                path="/changelog"
+                exact={true}
+                render={this.renderChangelogFile}
+              />
               <Route path="/settings" exact={true}>
                 <Settings />
               </Route>
-              {defaultFilePath ? <Redirect to={defaultFilePath} /> : <Redirect to="/files" />}
+              {defaultFilePath ? (
+                <Redirect to={defaultFilePath} />
+              ) : (
+                <Redirect to="/files" />
+              )}
             </Switch>
           ))}
       </div>
@@ -199,36 +223,38 @@ class Entry extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-  const files = state.org.present.get('files');
-  const path = state.org.present.get('path');
+  const files = state.org.present.get("files");
+  const path = state.org.present.get("path");
   const defaultFilePath = state.org.present
-    .get('fileSettings')
-    .filter((setting) => setting.get('defaultOnStartup'))
-    .map((setting) => `file${setting.get('path')}`)
+    .get("fileSettings")
+    .filter((setting) => setting.get("defaultOnStartup"))
+    .map((setting) => `file${setting.get("path")}`)
     .first();
   const filesToLoadOnStartup = state.org.present
-    .get('fileSettings')
-    .filter((setting) => setting.get('loadOnStartup'))
-    .map((setting) => setting.get('path'));
+    .get("fileSettings")
+    .filter((setting) => setting.get("loadOnStartup"))
+    .map((setting) => setting.get("path"));
   const loadedFiles = Set.fromKeys(files);
   const fileIsLoaded = (path) => loadedFiles.includes(path);
-  const filesToLoad = filesToLoadOnStartup.filter((path) => !fileIsLoaded(path));
+  const filesToLoad = filesToLoadOnStartup.filter(
+    (path) => !fileIsLoaded(path),
+  );
   const filesToSync = filesToLoadOnStartup.filter((path) => fileIsLoaded(path));
-  const hasDirtyFiles = !!files.find((file) => file.get('isDirty'));
+  const hasDirtyFiles = !!files.find((file) => file.get("isDirty"));
   return {
     path,
     filesToLoad,
     filesToSync,
     defaultFilePath,
-    loadingMessage: state.base.get('loadingMessage'),
-    isAuthenticated: state.syncBackend.get('isAuthenticated'),
-    fontSize: state.base.get('fontSize'),
-    lastSeenChangelogHash: state.base.get('lastSeenChangelogHash'),
-    activeModalPage: state.base.get('modalPageStack', List()).last(),
-    pendingCapture: state.org.present.get('pendingCapture'),
+    loadingMessage: state.base.get("loadingMessage"),
+    isAuthenticated: state.syncBackend.get("isAuthenticated"),
+    fontSize: state.base.get("fontSize"),
+    lastSeenChangelogHash: state.base.get("lastSeenChangelogHash"),
+    activeModalPage: state.base.get("modalPageStack", List()).last(),
+    pendingCapture: state.org.present.get("pendingCapture"),
     hasDirtyFiles,
-    colorScheme: state.base.get('colorScheme'),
-    theme: state.base.get('theme'),
+    colorScheme: state.base.get("colorScheme"),
+    theme: state.base.get("theme"),
   };
 };
 

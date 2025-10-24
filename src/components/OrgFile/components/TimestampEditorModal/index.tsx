@@ -1,43 +1,47 @@
-import React, { PureComponent, Fragment } from 'react';
+import React, { PureComponent, Fragment } from "react";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import TimestampEditor from './components/TimestampEditor';
+import TimestampEditor from "./components/TimestampEditor";
 
-import _ from 'lodash';
-import format from 'date-fns/format';
-import { Map } from 'immutable';
+import _ from "lodash";
+import format from "date-fns/format";
+import { Map } from "immutable";
 
 export default class TimestampEditorModal extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, ['handleAddEndTimestamp', 'handleRemoveEndTimestamp']);
+    _.bindAll(this, ["handleAddEndTimestamp", "handleRemoveEndTimestamp"]);
   }
 
   handleChange(key) {
-    return (newTimestamp) => this.props.onChange(this.props.timestamp.set(key, newTimestamp));
+    return (newTimestamp) =>
+      this.props.onChange(this.props.timestamp.set(key, newTimestamp));
   }
 
   handleAddEndTimestamp() {
     const { timestamp } = this.props;
-    const [year, month, day, dayName] = format(new Date(), 'yyyy MM dd eee').split(' ');
+    const [year, month, day, dayName] = format(
+      new Date(),
+      "yyyy MM dd eee",
+    ).split(" ");
     this.props.onChange(
       timestamp.set(
-        'secondTimestamp',
+        "secondTimestamp",
         Map({
           year,
           month,
           day,
           dayName,
-          isActive: timestamp.getIn(['firstTimestamp', 'isActive']),
-        })
-      )
+          isActive: timestamp.getIn(["firstTimestamp", "isActive"]),
+        }),
+      ),
     );
   }
 
   handleRemoveEndTimestamp() {
-    this.props.onChange(this.props.timestamp.set('secondTimestamp', null));
+    this.props.onChange(this.props.timestamp.set("secondTimestamp", null));
   }
 
   render() {
@@ -52,26 +56,28 @@ export default class TimestampEditorModal extends PureComponent {
     } = this.props;
 
     const timestampTitles = {
-      'timestamp-editor': 'Edit timestamp',
-      'scheduled-editor': 'Edit scheduled timestamp',
-      'deadline-editor': 'Edit deadline',
+      "timestamp-editor": "Edit timestamp",
+      "scheduled-editor": "Edit scheduled timestamp",
+      "deadline-editor": "Edit deadline",
     };
 
     return (
       <>
-        <h2 className="timestamp-editor__title">{timestampTitles[popupType]}</h2>
+        <h2 className="timestamp-editor__title">
+          {timestampTitles[popupType]}
+        </h2>
 
         <TimestampEditor
           headerId={headerId}
-          timestamp={timestamp && timestamp.get('firstTimestamp')}
+          timestamp={timestamp && timestamp.get("firstTimestamp")}
           timestampId={timestampId}
           planningItemIndex={planningItemIndex}
           onClose={onClose}
-          onChange={this.handleChange('firstTimestamp')}
+          onChange={this.handleChange("firstTimestamp")}
         />
 
         {!singleTimestampOnly &&
-          (!!timestamp.get('secondTimestamp') ? (
+          (!!timestamp.get("secondTimestamp") ? (
             <Fragment>
               <div className="timestamp-editor__separator">
                 <div className="timestamp-editor__separator__margin-line" />
@@ -81,9 +87,9 @@ export default class TimestampEditorModal extends PureComponent {
 
               <TimestampEditor
                 headerId={headerId}
-                timestamp={timestamp.get('secondTimestamp')}
+                timestamp={timestamp.get("secondTimestamp")}
                 timestampId={timestampId}
-                onChange={this.handleChange('secondTimestamp')}
+                onChange={this.handleChange("secondTimestamp")}
               />
 
               <div className="timestamp-editor__button-container">

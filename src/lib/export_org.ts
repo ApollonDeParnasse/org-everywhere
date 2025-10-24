@@ -1,141 +1,155 @@
-import _ from 'lodash';
-import { fromJS } from 'immutable';
+import _ from "lodash";
+import { fromJS } from "immutable";
 
-import { isRegularPlanningItem, subheadersOfHeaderWithId } from './org_utils';
-import { renderAsText, timestampDuration } from './timestamps';
+import { isRegularPlanningItem, subheadersOfHeaderWithId } from "./org_utils";
+import { renderAsText, timestampDuration } from "./timestamps";
 
 const linkPartToRawText = (linkPart) => {
-  if (!!linkPart.getIn(['contents', 'title'])) {
-    return `[[${linkPart.getIn(['contents', 'uri'])}][${linkPart.getIn(['contents', 'title'])}]]`;
+  if (!!linkPart.getIn(["contents", "title"])) {
+    return `[[${linkPart.getIn(["contents", "uri"])}][${linkPart.getIn(["contents", "title"])}]]`;
   } else {
-    return `[[${linkPart.getIn(['contents', 'uri'])}]]`;
+    return `[[${linkPart.getIn(["contents", "uri"])}]]`;
   }
 };
 
 const formattedAttributedStringText = (parts) => {
   return parts
     .map((part) => {
-      switch (part.get('type')) {
-        case 'text':
-          return part.get('contents');
-        case 'link':
-          if (part.getIn(['contents', 'title'])) {
-            return part.getIn(['contents', 'title']);
+      switch (part.get("type")) {
+        case "text":
+          return part.get("contents");
+        case "link":
+          if (part.getIn(["contents", "title"])) {
+            return part.getIn(["contents", "title"]);
           } else {
-            return part.getIn(['contents', 'uri']);
+            return part.getIn(["contents", "uri"]);
           }
-        case 'table':
-          return '';
+        case "table":
+          return "";
         default:
-          return '';
+          return "";
       }
     })
-    .join('');
+    .join("");
 };
 
 const tablePartToRawText = (tablePart) => {
   const rowHeights = tablePart
-    .get('contents')
+    .get("contents")
     .map((row) =>
       Math.max(
-        ...row.get('contents').map((cell) => (_.countBy(cell.get('rawContents'))['\n'] || 0) + 1)
-      )
+        ...row
+          .get("contents")
+          .map((cell) => (_.countBy(cell.get("rawContents"))["\n"] || 0) + 1),
+      ),
     )
     .toJS();
-  const columns = tablePart.getIn(['contents', 0, 'contents']);
+  const columns = tablePart.getIn(["contents", 0, "contents"]);
   if (columns === undefined) {
-    return '';
+    return "";
   }
   const numColumns = columns.size;
   const columnWidths = _.times(numColumns).map((columnIndex) =>
     Math.max(
-      ...tablePart.get('contents').map((row) => {
-        const content = row.getIn(['contents', columnIndex, 'contents']);
+      ...tablePart.get("contents").map((row) => {
+        const content = row.getIn(["contents", columnIndex, "contents"]);
         const formattedText = formattedAttributedStringText(content);
-        const lineLengths = formattedText.split('\n').map((line) => line.trim().length);
+        const lineLengths = formattedText
+          .split("\n")
+          .map((line) => line.trim().length);
         return Math.max(...lineLengths);
-      })
-    )
+      }),
+    ),
   );
 
   const rowStrings = _.dropRight(
     _.flatten(
       tablePart
-        .get('contents')
+        .get("contents")
         .map((row, rowIndex) => {
           const rowHeight = rowHeights[rowIndex];
 
           const contentRows = _.times(rowHeight)
             .map((lineIndex) =>
               row
-                .get('contents')
+                .get("contents")
                 .map((cell, columnIndex) => {
-                  const content = cell.get('contents');
+                  const content = cell.get("contents");
                   const formattedText = formattedAttributedStringText(content);
                   const formattedLineLengths = formattedText
-                    .split('\n')
+                    .split("\n")
                     .map((line) => line.trim().length);
-                  const line = (cell.get('rawContents').split('\n')[lineIndex] || '').trim();
+                  const line = (
+                    cell.get("rawContents").split("\n")[lineIndex] || ""
+                  ).trim();
 
-                  const padCount = columnWidths[columnIndex] - formattedLineLengths[lineIndex];
+                  const padCount =
+                    columnWidths[columnIndex] - formattedLineLengths[lineIndex];
 
-                  return line + ' '.repeat(padCount);
+                  return line + " ".repeat(padCount);
                 })
                 .toJS()
-                .join(' | ')
+                .join(" | "),
             )
             .map((contentRow) => `| ${contentRow} |`);
 
           const separator =
-            '|' + columnWidths.map((columnWidth) => '-'.repeat(columnWidth + 2)).join('+') + '|';
+            "|" +
+            columnWidths
+              .map((columnWidth) => "-".repeat(columnWidth + 2))
+              .join("+") +
+            "|";
 
           return contentRows.concat(separator);
         })
-        .toJS()
-    )
+        .toJS(),
+    ),
   );
 
-  return rowStrings.join('\n');
+  return rowStrings.join("\n");
 };
 
 const listPartToRawText = (listPart) => {
-  const bulletCharacter = listPart.get('bulletCharacter');
+  const bulletCharacter = listPart.get("bulletCharacter");
 
   let previousNumber = 0;
   return listPart
-    .get('items')
+    .get("items")
     .map((item) => {
-      const optionalLeadingSpace = !listPart.get('isOrdered') && bulletCharacter === '*' ? ' ' : '';
+      const optionalLeadingSpace =
+        !listPart.get("isOrdered") && bulletCharacter === "*" ? " " : "";
 
-      const titleText = attributedStringToRawText(item.get('titleLine'));
+      const titleText = attributedStringToRawText(item.get("titleLine"));
 
-      const contentText = attributedStringToRawText(item.get('contents'));
+      const contentText = attributedStringToRawText(item.get("contents"));
       const indentedContentText = contentText
-        .split('\n')
-        .map((line) => (!!line.trim() ? `${optionalLeadingSpace}  ${line}` : ''))
-        .join('\n');
+        .split("\n")
+        .map((line) =>
+          !!line.trim() ? `${optionalLeadingSpace}  ${line}` : "",
+        )
+        .join("\n");
 
       let listItemText = null;
-      if (listPart.get('isOrdered')) {
+      if (listPart.get("isOrdered")) {
         let number = ++previousNumber;
-        let forceNumber = item.get('forceNumber');
+        let forceNumber = item.get("forceNumber");
         if (!!forceNumber) {
           number = forceNumber;
           previousNumber = number;
         }
 
-        listItemText = `${number}${listPart.get('numberTerminatorCharacter')}`;
+        listItemText = `${number}${listPart.get("numberTerminatorCharacter")}`;
 
         if (!!forceNumber) {
           listItemText += ` [@${forceNumber}]`;
         }
 
-        if (item.get('isCheckbox')) {
+        if (item.get("isCheckbox")) {
           const stateCharacter = {
-            checked: 'X',
-            unchecked: ' ',
-            partial: '-',
-          }[item.get('checkboxState')];
+            checked: "X",
+            unchecked: " ",
+            partial: "-",
+          }[item.get("checkboxState")];
 
           listItemText += ` [${stateCharacter}]`;
         }
@@ -144,12 +158,12 @@ const listPartToRawText = (listPart) => {
       } else {
         listItemText = `${optionalLeadingSpace}${bulletCharacter}`;
 
-        if (item.get('isCheckbox')) {
+        if (item.get("isCheckbox")) {
           const stateCharacter = {
-            checked: 'X',
-            unchecked: ' ',
-            partial: '-',
-          }[item.get('checkboxState')];
+            checked: "X",
+            unchecked: " ",
+            partial: "-",
+          }[item.get("checkboxState")];
 
           listItemText += ` [${stateCharacter}]`;
         }
@@ -163,13 +177,13 @@ const listPartToRawText = (listPart) => {
 
       return listItemText;
     })
-    .join('\n');
+    .join("\n");
 };
 
 const timestampPartToRawText = (part) => {
-  let text = renderAsText(part.get('firstTimestamp'));
-  if (part.get('secondTimestamp')) {
-    text += `--${renderAsText(part.get('secondTimestamp'))}`;
+  let text = renderAsText(part.get("firstTimestamp"));
+  if (part.get("secondTimestamp")) {
+    text += `--${renderAsText(part.get("secondTimestamp"))}`;
   }
 
   return text;
@@ -177,25 +191,28 @@ const timestampPartToRawText = (part) => {
 
 const inlineMarkUpToRawText = (part) => {
   const markupTypeToRaw = {
-    'inline-code': '~',
-    bold: '*',
-    italic: '/',
-    strikethrough: '+',
-    underline: '_',
-    verbatim: '=',
+    "inline-code": "~",
+    bold: "*",
+    italic: "/",
+    strikethrough: "+",
+    underline: "_",
+    verbatim: "=",
   };
-  if (part.get('type') !== 'inline-markup' || !markupTypeToRaw[part.get('markupType')])
-    return part.get('content');
+  if (
+    part.get("type") !== "inline-markup" ||
+    !markupTypeToRaw[part.get("markupType")]
+  )
+    return part.get("content");
   return (
-    markupTypeToRaw[part.get('markupType')] +
-    part.get('content') +
-    markupTypeToRaw[part.get('markupType')]
+    markupTypeToRaw[part.get("markupType")] +
+    part.get("content") +
+    markupTypeToRaw[part.get("markupType")]
   );
 };
 
 export const attributedStringToRawText = (parts) => {
   if (!parts) {
-    return '';
+    return "";
   }
 
   const prevParts = parts.unshift(null);
@@ -203,65 +220,65 @@ export const attributedStringToRawText = (parts) => {
   return parts
     .zip(prevParts)
     .map(([part, prevPart]) => {
-      let text = '';
-      switch (part.get('type')) {
-        case 'text':
-          text = part.get('contents');
+      let text = "";
+      switch (part.get("type")) {
+        case "text":
+          text = part.get("contents");
           break;
-        case 'inline-markup':
+        case "inline-markup":
           text = inlineMarkUpToRawText(part);
           break;
-        case 'link':
+        case "link":
           text = linkPartToRawText(part);
           break;
-        case 'fraction-cookie':
-          text = `[${part.getIn(['fraction', 0]) || ''}/${part.getIn(['fraction', 1]) || ''}]`;
+        case "fraction-cookie":
+          text = `[${part.getIn(["fraction", 0]) || ""}/${part.getIn(["fraction", 1]) || ""}]`;
           break;
-        case 'percentage-cookie':
-          text = `[${part.get('percentage') || ''}%]`;
+        case "percentage-cookie":
+          text = `[${part.get("percentage") || ""}%]`;
           break;
-        case 'table':
+        case "table":
           text = tablePartToRawText(part);
           break;
-        case 'list':
+        case "list":
           text = listPartToRawText(part);
           break;
-        case 'timestamp':
+        case "timestamp":
           text = timestampPartToRawText(part);
           break;
-        case 'url':
-        case 'www-url':
-        case 'e-mail':
-        case 'phone-number':
-          text = part.get('content');
+        case "url":
+        case "www-url":
+        case "e-mail":
+        case "phone-number":
+          text = part.get("content");
           break;
         default:
           console.error(
-            `Unknown attributed string part type in attributedStringToRawText: ${part.get('type')}`
+            `Unknown attributed string part type in attributedStringToRawText: ${part.get("type")}`,
           );
       }
 
-      let optionalNewlinePrefix = '';
+      let optionalNewlinePrefix = "";
       if (!!prevPart) {
-        if (['list', 'table'].includes(prevPart.get('type'))) {
-          optionalNewlinePrefix = '\n';
+        if (["list", "table"].includes(prevPart.get("type"))) {
+          optionalNewlinePrefix = "\n";
         } else if (
-          part.get('type') === 'list' &&
-          prevPart.get('type') === 'text' &&
-          !prevPart.get('contents').endsWith('\n')
+          part.get("type") === "list" &&
+          prevPart.get("type") === "text" &&
+          !prevPart.get("contents").endsWith("\n")
         ) {
-          optionalNewlinePrefix = '\n';
+          optionalNewlinePrefix = "\n";
         }
       }
       return optionalNewlinePrefix + text;
     })
-    .join('');
+    .join("");
 };
 
 // Takes a plain JS object
 export const generateTitleLine = (header, includeStars) => {
   // Remove stars afterwards if not includeStars - because of :tag: alignment
-  let titleLine = '*'.repeat(header.nestingLevel);
+  let titleLine = "*".repeat(header.nestingLevel);
 
   if (header.titleLine.todoKeyword) {
     titleLine += ` ${header.titleLine.todoKeyword}`;
@@ -270,11 +287,11 @@ export const generateTitleLine = (header, includeStars) => {
 
   if (header.titleLine.tags.length) {
     // TODO: filter()? Why would we add empty tags in the first place?
-    let tagsString = `:${header.titleLine.tags.filter((x) => x).join(':')}:`;
+    let tagsString = `:${header.titleLine.tags.filter((x) => x).join(":")}:`;
     if (!titleLine.match(/\s$/)) {
       // Insert as many spaces as orgmode auto-formatting does:
       let n = 77 - titleLine.length - tagsString.length;
-      let space = ' '.repeat(n > 0 ? n : 1);
+      let space = " ".repeat(n > 0 ? n : 1);
       titleLine += space;
     }
     titleLine += tagsString;
@@ -293,8 +310,10 @@ export const generateTitleLine = (header, includeStars) => {
  * nesting level, else keep everything flush-left. Description is kept as is.
  */
 export const exportOrg = ({ headers, linesBeforeHeadings, dontIndent }) => {
-  let configContent = linesBeforeHeadings.map((x) => x + '\n').join('');
-  const headerContent = headers.map((x) => createRawDescriptionText(x, true, dontIndent)).join('');
+  let configContent = linesBeforeHeadings.map((x) => x + "\n").join("");
+  const headerContent = headers
+    .map((x) => createRawDescriptionText(x, true, dontIndent))
+    .join("");
   return configContent + headerContent;
 };
 
@@ -312,16 +331,16 @@ export const createRawDescriptionText = (header, includeTitle, dontIndent) => {
 
   // Pad things like planning items and tables appropriately
   // considering the nestingLevel of the header, unless that is explicitly disabled
-  const indentation = dontIndent ? '' : ' '.repeat(header.nestingLevel + 1);
-  let contents = '';
+  const indentation = dontIndent ? "" : " ".repeat(header.nestingLevel + 1);
+  let contents = "";
 
   if (includeTitle) {
-    contents += generateTitleLine(header, true) + '\n';
+    contents += generateTitleLine(header, true) + "\n";
   }
 
   // Special case: do not render planning items that are normal active timestamps
   const planningItemsToRender = immutableHeader
-    .get('planningItems')
+    .get("planningItems")
     .filter(isRegularPlanningItem)
     .toJS();
   if (planningItemsToRender.length) {
@@ -330,7 +349,7 @@ export const createRawDescriptionText = (header, includeTitle, dontIndent) => {
         const timestampString = renderAsText(fromJS(planningItem.timestamp));
         return `${planningItem.type}: ${timestampString}`;
       })
-      .join(' ')
+      .join(" ")
       .trimRight();
     contents += `${indentation}${planningItemsContent}\n`;
   }
@@ -339,10 +358,10 @@ export const createRawDescriptionText = (header, includeTitle, dontIndent) => {
     const propertyListItemsContent = header.propertyListItems
       .map((propertyListItem) => {
         return `${indentation}:${propertyListItem.property}: ${attributedStringToRawText(
-          fromJS(propertyListItem.value)
+          fromJS(propertyListItem.value),
         )}`;
       })
-      .join('\n');
+      .join("\n");
     contents += `${indentation}:PROPERTIES:\n`;
     contents += `${propertyListItemsContent}\n`;
     contents += `${indentation}:END:\n`;
@@ -350,25 +369,25 @@ export const createRawDescriptionText = (header, includeTitle, dontIndent) => {
 
   // Log notes come after properties and before logbook.
   contents += attributedStringToRawText(fromJS(header.logNotes))
-    .split('\n')
-    .map((line) => (line.trim() ? `${indentation}${line}` : ''))
-    .join('\n');
-  contents += header.logNotes.length ? '\n' : '';
+    .split("\n")
+    .map((line) => (line.trim() ? `${indentation}${line}` : ""))
+    .join("\n");
+  contents += header.logNotes.length ? "\n" : "";
 
   if (header.logBookEntries.length) {
     const logBookEntriesContent = header.logBookEntries
       .map((entry) => {
         if (entry.raw !== undefined) {
-          return entry.raw ? `${indentation}${entry.raw}` : '';
+          return entry.raw ? `${indentation}${entry.raw}` : "";
         } else if (entry.end === null) {
           return `${indentation}CLOCK: ${renderAsText(fromJS(entry.start))}`;
         } else {
           return `${indentation}CLOCK: ${renderAsText(fromJS(entry.start))}--${renderAsText(
-            fromJS(entry.end)
+            fromJS(entry.end),
           )} => ${timestampDuration(fromJS(entry.start), fromJS(entry.end))}`;
         }
       })
-      .join('\n')
+      .join("\n")
       .trimRight();
     contents += `${indentation}:LOGBOOK:\n`;
     contents += `${logBookEntriesContent}\n`;
@@ -378,7 +397,8 @@ export const createRawDescriptionText = (header, includeTitle, dontIndent) => {
   // A newline character belongs to its line, not to the next line.
   // Unless rawDescription === '', it must have a trailing newline character.
   let fixedRawDescription = header.rawDescription;
-  if (header.rawDescription.match(/[^\n]$/)) fixedRawDescription = header.rawDescription + '\n';
+  if (header.rawDescription.match(/[^\n]$/))
+    fixedRawDescription = header.rawDescription + "\n";
   contents += fixedRawDescription;
 
   return contents;
@@ -395,7 +415,10 @@ const getAllNestedSubheaders = (headers, headerId) => {
   let allSubheaders = directSubheaders;
 
   directSubheaders.forEach((subheader) => {
-    const nestedSubheaders = getAllNestedSubheaders(headers, subheader.get('id'));
+    const nestedSubheaders = getAllNestedSubheaders(
+      headers,
+      subheader.get("id"),
+    );
     allSubheaders = allSubheaders.concat(nestedSubheaders);
   });
 
@@ -425,15 +448,15 @@ export const exportHeaderWithSubheaders = (header, headers, options = {}) => {
 
   if (includeSubheaders) {
     const subheaders = recursive
-      ? getAllNestedSubheaders(headers, header.get('id'))
-      : subheadersOfHeaderWithId(headers, header.get('id'));
+      ? getAllNestedSubheaders(headers, header.get("id"))
+      : subheadersOfHeaderWithId(headers, header.get("id"));
 
     const subheaderContent = subheaders
       .map((subheader) => createRawDescriptionText(subheader, true, dontIndent))
-      .join('\n');
+      .join("\n");
 
     if (subheaderContent) {
-      content += '\n' + subheaderContent;
+      content += "\n" + subheaderContent;
     }
   }
 

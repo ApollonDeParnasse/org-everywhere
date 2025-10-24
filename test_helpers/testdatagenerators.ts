@@ -23,10 +23,11 @@ import {
   last,
   sum,
   size,
-  concat
+  concat,
 } from "lodash/fp";
-import type {ColorObject} from 'color';
-import { unfold,
+import type { ColorObject } from "color";
+import {
+  unfold,
   minusOne,
   addOne,
   convertCharacterCodeIntoCharacter,
@@ -38,27 +39,25 @@ import { unfold,
   convertArrayOfArraysIntoShuffledArray,
   addMinusOne,
   mapFlatten,
-  unfoldItemCountTuplesIntoMixedArray
-} from "../src/util/transformers"
-import { getFirstLevelArrayLengths } from "../src/util/getters"
-import { NONSPACESCHARACTERRANGE, DOUBLEBETWEENZEROAND1RANGE } from "./constants"
-
+  unfoldItemCountTuplesIntoMixedArray,
+} from "../src/util/transformers";
+import { getFirstLevelArrayLengths } from "../src/util/getters";
+import {
+  NONSPACESCHARACTERRANGE,
+  DOUBLEBETWEENZEROAND1RANGE,
+} from "./constants";
 
 export const fastCheckRandomItemFromArray = curry(
-  <T>(
-    fcGen: fc.GeneratorValue,
-    testArray: Array<T>,
-  ): fc.Arbitrary<T> => {
+  <T>(fcGen: fc.GeneratorValue, testArray: Array<T>): fc.Arbitrary<T> => {
     return fcGen(fc.constantFrom, ...shuffle(testArray));
   },
 );
 
-
- export const fastCheckRandomObjectKey = curry(
-   <T>(fcGen: fc.GeneratorValue, object: Record<string, T>): string => {
-     return pipe([Object.keys, fastCheckRandomItemFromArray(fcGen)])(object);
+export const fastCheckRandomObjectKey = curry(
+  <T>(fcGen: fc.GeneratorValue, object: Record<string, T>): string => {
+    return pipe([Object.keys, fastCheckRandomItemFromArray(fcGen)])(object);
   },
- );
+);
 
 export const fastCheckRandomObjectKeyValuePair = curry(
   <T>(fcGen: fc.GeneratorValue, object: Record<string, T>): [string, T] => {
@@ -71,9 +70,11 @@ export const fastCheckRandomItemFromArrayWithIndex = curry(
     fcGen: fc.GeneratorValue,
     testArray: Array<T>,
   ): [fc.Arbitrary<T>, number] => {
-    return pipe([fastCheckRandomObjectKey(fcGen),
+    return pipe([
+      fastCheckRandomObjectKey(fcGen),
 
-      over([partialRight(property, [testArray]), identity])])(testArray)
+      over([partialRight(property, [testArray]), identity]),
+    ])(testArray);
   },
 );
 
@@ -82,14 +83,15 @@ export const fastCheckGetRandomArrayChunk = curry(
     fcGen: fc.GeneratorValue,
     [testArray, testChunkSize]: [Array<T>, number],
   ): fc.Arbitrary<T> => {
-    return pipe([chunk(testChunkSize), fastCheckRandomItemFromArrayWithIndex(fcGen)])(testArray)
+    return pipe([
+      chunk(testChunkSize),
+      fastCheckRandomItemFromArrayWithIndex(fcGen),
+    ])(testArray);
   },
 );
 
-
 export const fastCheckRandomInteger = (fcGen: fc.GeneratorValue) =>
   fcGen(fc.integer);
-
 
 export const fastCheckRandomIntegerInRange = curry(
   (
@@ -100,46 +102,46 @@ export const fastCheckRandomIntegerInRange = curry(
   },
 );
 
-export const fastCheckRandomIntegerInRange255 = partialRight(fastCheckRandomIntegerInRange, [[0,255]])
+export const fastCheckRandomIntegerInRange255 = partialRight(
+  fastCheckRandomIntegerInRange,
+  [[0, 255]],
+);
 
 export const fastCheckRandomIntegerBetweenOneAnd = curry(
-  (
-    fcGen: fc.GeneratorValue,
-    rangeMax: number
-  ): number => {
-    return pipe([concat([1]), fastCheckRandomIntegerInRange(fcGen)])(rangeMax)
+  (fcGen: fc.GeneratorValue, rangeMax: number): number => {
+    return pipe([concat([1]), fastCheckRandomIntegerInRange(fcGen)])(rangeMax);
   },
 );
 
 export const fastCheckRandomArrayChunkSize = curry(
-  <T>(
-    fcGen: fc.GeneratorValue,
-    array: Array<T>
-  ): number => {
-    return pipe([size, concat([1]), fastCheckRandomIntegerInRange(fcGen)])(array)
+  <T>(fcGen: fc.GeneratorValue, array: Array<T>): number => {
+    return pipe([size, concat([1]), fastCheckRandomIntegerInRange(fcGen)])(
+      array,
+    );
   },
 );
 
 export const fastCheckNRandomArrayIndices = curry(
   <T>(
     fcGen: fc.GeneratorValue,
-    count: number, 
-    array: Array<T>
+    count: number,
+    array: Array<T>,
   ): Array<string> => {
-    return fcGen(fc.shuffledSubarray, Object.keys(array), {minLength: count, maxLength: count})
+    return fcGen(fc.shuffledSubarray, Object.keys(array), {
+      minLength: count,
+      maxLength: count,
+    });
   },
 );
 
 export const fastCheckNRandomItemsFromArray = curry(
-  <T>(
-    fcGen: fc.GeneratorValue,
-    count: number, 
-    array: Array<T>
-  ): Array<T> => {
-    return fcGen(fc.shuffledSubarray, array, {minLength: count, maxLength: count})
+  <T>(fcGen: fc.GeneratorValue, count: number, array: Array<T>): Array<T> => {
+    return fcGen(fc.shuffledSubarray, array, {
+      minLength: count,
+      maxLength: count,
+    });
   },
 );
-
 
 export const fastCheckRandomNaturalNumberWithMax = curry(
   (max: number, fcGen: fc.GeneratorValue): number => {
@@ -159,21 +161,23 @@ export const fastCheckRandomFloatBetweenZeroAndOne = (
 };
 
 export const fastCheckRandomRGBA = (fcGen: fc.GeneratorValue): ColorObject => {
-  const [r, g, b] = unfold(() => fastCheckRandomIntegerInRange255(fcGen), 3)
+  const [r, g, b] = unfold(() => fastCheckRandomIntegerInRange255(fcGen), 3);
   return {
     r,
     g,
     b,
-    alpha: fastCheckRandomFloatBetweenZeroAndOne(fcGen)
-  }
-}
+    alpha: fastCheckRandomFloatBetweenZeroAndOne(fcGen),
+  };
+};
 
-export const fastCheckNRandomRGBAs = curry((count: number, fcGen: fc.GeneratorValue): Array<ColorObject> => {
-  return unfold(() => fastCheckRandomRGBA(fcGen), count)
-})
+export const fastCheckNRandomRGBAs = curry(
+  (count: number, fcGen: fc.GeneratorValue): Array<ColorObject> => {
+    return unfold(() => fastCheckRandomRGBA(fcGen), count);
+  },
+);
 
-export const fastCheck2RandomRGBAs = fastCheckNRandomRGBAs(2)
-      
+export const fastCheck2RandomRGBAs = fastCheckNRandomRGBAs(2);
+
 export const fastCheckArrayOfNFloatsBetweenZeroAndOne = (
   fcGen: fc.GeneratorValue,
   floatCount: number,
@@ -238,7 +242,6 @@ export const fastCheckRandomIntegerInRangeAsString = curry(
     );
   },
 );
-
 
 export const fastCheckRandomCharacterGenerator = curry(
   (range: [number, number], fcGen: fc.GeneratorValue): string => {
@@ -496,4 +499,3 @@ export const fastCheckTestIntegerArrayWithDefinedIntegersPerChunk =
   fastCheckTestArrayWithDefinedItemsPerChunk(
     fastCheckNLengthUniqueStringArrayGenerator,
   );
-

@@ -1,4 +1,4 @@
-@import '../../../../colors.css';
+@import "../../../../colors.css";
 
 .file-setting-container {
   border-bottom: 2px solid var(--base2);

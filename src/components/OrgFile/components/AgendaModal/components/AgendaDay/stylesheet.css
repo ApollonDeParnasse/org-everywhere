@@ -1,4 +1,4 @@
-@import '../../../../../../colors.css';
+@import "../../../../../../colors.css";
 
 .agenda-day__title {
   color: var(--base01);

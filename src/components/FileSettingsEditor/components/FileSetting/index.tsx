@@ -1,57 +1,90 @@
-import React, { useState } from 'react';
-import { UnmountClosed as Collapse } from 'react-collapse';
+import React, { useState } from "react";
+import { UnmountClosed as Collapse } from "react-collapse";
 
-import { Draggable } from 'react-beautiful-dnd';
+import { Draggable } from "react-beautiful-dnd";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import Switch from '../../../UI/Switch';
+import Switch from "../../../UI/Switch";
 
-import classNames from 'classnames';
+import classNames from "classnames";
 
-export default ({ setting, index, onFieldPathUpdate, onDeleteSetting, loadedFilepaths, path }) => {
+export default ({
+  setting,
+  index,
+  onFieldPathUpdate,
+  onDeleteSetting,
+  loadedFilepaths,
+  path,
+}) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const handleHeaderBarClick = () => setIsCollapsed(!isCollapsed);
 
   const updateField = (fieldName) => (event) =>
-    onFieldPathUpdate(setting.get('id'), [fieldName], event.target.value);
+    onFieldPathUpdate(setting.get("id"), [fieldName], event.target.value);
 
   const toggleDefaultOnStartup = () =>
-    onFieldPathUpdate(setting.get('id'), ['defaultOnStartup'], !setting.get('defaultOnStartup'));
+    onFieldPathUpdate(
+      setting.get("id"),
+      ["defaultOnStartup"],
+      !setting.get("defaultOnStartup"),
+    );
 
   const toggleLoadOnStartup = () =>
-    onFieldPathUpdate(setting.get('id'), ['loadOnStartup'], !setting.get('loadOnStartup'));
+    onFieldPathUpdate(
+      setting.get("id"),
+      ["loadOnStartup"],
+      !setting.get("loadOnStartup"),
+    );
 
   const toggleIncludeInAgenda = () =>
-    onFieldPathUpdate(setting.get('id'), ['includeInAgenda'], !setting.get('includeInAgenda'));
+    onFieldPathUpdate(
+      setting.get("id"),
+      ["includeInAgenda"],
+      !setting.get("includeInAgenda"),
+    );
 
   const toggleIncludeInSearch = () =>
-    onFieldPathUpdate(setting.get('id'), ['includeInSearch'], !setting.get('includeInSearch'));
+    onFieldPathUpdate(
+      setting.get("id"),
+      ["includeInSearch"],
+      !setting.get("includeInSearch"),
+    );
 
   const toggleIncludeInTasklist = () =>
-    onFieldPathUpdate(setting.get('id'), ['includeInTasklist'], !setting.get('includeInTasklist'));
+    onFieldPathUpdate(
+      setting.get("id"),
+      ["includeInTasklist"],
+      !setting.get("includeInTasklist"),
+    );
 
   const toggleIncludeInRefile = () =>
-    onFieldPathUpdate(setting.get('id'), ['includeInRefile'], !setting.get('includeInRefile'));
+    onFieldPathUpdate(
+      setting.get("id"),
+      ["includeInRefile"],
+      !setting.get("includeInRefile"),
+    );
 
   const handleDeleteClick = () => {
     if (
-      window.confirm(`Are you sure you want to delete the settings for "${setting.get('path')}"?`)
+      window.confirm(
+        `Are you sure you want to delete the settings for "${setting.get("path")}"?`,
+      )
     ) {
-      onDeleteSetting(setting.get('id'));
+      onDeleteSetting(setting.get("id"));
     }
   };
 
   const renderPathField = (setting) => {
-    if (setting.get('path') === '') {
-      updateField('path')({ target: { value: path || loadedFilepaths[0] } });
+    if (setting.get("path") === "") {
+      updateField("path")({ target: { value: path || loadedFilepaths[0] } });
     }
     return (
       <div className="file-setting__field-container">
         <div className="file-setting__field">
           <div>Path: </div>
-          <select onChange={updateField('path')} style={{ width: '90%' }}>
-            {[setting.get('path'), ...loadedFilepaths].map((path) => (
+          <select onChange={updateField("path")} style={{ width: "90%" }}>
+            {[setting.get("path"), ...loadedFilepaths].map((path) => (
               <option key={path} value={path}>
                 {path}
               </option>
@@ -67,74 +100,97 @@ export default ({ setting, index, onFieldPathUpdate, onDeleteSetting, loadedFile
       <div className="file-setting__field-container">
         <div className="file-setting__field">
           <div>Is default file to load on startup?</div>
-          <Switch isEnabled={setting.get('defaultOnStartup')} onToggle={toggleDefaultOnStartup} />
+          <Switch
+            isEnabled={setting.get("defaultOnStartup")}
+            onToggle={toggleDefaultOnStartup}
+          />
         </div>
 
         <div className="file-setting__help-text">
-          By default, when you start organice, it will display your root file directory. If you
-          prefer to display a specific Org file instead, enable this option. <br /> Note: There can
-          only be one default file, of course. If you enable this option for multiple files,
-          organice will pick the first one.
+          By default, when you start organice, it will display your root file
+          directory. If you prefer to display a specific Org file instead,
+          enable this option. <br /> Note: There can only be one default file,
+          of course. If you enable this option for multiple files, organice will
+          pick the first one.
         </div>
       </div>
       <div className="file-setting__field-container">
         <div className="file-setting__field">
           <div>Sync on startup?</div>
-          <Switch isEnabled={setting.get('loadOnStartup')} onToggle={toggleLoadOnStartup} />
+          <Switch
+            isEnabled={setting.get("loadOnStartup")}
+            onToggle={toggleLoadOnStartup}
+          />
         </div>
 
         <div className="file-setting__help-text">
-          By default, files are loaded from localStorage when available and are only synced when
-          visited or when a sync is manually triggered. Enable this setting to always sync this file
-          when opening organice.
+          By default, files are loaded from localStorage when available and are
+          only synced when visited or when a sync is manually triggered. Enable
+          this setting to always sync this file when opening organice.
         </div>
       </div>
 
       <div className="file-setting__field-container">
         <div className="file-setting__field">
           <div>Include in Agenda?</div>
-          <Switch isEnabled={setting.get('includeInAgenda')} onToggle={toggleIncludeInAgenda} />
+          <Switch
+            isEnabled={setting.get("includeInAgenda")}
+            onToggle={toggleIncludeInAgenda}
+          />
         </div>
 
         <div className="file-setting__help-text">
-          By default, only the currently opened file is included in the agenda. Enable this setting
-          to always include this file. The currently viewed file is always included.
+          By default, only the currently opened file is included in the agenda.
+          Enable this setting to always include this file. The currently viewed
+          file is always included.
         </div>
       </div>
 
       <div className="file-setting__field-container">
         <div className="file-setting__field">
           <div>Include in Search?</div>
-          <Switch isEnabled={setting.get('includeInSearch')} onToggle={toggleIncludeInSearch} />
+          <Switch
+            isEnabled={setting.get("includeInSearch")}
+            onToggle={toggleIncludeInSearch}
+          />
         </div>
 
         <div className="file-setting__help-text">
-          By default, only the current viewed file is included in search. Enable this setting to
-          always include this file. The currently loaded file is always included.
+          By default, only the current viewed file is included in search. Enable
+          this setting to always include this file. The currently loaded file is
+          always included.
         </div>
       </div>
 
       <div className="file-setting__field-container">
         <div className="file-setting__field">
           <div>Include in Tasklist?</div>
-          <Switch isEnabled={setting.get('includeInTasklist')} onToggle={toggleIncludeInTasklist} />
+          <Switch
+            isEnabled={setting.get("includeInTasklist")}
+            onToggle={toggleIncludeInTasklist}
+          />
         </div>
 
         <div className="file-setting__help-text">
-          By default, only the current viewed file is included in the tasklist. Enable this setting
-          to always include this file. The currently loaded file is always included.
+          By default, only the current viewed file is included in the tasklist.
+          Enable this setting to always include this file. The currently loaded
+          file is always included.
         </div>
       </div>
 
       <div className="file-setting__field-container">
         <div className="file-setting__field">
           <div>Include in Refile?</div>
-          <Switch isEnabled={setting.get('includeInRefile')} onToggle={toggleIncludeInRefile} />
+          <Switch
+            isEnabled={setting.get("includeInRefile")}
+            onToggle={toggleIncludeInRefile}
+          />
         </div>
 
         <div className="file-setting__help-text">
-          By default, only the currently viewed file is available as a refile targets. Enable this
-          setting to always include this file. The currently loaded file is always included.
+          By default, only the currently viewed file is available as a refile
+          targets. Enable this setting to always include this file. The
+          currently loaded file is always included.
         </div>
       </div>
     </>
@@ -142,65 +198,82 @@ export default ({ setting, index, onFieldPathUpdate, onDeleteSetting, loadedFile
 
   const renderDeleteButton = () => (
     <div className="file-setting__field-container file-setting__delete-button-container">
-      <button className="btn settings-btn file-setting__delete-button" onClick={handleDeleteClick}>
+      <button
+        className="btn settings-btn file-setting__delete-button"
+        onClick={handleDeleteClick}
+      >
         Delete setting
       </button>
     </div>
   );
 
   const caretClassName = classNames(
-    'fas fa-2x fa-caret-right file-setting-container__header__caret',
+    "fas fa-2x fa-caret-right file-setting-container__header__caret",
     {
-      'file-setting-container__header__caret--rotated': !isCollapsed,
-    }
+      "file-setting-container__header__caret--rotated": !isCollapsed,
+    },
   );
 
   return (
-    <Draggable draggableId={`file-setting--${setting.get('path')}`} index={index}>
+    <Draggable
+      draggableId={`file-setting--${setting.get("path")}`}
+      index={index}
+    >
       {(provided, snapshot) => (
         <div
-          className={classNames('file-setting-container', {
-            'file-setting-container--dragging': snapshot.isDragging,
+          className={classNames("file-setting-container", {
+            "file-setting-container--dragging": snapshot.isDragging,
           })}
           ref={provided.innerRef}
           {...provided.draggableProps}
         >
-          <div className="file-setting-container__header" onClick={handleHeaderBarClick}>
+          <div
+            className="file-setting-container__header"
+            onClick={handleHeaderBarClick}
+          >
             <i className={caretClassName} />
             <div className="file-setting-icons">
               <div
-                className={classNames('default-on-startup-icon', {
-                  'fas fa-bookmark fa-lg file-setting-icon': setting.get('defaultOnStartup'),
+                className={classNames("default-on-startup-icon", {
+                  "fas fa-bookmark fa-lg file-setting-icon":
+                    setting.get("defaultOnStartup"),
                 })}
               />
               <div
-                className={classNames('load-on-startup-icon', {
-                  'fas fa-sync-alt fa-lg file-setting-icon': setting.get('loadOnStartup'),
-                })}
-              />
-              <div
-                className={classNames({
-                  'fas fa-calendar-alt fa-lg file-setting-icon': setting.get('includeInAgenda'),
-                })}
-              />
-              <div
-                className={classNames({
-                  'fas fa-search fa-lg file-setting-icon': setting.get('includeInSearch'),
+                className={classNames("load-on-startup-icon", {
+                  "fas fa-sync-alt fa-lg file-setting-icon":
+                    setting.get("loadOnStartup"),
                 })}
               />
               <div
                 className={classNames({
-                  'fas fa-tasks fa-lg file-setting-icon': setting.get('includeInTasklist'),
+                  "fas fa-calendar-alt fa-lg file-setting-icon":
+                    setting.get("includeInAgenda"),
                 })}
               />
               <div
                 className={classNames({
-                  'fas fa-file-export fa-lg file-setting-icon': setting.get('includeInRefile'),
+                  "fas fa-search fa-lg file-setting-icon":
+                    setting.get("includeInSearch"),
+                })}
+              />
+              <div
+                className={classNames({
+                  "fas fa-tasks fa-lg file-setting-icon":
+                    setting.get("includeInTasklist"),
+                })}
+              />
+              <div
+                className={classNames({
+                  "fas fa-file-export fa-lg file-setting-icon":
+                    setting.get("includeInRefile"),
                 })}
               />
             </div>
 
-            <span className="file_setting-container__header__title">{setting.get('path')}</span>
+            <span className="file_setting-container__header__title">
+              {setting.get("path")}
+            </span>
 
             <i
               className="fas fa-bars fa-lg file-setting-container__header__drag-handle"

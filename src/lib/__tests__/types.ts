@@ -1,6 +1,6 @@
 export interface DefaultTimestampOptions {
-  isActive?: boolean,
-  withStartTime?: boolean
+  isActive?: boolean;
+  withStartTime?: boolean;
 }
 
 export interface Timestamp {

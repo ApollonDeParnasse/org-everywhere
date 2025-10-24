@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   FaTimes,
   FaCalendarAlt,
@@ -28,47 +28,46 @@ import {
   FaHourglassEnd,
   FaFileExport,
   FaBars,
-  FaStar
+  FaStar,
 } from "react-icons/fa";
-import { property, partialRight } from "lodash/fp"
+import { property, partialRight } from "lodash/fp";
 import { PiPlus, PiColumnsBold, PiRowsBold } from "react-icons/pi";
 import { TiTimes } from "react-icons/ti";
 
-const ICONMAPPING = {  
-  "times": <FaTimes />,
-  "check": <FaCheck />,
-  "plus": <FaPlus />,
-  "arrow-up": <FaArrowUp/>,
-  "arrow-left": <FaArrowLeft/>,
-  "arrow-right": <FaArrowRight/>,
-  "arrow-down": <FaArrowDown/>,
+const ICONMAPPING = {
+  times: <FaTimes />,
+  check: <FaCheck />,
+  plus: <FaPlus />,
+  "arrow-up": <FaArrowUp />,
+  "arrow-left": <FaArrowLeft />,
+  "arrow-right": <FaArrowRight />,
+  "arrow-down": <FaArrowDown />,
   "arrows-alt": <FaArrowsAlt />,
   "chevron-left": <FaChevronLeft />,
   "chevron-right": <FaChevronRight />,
-  "cloud": <FaCloud />,
+  cloud: <FaCloud />,
   "calendar-alt": <FaCalendarAlt />,
-  "search": <FaSearch />,
-  "pencil": <FaPencilAlt/>,
-  "small-times": <TiTimes/>,
-  "small-plus": <PiPlus/>,
-  "columns": <PiColumnsBold/>,
-  "rows": <PiRowsBold/>,
-  "edit": <FaEdit/>,
-  "tags": <FaTags/>,
-  "list": <FaList/>,
-  "calendar-check": <FaCalendarCheck/>,
-  "calendar-times": <FaCalendarTimes/>,
-  "sticky-note": <FaStickyNote/>,
-  "trash": <FaTrash/>,
-  "expand": <FaExpand/>,
-  "compress": <FaCompress/>,
-  "share": <FaShare/>,
-  "hourglass-start": <FaHourglassStart/>,
-  "hourglass-end": <FaHourglassEnd/>,
-  "file-export": <FaFileExport/>,
-  "bars": <FaBars/>,
-  "stars": <FaStar/>,
-  
-}
+  search: <FaSearch />,
+  pencil: <FaPencilAlt />,
+  "small-times": <TiTimes />,
+  "small-plus": <PiPlus />,
+  columns: <PiColumnsBold />,
+  rows: <PiRowsBold />,
+  edit: <FaEdit />,
+  tags: <FaTags />,
+  list: <FaList />,
+  "calendar-check": <FaCalendarCheck />,
+  "calendar-times": <FaCalendarTimes />,
+  "sticky-note": <FaStickyNote />,
+  trash: <FaTrash />,
+  expand: <FaExpand />,
+  compress: <FaCompress />,
+  share: <FaShare />,
+  "hourglass-start": <FaHourglassStart />,
+  "hourglass-end": <FaHourglassEnd />,
+  "file-export": <FaFileExport />,
+  bars: <FaBars />,
+  stars: <FaStar />,
+};
 
-export const getIcon = partialRight(property, [ICONMAPPING])
+export const getIcon = partialRight(property, [ICONMAPPING]);

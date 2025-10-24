@@ -1,45 +1,52 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent } from "react";
 
-import { Provider } from 'react-redux';
-import Store from './store';
-import parseQueryString from './util/parse_query_string';
+import { Provider } from "react-redux";
+import Store from "./store";
+import parseQueryString from "./util/parse_query_string";
 import {
   readInitialState,
   loadSettingsFromConfigFile,
   subscribeToChanges,
   getPersistedField,
-} from './util/settings_persister';
+} from "./util/settings_persister";
 
-import runAllMigrations from './migrations';
-import { BrowserRouter } from 'react-router-dom';
+import runAllMigrations from "./migrations";
+import { BrowserRouter } from "react-router-dom";
 
-import { DragDropContext } from 'react-beautiful-dnd';
+import { DragDropContext } from "react-beautiful-dnd";
 
-import { reorderCaptureTemplate } from './actions/capture';
-import { reorderTags, reorderPropertyList, reorderFileSetting } from './actions/org';
-import { signOut } from './actions/sync_backend';
-import { setDisappearingLoadingMessage, restoreStaticFile } from './actions/base';
+import { reorderCaptureTemplate } from "./actions/capture";
+import {
+  reorderTags,
+  reorderPropertyList,
+  reorderFileSetting,
+} from "./actions/org";
+import { signOut } from "./actions/sync_backend";
+import {
+  setDisappearingLoadingMessage,
+  restoreStaticFile,
+} from "./actions/base";
 
-import createDropboxSyncBackendClient from './sync_backend_clients/dropbox_sync_backend_client';
-import createWebDAVSyncBackendClient from './sync_backend_clients/webdav_sync_backend_client';
+import createDropboxSyncBackendClient from "./sync_backend_clients/dropbox_sync_backend_client";
+import createWebDAVSyncBackendClient from "./sync_backend_clients/webdav_sync_backend_client";
 import createGitLabSyncBackendClient, {
   createGitlabOAuth,
-} from './sync_backend_clients/gitlab_sync_backend_client';
+} from "./sync_backend_clients/gitlab_sync_backend_client";
 
-import './base.css';
+import "./base.css";
 
-import Turnout from './components/Turnout';
+import Turnout from "./components/Turnout";
 
 import {
   listenToBrowserButtons,
   syncOnBecomingVisible,
   listenToNetworkConnectionEvents,
-} from './lib/initial_setup';
+} from "./lib/initial_setup";
 
-import _ from 'lodash';
-import { Map } from 'immutable';
+import _ from "lodash";
+import { Map } from "immutable";
 
-import { configure } from 'react-hotkeys';
+import { configure } from "react-hotkeys";
 // do handle hotkeys even if they come from within 'input', 'select' or 'textarea'
 configure({ ignoreTags: [] });
 
@@ -54,16 +61,16 @@ const handleGitLabAuthResponse = async (oauthClient) => {
   if (!success) {
     // Edge case: somehow OAuth success redirect occurred but there isn't a code in
     // the current location's search params. This /shouldn't/ happen in practice.
-    alert('Unexpected sign in error, please try again');
+    alert("Unexpected sign in error, please try again");
     return;
   }
 
   const syncClient = createGitLabSyncBackendClient(oauthClient);
   const isAccessible = await syncClient.isProjectAccessible();
   if (!isAccessible) {
-    alert('Failed to access GitLab project - is the URL correct?');
+    alert("Failed to access GitLab project - is the URL correct?");
   } else {
-    window.location.search = '';
+    window.location.search = "";
   }
 };
 
@@ -75,19 +82,22 @@ export default class App extends PureComponent {
 
     const initialState = readInitialState();
 
-    const authenticatedSyncService = getPersistedField('authenticatedSyncService', true);
+    const authenticatedSyncService = getPersistedField(
+      "authenticatedSyncService",
+      true,
+    );
     let client = null;
 
     if (!!authenticatedSyncService) {
       switch (authenticatedSyncService) {
-        case 'Dropbox':
+        case "Dropbox":
           client = createDropboxSyncBackendClient();
           initialState.syncBackend = Map({
             isAuthenticated: true,
             client: client,
           });
           break;
-        case 'GitLab':
+        case "GitLab":
           const gitlabOAuth = createGitlabOAuth();
           if (gitlabOAuth.isAuthorized()) {
             client = createGitLabSyncBackendClient(gitlabOAuth);
@@ -99,11 +109,11 @@ export default class App extends PureComponent {
             handleGitLabAuthResponse(gitlabOAuth);
           }
           break;
-        case 'WebDAV':
+        case "WebDAV":
           client = createWebDAVSyncBackendClient(
-            getPersistedField('webdavEndpoint'),
-            getPersistedField('webdavUsername'),
-            getPersistedField('webdavPassword')
+            getPersistedField("webdavEndpoint"),
+            getPersistedField("webdavUsername"),
+            getPersistedField("webdavPassword"),
           );
           initialState.syncBackend = Map({
             isAuthenticated: true,
@@ -115,29 +125,32 @@ export default class App extends PureComponent {
     }
 
     const queryStringContents = parseQueryString(window.location.search);
-    const { captureFile, captureTemplateName, captureContent } = queryStringContents;
+    const { captureFile, captureTemplateName, captureContent } =
+      queryStringContents;
     if (!!captureFile && !!captureTemplateName) {
-      const capturePath = captureFile.startsWith('/') ? captureFile : `/${captureFile}`;
+      const capturePath = captureFile.startsWith("/")
+        ? captureFile
+        : `/${captureFile}`;
       const customCaptureVariables = Map(
         Object.entries(queryStringContents)
           .map(([key, value]) => {
-            const CUSTOM_VARIABLE_PREFIX = 'captureVariable_';
+            const CUSTOM_VARIABLE_PREFIX = "captureVariable_";
             if (key.startsWith(CUSTOM_VARIABLE_PREFIX)) {
               return [key.substring(CUSTOM_VARIABLE_PREFIX.length), value];
             }
 
             return null;
           })
-          .filter((item) => !!item)
+          .filter((item) => !!item),
       );
       initialState.org.present = initialState.org.present.set(
-        'pendingCapture',
+        "pendingCapture",
         Map({
           capturePath,
           captureTemplateName,
           captureContent,
           customCaptureVariables,
-        })
+        }),
       );
     }
 
@@ -153,25 +166,25 @@ export default class App extends PureComponent {
         }
       });
     } else {
-      if (!!this.store.getState().org.present.get('pendingCapture')) {
+      if (!!this.store.getState().org.present.get("pendingCapture")) {
         this.store.dispatch(
           setDisappearingLoadingMessage(
             `You need to sign in before you can use capture templates`,
-            5000
-          )
+            5000,
+          ),
         );
       }
     }
 
     // Load static files.
-    this.store.dispatch(restoreStaticFile('sample'));
-    this.store.dispatch(restoreStaticFile('changelog'));
+    this.store.dispatch(restoreStaticFile("sample"));
+    this.store.dispatch(restoreStaticFile("changelog"));
 
     listenToBrowserButtons(this.store);
     syncOnBecomingVisible(this.store);
     listenToNetworkConnectionEvents(this.store);
 
-    _.bindAll(this, ['handleDragEnd']);
+    _.bindAll(this, ["handleDragEnd"]);
   }
 
   handleDragEnd(result) {
@@ -179,21 +192,29 @@ export default class App extends PureComponent {
       return;
     }
 
-    if (result.type === 'TAG') {
-      this.store.dispatch(reorderTags(result.source.index, result.destination.index));
-    } else if (result.type === 'PROPERTY-LIST') {
-      this.store.dispatch(reorderPropertyList(result.source.index, result.destination.index));
-    } else if (result.type === 'CAPTURE-TEMPLATE') {
-      this.store.dispatch(reorderCaptureTemplate(result.source.index, result.destination.index));
-    } else if (result.type === 'FILE-SETTING') {
-      this.store.dispatch(reorderFileSetting(result.source.index, result.destination.index));
+    if (result.type === "TAG") {
+      this.store.dispatch(
+        reorderTags(result.source.index, result.destination.index),
+      );
+    } else if (result.type === "PROPERTY-LIST") {
+      this.store.dispatch(
+        reorderPropertyList(result.source.index, result.destination.index),
+      );
+    } else if (result.type === "CAPTURE-TEMPLATE") {
+      this.store.dispatch(
+        reorderCaptureTemplate(result.source.index, result.destination.index),
+      );
+    } else if (result.type === "FILE-SETTING") {
+      this.store.dispatch(
+        reorderFileSetting(result.source.index, result.destination.index),
+      );
     }
   }
 
   render() {
     return (
       <DragDropContext onDragEnd={this.handleDragEnd}>
-        <BrowserRouter>
+        <BrowserRouter baseName={"/org-everywhere"}>
           <Provider store={this.store}>
             <Turnout />
           </Provider>

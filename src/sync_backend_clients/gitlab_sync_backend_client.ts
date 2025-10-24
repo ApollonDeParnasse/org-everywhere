@@ -1,10 +1,10 @@
 /* global process */
 
-import { OAuth2AuthCodePKCE } from '@bity/oauth2-auth-code-pkce';
-import { orgFileExtensions } from '../lib/org_utils';
-import { getPersistedField } from '../util/settings_persister';
+import { OAuth2AuthCodePKCE } from "@bity/oauth2-auth-code-pkce";
+import { orgFileExtensions } from "../lib/org_utils";
+import { getPersistedField } from "../util/settings_persister";
 
-import { fromJS, Map } from 'immutable';
+import { fromJS, Map } from "immutable";
 
 export const createGitlabOAuth = () => {
   // Use promises as mutex to prevent concurrent token refresh attempts, which causes problems.
@@ -13,11 +13,11 @@ export const createGitlabOAuth = () => {
   let expiryPromise;
   let invalidGrantPromise;
   return new OAuth2AuthCodePKCE({
-    authorizationUrl: 'https://gitlab.com/oauth/authorize',
-    tokenUrl: 'https://gitlab.com/oauth/token',
+    authorizationUrl: "https://gitlab.com/oauth/authorize",
+    tokenUrl: "https://gitlab.com/oauth/token",
     clientId: process.env.REACT_APP_GITLAB_CLIENT_ID,
     redirectUrl: window.location.origin,
-    scopes: ['api'],
+    scopes: ["api"],
     extraAuthorizationParams: {
       clientSecret: process.env.REACT_APP_GITLAB_SECRET,
     },
@@ -54,24 +54,24 @@ export const createGitlabOAuth = () => {
 export const gitLabProjectIdFromURL = (projectURL) => {
   if (!projectURL) return;
 
-  if (!projectURL.includes('://')) {
+  if (!projectURL.includes("://")) {
     // URL() class requires protocol.
     projectURL = `https://${projectURL}`;
   }
   try {
     const url = new URL(projectURL);
-    const path = url.pathname.replace(/(^\/)|(\/$)/g, '');
+    const path = url.pathname.replace(/(^\/)|(\/$)/g, "");
     // Rough heuristic to check that url at least *potentially* refers
     // to a project. Reminder: a project path is not necessarily
     // /user/project because it may be under one or more groups such
     // as /user/group/subgroup/project.
-    if (url.hostname === 'gitlab.com' && path.split('/').length > 1) {
+    if (url.hostname === "gitlab.com" && path.split("/").length > 1) {
       return encodeURIComponent(path);
     } else {
       return undefined;
     }
   } catch (e) {
-    console.error('Error trying to get gitLab project_id from URL:');
+    console.error("Error trying to get gitLab project_id from URL:");
     console.error(e);
     return undefined;
   }
@@ -89,7 +89,7 @@ export const parseLinkHeader = (links) => {
     return {};
   }
   // Based on https://stackoverflow.com/a/48109741
-  return links.split(',').reduce((acc, link) => {
+  return links.split(",").reduce((acc, link) => {
     const match = link.match(/<(.*)>; rel="(\w*)"/);
     const url = match[1];
     const rel = match[2];
@@ -104,7 +104,7 @@ export const parseLinkHeader = (links) => {
  * @see https://docs.gitlab.com/ee/api/repositories.html#list-repository-tree
  */
 export const treeToDirectoryListing = (tree) => {
-  const isDirectory = (it) => it.type === 'tree';
+  const isDirectory = (it) => it.type === "tree";
   return fromJS(
     tree
       .filter((it) => isDirectory(it) || it.name.match(orgFileExtensions))
@@ -127,11 +127,11 @@ export const treeToDirectoryListing = (tree) => {
           // equal/return 0.
           return a.name > b.name ? 1 : -1;
         }
-      })
+      }),
   );
 };
 
-const API_URL = 'https://gitlab.com/api/v4';
+const API_URL = "https://gitlab.com/api/v4";
 
 /**
  * GitLab sync backend, implemented using their REST API.
@@ -142,7 +142,8 @@ const API_URL = 'https://gitlab.com/api/v4';
 export default (oauthClient) => {
   const decoratedFetch = oauthClient.decorateFetchHTTPClient(fetch);
 
-  const getProjectApi = () => `${API_URL}/projects/${getPersistedField('gitLabProject')}`;
+  const getProjectApi = () =>
+    `${API_URL}/projects/${getPersistedField("gitLabProject")}`;
 
   const isSignedIn = async () => {
     if (!oauthClient.isAuthorized()) {
@@ -155,7 +156,7 @@ export default (oauthClient) => {
       await oauthClient.getAccessToken();
       return true;
     } catch (e) {
-      console.error('Error trying to get OAuth access token.');
+      console.error("Error trying to get OAuth access token.");
       console.error(e);
       return false;
     }
@@ -182,7 +183,10 @@ export default (oauthClient) => {
     if (!userResponse.ok || !membersResponse.ok) {
       return false;
     }
-    const [user, members] = await Promise.all([userResponse.json(), membersResponse.json()]);
+    const [user, members] = await Promise.all([
+      userResponse.json(),
+      membersResponse.json(),
+    ]);
     const matched = members.find((m) => m.id === user.id);
     // Access levels:
     // https://docs.gitlab.com/ee/api/members.html#valid-access-levels
@@ -200,7 +204,9 @@ export default (oauthClient) => {
       // https://docs.gitlab.com/ee/api/projects.html#get-single-project
       const response = await decoratedFetch(getProjectApi());
       if (!response.ok) {
-        throw new Error(`Unexpected response from project API. Status code: ${response.status}`);
+        throw new Error(
+          `Unexpected response from project API. Status code: ${response.status}`,
+        );
       }
       const body = await response.json();
       cachedDefaultBranch = body.default_branch;
@@ -211,9 +217,11 @@ export default (oauthClient) => {
   const fetchDirectory = async (url) => {
     const response = await decoratedFetch(url);
     if (!response.ok) {
-      throw new Error(`Unexpected response from directory API. Status code: ${response.status}`);
+      throw new Error(
+        `Unexpected response from directory API. Status code: ${response.status}`,
+      );
     }
-    const pages = parseLinkHeader(response.headers.get('link'));
+    const pages = parseLinkHeader(response.headers.get("link"));
     const data = await response.json();
     return {
       listing: treeToDirectoryListing(data),
@@ -226,11 +234,11 @@ export default (oauthClient) => {
 
   const getDirectoryListing = async (path) => {
     const params = new URLSearchParams({
-      pagination: 'keyset',
+      pagination: "keyset",
       ref: await getDefaultBranch(),
       // Organice requires a leading "/", whereas GitLab API requires
       // there *not* be one.
-      path: path.replace(/^\//, ''),
+      path: path.replace(/^\//, ""),
       per_page: 100,
     });
     // https://docs.gitlab.com/ee/api/repositories.html#list-repository-tree
@@ -238,33 +246,37 @@ export default (oauthClient) => {
   };
 
   const getMoreDirectoryListing = async (additionalSyncBackendState) =>
-    await fetchDirectory(additionalSyncBackendState.get('cursor'));
+    await fetchDirectory(additionalSyncBackendState.get("cursor"));
 
   const getRawFile = async (path) => {
     const params = new URLSearchParams({
       ref: await getDefaultBranch(),
     });
-    const encodedPath = encodeURIComponent(path.replace(/^\//, ''));
+    const encodedPath = encodeURIComponent(path.replace(/^\//, ""));
     // https://docs.gitlab.com/ee/api/repository_files.html#get-raw-file-from-repository
     const response = await decoratedFetch(
-      `${getProjectApi()}/repository/files/${encodedPath}/raw?${params}`
+      `${getProjectApi()}/repository/files/${encodedPath}/raw?${params}`,
     );
     if (!response.ok) {
-      throw new Error(`Unexpected response from file API. Status code: ${response.status}`);
+      throw new Error(
+        `Unexpected response from file API. Status code: ${response.status}`,
+      );
     }
     return {
       contents: await response.text(),
-      commit: response.headers.get('x-gitlab-last-commit-id'),
+      commit: response.headers.get("x-gitlab-last-commit-id"),
     };
   };
 
   const getCommitDate = async (sha) => {
     // https://docs.gitlab.com/ee/api/commits.html#get-a-single-commit
     const response = await decoratedFetch(
-      `${getProjectApi()}/repository/commits/${sha}?stats=false`
+      `${getProjectApi()}/repository/commits/${sha}?stats=false`,
     );
     if (!response.ok) {
-      throw new Error(`Unexpected response from commit API. Status code: ${response.status}`);
+      throw new Error(
+        `Unexpected response from commit API. Status code: ${response.status}`,
+      );
     }
     const body = await response.json();
     // Dates are ISO-8601. Note: while commit date *should* generally
@@ -274,7 +286,9 @@ export default (oauthClient) => {
     const committed = new Date(body.committed_date);
     const authored = new Date(body.authored_date);
     // Use Date objects for comparison, but need to return as strings.
-    return committed > authored ? committed.toISOString() : authored.toISOString();
+    return committed > authored
+      ? committed.toISOString()
+      : authored.toISOString();
   };
 
   const getFileContentsAndMetadata = async (path) => {
@@ -290,12 +304,13 @@ export default (oauthClient) => {
   const getFileContents = async (path) => (await getRawFile(path)).contents;
 
   const doCommit = async (action) => {
-    const capitalizedAction = action.action.charAt(0).toUpperCase() + action.action.slice(1);
+    const capitalizedAction =
+      action.action.charAt(0).toUpperCase() + action.action.slice(1);
     // Two newlines because Git commits should have an empty line
     // between title and body.
     const message =
       `[organice] ${capitalizedAction} ${action.file_path}\n\n` +
-      'Automatic commit from organice app.';
+      "Automatic commit from organice app.";
     // It's also possible to modify files using the files API instead
     // of commits API. For this use case they're about equal, but I
     // picked commits because it doesn't require non-standard encoding
@@ -307,9 +322,9 @@ export default (oauthClient) => {
     // https://docs.gitlab.com/ee/api/commits.html#create-a-commit-with-multiple-files-and-actions
     // https://docs.gitlab.com/ee/api/repository_files.html
     await decoratedFetch(`${getProjectApi()}/repository/commits`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         branch: await getDefaultBranch(),
@@ -323,29 +338,29 @@ export default (oauthClient) => {
 
   const createFile = async (path, content) => {
     await doCommit({
-      action: 'create',
-      file_path: path.replace(/^\//, ''),
+      action: "create",
+      file_path: path.replace(/^\//, ""),
       content,
     });
   };
 
   const updateFile = async (path, content) => {
     await doCommit({
-      action: 'update',
-      file_path: path.replace(/^\//, ''),
+      action: "update",
+      file_path: path.replace(/^\//, ""),
       content,
     });
   };
 
   const deleteFile = async (path) => {
     await doCommit({
-      action: 'delete',
-      file_path: path.replace(/^\//, ''),
+      action: "delete",
+      file_path: path.replace(/^\//, ""),
     });
   };
 
   return {
-    type: 'GitLab',
+    type: "GitLab",
     isSignedIn,
     isProjectAccessible,
     getDirectoryListing,

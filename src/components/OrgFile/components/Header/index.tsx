@@ -1,32 +1,37 @@
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import React, { PureComponent } from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
 
-import { Motion, spring } from 'react-motion';
-import { UnmountClosed as Collapse } from 'react-collapse';
+import { Motion, spring } from "react-motion";
+import { UnmountClosed as Collapse } from "react-collapse";
 import { IconContext } from "react-icons";
 import { FaCheck, FaTimes } from "react-icons/fa";
 
-import * as orgActions from '../../../../actions/org';
-import * as baseActions from '../../../../actions/base';
+import * as orgActions from "../../../../actions/org";
+import * as baseActions from "../../../../actions/base";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import classNames from 'classnames';
-import { bindAll } from 'lodash';
+import classNames from "classnames";
+import { bindAll } from "lodash";
 
-import TitleLine from '../TitleLine';
-import HeaderContent from '../HeaderContent';
-import HeaderActionDrawer from './components/HeaderActionDrawer';
+import TitleLine from "../TitleLine";
+import HeaderContent from "../HeaderContent";
+import HeaderActionDrawer from "./components/HeaderActionDrawer";
 
-import { headerWithId } from '../../../../lib/org_utils';
-import { interpolateColorsAndReturnCSS, readRgbaVariable, createColorObject } from '../../../../lib/color';
-import { getCurrentTimestamp, millisDuration } from '../../../../lib/timestamps';
-import { Map } from 'immutable';
-import { shareContent } from '../../../../lib/share_utils';
-import { exportHeaderWithSubheaders } from '../../../../lib/export_org';
-
-
+import { headerWithId } from "../../../../lib/org_utils";
+import {
+  interpolateColorsAndReturnCSS,
+  readRgbaVariable,
+  createColorObject,
+} from "../../../../lib/color";
+import {
+  getCurrentTimestamp,
+  millisDuration,
+} from "../../../../lib/timestamps";
+import { Map } from "immutable";
+import { shareContent } from "../../../../lib/share_utils";
+import { exportHeaderWithSubheaders } from "../../../../lib/export_org";
 
 class Header extends PureComponent {
   SWIPE_ACTION_ACTIVATION_DISTANCE = 80;
@@ -36,26 +41,26 @@ class Header extends PureComponent {
     super(props);
 
     bindAll(this, [
-      'handleRef',
-      'handleMouseDown',
-      'handleTouchStart',
-      'handleTouchCancel',
-      'handleHeaderClick',
-      'handleShowTitleModal',
-      'handleShowDescriptionModal',
-      'handleShowTagsModal',
-      'handleShowPropertyListEditorModal',
-      'handleNarrow',
-      'handleWiden',
-      'handleAddNewHeader',
-      'handleRest',
-      'handleDeadlineClick',
-      'handleClockInOutClick',
-      'handleScheduledClick',
-      'handleShareHeaderClick',
-      'handleRefileHeaderRequest',
-      'handleAddNoteClick',
-      'handleDuplicateHeader',
+      "handleRef",
+      "handleMouseDown",
+      "handleTouchStart",
+      "handleTouchCancel",
+      "handleHeaderClick",
+      "handleShowTitleModal",
+      "handleShowDescriptionModal",
+      "handleShowTagsModal",
+      "handleShowPropertyListEditorModal",
+      "handleNarrow",
+      "handleWiden",
+      "handleAddNewHeader",
+      "handleRest",
+      "handleDeadlineClick",
+      "handleClockInOutClick",
+      "handleScheduledClick",
+      "handleShareHeaderClick",
+      "handleRefileHeaderRequest",
+      "handleAddNoteClick",
+      "handleDuplicateHeader",
     ]);
 
     this.state = {
@@ -65,7 +70,7 @@ class Header extends PureComponent {
       containerWidth: null,
       isPlayingRemoveAnimation: false,
       heightBeforeRemove: null,
-      disabledBackgroundColor: readRgbaVariable('--base3'),
+      disabledBackgroundColor: readRgbaVariable("--base3"),
       // Track vertical touch positions to detect vertical scrolling intent
       touchStartY: null,
       currentTouchY: null,
@@ -81,18 +86,18 @@ class Header extends PureComponent {
 
   addGlobalDragHandlers() {
     // Begin listening for global mouse/touch events after dragging begins
-    window.addEventListener('mousemove', this.globalMouseMoveHandler);
-    window.addEventListener('mouseup', this.globalMouseUpHandler);
-    window.addEventListener('touchmove', this.globalTouchMoveHandler);
-    window.addEventListener('touchend', this.globalTouchEndHandler);
+    window.addEventListener("mousemove", this.globalMouseMoveHandler);
+    window.addEventListener("mouseup", this.globalMouseUpHandler);
+    window.addEventListener("touchmove", this.globalTouchMoveHandler);
+    window.addEventListener("touchend", this.globalTouchEndHandler);
   }
 
   removeGlobalDragHandlers() {
     // Stop listening for global mouse/touch events after dragging ends
-    window.removeEventListener('mousemove', this.globalMouseMoveHandler);
-    window.removeEventListener('mouseup', this.globalMouseUpHandler);
-    window.removeEventListener('touchmove', this.globalTouchMoveHandler);
-    window.removeEventListener('touchend', this.globalTouchEndHandler);
+    window.removeEventListener("mousemove", this.globalMouseMoveHandler);
+    window.removeEventListener("mouseup", this.globalMouseUpHandler);
+    window.removeEventListener("touchmove", this.globalTouchMoveHandler);
+    window.removeEventListener("touchend", this.globalTouchEndHandler);
   }
 
   componentDidMount() {
@@ -115,7 +120,7 @@ class Header extends PureComponent {
       return;
     }
 
-    if (!!event.target.closest('.table-part')) {
+    if (!!event.target.closest(".table-part")) {
       return;
     }
 
@@ -134,7 +139,10 @@ class Header extends PureComponent {
     }
 
     if (!this.state.isDraggingFreely) {
-      if (Math.abs(dragX - this.state.dragStartX) >= this.FREE_DRAG_ACTIVATION_DISTANCE) {
+      if (
+        Math.abs(dragX - this.state.dragStartX) >=
+        this.FREE_DRAG_ACTIVATION_DISTANCE
+      ) {
         this.setState({ isDraggingFreely: true });
       }
     }
@@ -148,8 +156,8 @@ class Header extends PureComponent {
     if (!!dragStartX && !!currentDragX) {
       if (currentDragX >= 2 * dragStartX) {
         this.props.org.advanceTodoState(
-          this.props.header.get('id'),
-          this.props.shouldLogIntoDrawer
+          this.props.header.get("id"),
+          this.props.shouldLogIntoDrawer,
         );
       }
 
@@ -246,35 +254,39 @@ class Header extends PureComponent {
 
   handleHeaderClick(event) {
     const classList = event.target.classList;
-    if (classList.contains('header') || classList.contains('header__bullet')) {
-      const { header, hasContent, isSelected, closeSubheadersRecursively } = this.props;
+    if (classList.contains("header") || classList.contains("header__bullet")) {
+      const { header, hasContent, isSelected, closeSubheadersRecursively } =
+        this.props;
 
-      if (hasContent && (!header.get('opened') || isSelected)) {
-        this.props.org.toggleHeaderOpened(header.get('id'), closeSubheadersRecursively);
+      if (hasContent && (!header.get("opened") || isSelected)) {
+        this.props.org.toggleHeaderOpened(
+          header.get("id"),
+          closeSubheadersRecursively,
+        );
       }
 
-      this.props.org.selectHeader(header.get('id'));
+      this.props.org.selectHeader(header.get("id"));
     }
   }
 
   handleShowTitleModal() {
-    this.props.base.activatePopup('title-editor');
+    this.props.base.activatePopup("title-editor");
   }
 
   handleShowDescriptionModal() {
-    this.props.base.activatePopup('description-editor');
+    this.props.base.activatePopup("description-editor");
   }
 
   handleShowTagsModal() {
-    this.props.base.activatePopup('tags-editor');
+    this.props.base.activatePopup("tags-editor");
   }
 
   handleShowPropertyListEditorModal() {
-    this.props.base.activatePopup('property-list-editor');
+    this.props.base.activatePopup("property-list-editor");
   }
 
   handleNarrow() {
-    this.props.org.narrowHeader(this.props.header.get('id'));
+    this.props.org.narrowHeader(this.props.header.get("id"));
   }
 
   handleWiden() {
@@ -282,68 +294,70 @@ class Header extends PureComponent {
   }
 
   handleAddNewHeader() {
-    this.props.org.addHeaderAndEdit(this.props.header.get('id'));
+    this.props.org.addHeaderAndEdit(this.props.header.get("id"));
   }
 
   handleDuplicateHeader() {
-    this.props.org.duplicateHeader(this.props.header.get('id'));
+    this.props.org.duplicateHeader(this.props.header.get("id"));
   }
 
   handleRest() {
     if (this.state.isPlayingRemoveAnimation) {
-      this.props.org.removeHeader(this.props.header.get('id'));
+      this.props.org.removeHeader(this.props.header.get("id"));
     }
   }
 
   handleDeadlineAndScheduledClick(planningType) {
     const { header } = this.props;
     const popupType = {
-      DEADLINE: 'deadline-editor',
-      SCHEDULED: 'scheduled-editor',
+      DEADLINE: "deadline-editor",
+      SCHEDULED: "scheduled-editor",
     }[planningType];
 
     const existingDeadlinePlanningItemIndex = header
-      .get('planningItems', [])
-      .findIndex((planningItem) => planningItem.get('type') === planningType);
+      .get("planningItems", [])
+      .findIndex((planningItem) => planningItem.get("type") === planningType);
 
     this.props.base.activatePopup(popupType, {
-      headerId: header.get('id'),
+      headerId: header.get("id"),
       planningItemIndex: existingDeadlinePlanningItemIndex,
     });
 
-    this.props.org.openHeader(header.get('id'));
+    this.props.org.openHeader(header.get("id"));
   }
 
   handleDeadlineClick() {
-    this.handleDeadlineAndScheduledClick('DEADLINE');
+    this.handleDeadlineAndScheduledClick("DEADLINE");
   }
 
   handleClockInOutClick() {
     const { header } = this.props;
-    const logBook = header.get('logBookEntries', []);
-    const existingClockIndex = logBook.findIndex((entry) => entry.get('end') === null);
+    const logBook = header.get("logBookEntries", []);
+    const existingClockIndex = logBook.findIndex(
+      (entry) => entry.get("end") === null,
+    );
     const now = getCurrentTimestamp({ isActive: false, withStartTime: true });
     if (existingClockIndex !== -1) {
       this.props.org.setLogEntryStop(
-        header.get('id'),
-        logBook.getIn([existingClockIndex, 'id']),
-        now
+        header.get("id"),
+        logBook.getIn([existingClockIndex, "id"]),
+        now,
       );
     } else {
-      this.props.org.createLogEntryStart(header.get('id'), now);
+      this.props.org.createLogEntryStart(header.get("id"), now);
     }
   }
 
   handleScheduledClick() {
-    this.handleDeadlineAndScheduledClick('SCHEDULED');
+    this.handleDeadlineAndScheduledClick("SCHEDULED");
   }
 
   handleShareHeaderClick() {
     const { header, headers } = this.props;
 
-    const titleLine = header.get('titleLine');
-    const todoKeyword = titleLine.get('todoKeyword');
-    const title = titleLine.get('rawTitle').trim();
+    const titleLine = header.get("titleLine");
+    const todoKeyword = titleLine.get("todoKeyword");
+    const title = titleLine.get("rawTitle").trim();
     const fullTitle = todoKeyword ? `${todoKeyword} ${title}` : title;
 
     // Export header with all sub-headers
@@ -362,7 +376,7 @@ class Header extends PureComponent {
   }
 
   handleAddNoteClick() {
-    this.props.base.activatePopup('note-editor');
+    this.props.base.activatePopup("note-editor");
   }
 
   handlePopupClose() {
@@ -370,7 +384,7 @@ class Header extends PureComponent {
   }
 
   handleRefileHeaderRequest() {
-    this.props.base.activatePopup('refile');
+    this.props.base.activatePopup("refile");
   }
 
   render() {
@@ -388,23 +402,27 @@ class Header extends PureComponent {
       showDeadlineDisplay,
     } = this.props;
     const indentLevel = !!narrowedHeader
-      ? header.get('nestingLevel') - narrowedHeader.get('nestingLevel') + 1
-      : header.get('nestingLevel');
+      ? header.get("nestingLevel") - narrowedHeader.get("nestingLevel") + 1
+      : header.get("nestingLevel");
 
     const headerDeadlineMap = header
-      .get('planningItems')
-      .filter((p) => p.get('type') === 'DEADLINE')
-      .map((p) => p.get('timestamp'))
+      .get("planningItems")
+      .filter((p) => p.get("type") === "DEADLINE")
+      .map((p) => p.get("timestamp"))
       .get(0);
 
     let isOverdue = false;
-    let deadlineString = '';
+    let deadlineString = "";
     if (showDeadlineDisplay && headerDeadlineMap) {
-      const year = headerDeadlineMap.get('year');
-      const month = headerDeadlineMap.get('month');
-      const day = headerDeadlineMap.get('day');
+      const year = headerDeadlineMap.get("year");
+      const month = headerDeadlineMap.get("month");
+      const day = headerDeadlineMap.get("day");
       // Ensure parts are parsed as integers for Date constructor
-      const deadlineDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      const deadlineDate = new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day),
+      );
 
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Normalize today to midnight for date-only comparison
@@ -414,9 +432,9 @@ class Header extends PureComponent {
     }
 
     const clockDisplayString =
-      showClockDisplay && header.get('totalTimeLoggedRecursive') !== 0
-        ? millisDuration(header.get('totalTimeLoggedRecursive'))
-        : '';
+      showClockDisplay && header.get("totalTimeLoggedRecursive") !== 0
+        ? millisDuration(header.get("totalTimeLoggedRecursive"))
+        : "";
 
     const {
       dragStartX,
@@ -429,31 +447,35 @@ class Header extends PureComponent {
       !!dragStartX && !!currentDragX && isDraggingFreely
         ? currentDragX - dragStartX
         : isPlayingRemoveAnimation
-        ? spring(-1 * containerWidth, { stiffness: 300 })
-        : spring(0, { stiffness: 300 });
+          ? spring(-1 * containerWidth, { stiffness: 300 })
+          : spring(0, { stiffness: 300 });
 
     const style = {
       paddingLeft: 20 * indentLevel,
       marginLeft,
-      heightFactor: isPlayingRemoveAnimation ? spring(0, { stiffness: 300 }) : 1,
+      heightFactor: isPlayingRemoveAnimation
+        ? spring(0, { stiffness: 300 })
+        : 1,
     };
 
-    const className = classNames('header', {
-      'header--selected': isSelected,
-      'header--removing': isPlayingRemoveAnimation,
+    const className = classNames("header", {
+      "header--selected": isSelected,
+      "header--removing": isPlayingRemoveAnimation,
     });
 
     const logBookEntries = header
-      .get('logBookEntries')
-      .filter((entry) => entry.get('raw') === undefined);
+      .get("logBookEntries")
+      .filter((entry) => entry.get("raw") === undefined);
     const hasActiveClock =
-      logBookEntries.size !== 0 && logBookEntries.filter((entry) => !entry.get('end')).size !== 0;
+      logBookEntries.size !== 0 &&
+      logBookEntries.filter((entry) => !entry.get("end")).size !== 0;
 
     return (
       <Motion style={style} onRest={this.handleRest}>
         {(interpolatedStyle) => {
           const swipedDistance = interpolatedStyle.marginLeft;
-          const isLeftActionActivated = swipedDistance >= this.SWIPE_ACTION_ACTIVATION_DISTANCE;
+          const isLeftActionActivated =
+            swipedDistance >= this.SWIPE_ACTION_ACTIVATION_DISTANCE;
           const isRightActionActivated =
             -1 * swipedDistance >= this.SWIPE_ACTION_ACTIVATION_DISTANCE;
 
@@ -465,11 +487,15 @@ class Header extends PureComponent {
 
           const leftSwipeActionContainerStyle = {
             width: interpolatedStyle.marginLeft,
-            backgroundColorFactor: spring(isLeftActionActivated ? 1 : 0, { stiffness: 300 }),
+            backgroundColorFactor: spring(isLeftActionActivated ? 1 : 0, {
+              stiffness: 300,
+            }),
           };
           const rightSwipeActionContainerStyle = {
             width: -1 * interpolatedStyle.marginLeft,
-            backgroundColorFactor: spring(isRightActionActivated ? 1 : 0, { stiffness: 300 }),
+            backgroundColorFactor: spring(isRightActionActivated ? 1 : 0, {
+              stiffness: 300,
+            }),
           };
 
           const { heightFactor, ...headerStyle } = interpolatedStyle;
@@ -492,31 +518,38 @@ class Header extends PureComponent {
                 {(leftInterpolatedStyle) => {
                   const leftStyle = {
                     width: leftInterpolatedStyle.width,
-                    backgroundColor: 
-                      interpolateColorsAndReturnCSS(
-                        this.state.disabledBackgroundColor,
-                        leftActivatedBackgroundColor,
-                        leftInterpolatedStyle.backgroundColorFactor
+                    backgroundColor: interpolateColorsAndReturnCSS(
+                      this.state.disabledBackgroundColor,
+                      leftActivatedBackgroundColor,
+                      leftInterpolatedStyle.backgroundColorFactor,
                     ),
                   };
 
                   const leftIconStyle = {
-                    display: swipedDistance > 30 ? '' : 'none',
-                    color: 
-                      interpolateColorsAndReturnCSS(
-                        disabledIconColor,
-                        activatedIconColor,
-                        leftInterpolatedStyle.backgroundColorFactor
-                      )
+                    display: swipedDistance > 30 ? "" : "none",
+                    color: interpolateColorsAndReturnCSS(
+                      disabledIconColor,
+                      activatedIconColor,
+                      leftInterpolatedStyle.backgroundColorFactor,
+                    ),
                   };
 
                   return (
-                    <div className="left-swipe-action-container" style={leftStyle}>
-		      <IconContext.Provider value={{ color: "green", className: "swipe-action-container__icon swipe-action-container__icon--left" }}>
-			<div>
-			  <FaCheck />
-			</div>
-		      </IconContext.Provider>
+                    <div
+                      className="left-swipe-action-container"
+                      style={leftStyle}
+                    >
+                      <IconContext.Provider
+                        value={{
+                          color: "green",
+                          className:
+                            "swipe-action-container__icon swipe-action-container__icon--left",
+                        }}
+                      >
+                        <div>
+                          <FaCheck />
+                        </div>
+                      </IconContext.Provider>
                     </div>
                   );
                 }}
@@ -525,38 +558,48 @@ class Header extends PureComponent {
                 {(rightInterpolatedStyle) => {
                   const rightStyle = {
                     width: rightInterpolatedStyle.width,
-                    backgroundColor: 
-                      interpolateColorsAndReturnCSS(
-                        this.state.disabledBackgroundColor,
-                        rightActivatedBackgroundColor,
-                        rightInterpolatedStyle.backgroundColorFactor                      
-                    )
+                    backgroundColor: interpolateColorsAndReturnCSS(
+                      this.state.disabledBackgroundColor,
+                      rightActivatedBackgroundColor,
+                      rightInterpolatedStyle.backgroundColorFactor,
+                    ),
                   };
 
                   const rightIconStyle = {
-                    display: -1 * swipedDistance > 30 ? '' : 'none',
-                    color: 
-                      interpolateColorsAndReturnCSS(
-                        disabledIconColor,
-                        activatedIconColor,
-                        rightInterpolatedStyle.backgroundColorFactor
-                      )
+                    display: -1 * swipedDistance > 30 ? "" : "none",
+                    color: interpolateColorsAndReturnCSS(
+                      disabledIconColor,
+                      activatedIconColor,
+                      rightInterpolatedStyle.backgroundColorFactor,
+                    ),
                   };
 
                   return (
-                    <div className="right-swipe-action-container" style={rightStyle}>
-		      <IconContext.Provider value={{ color: "red", className: "swipe-action-container__icon swipe-action-container__icon--right" }}>
-			<div>
-			  <FaTimes />
-			</div>
-		      </IconContext.Provider>
+                    <div
+                      className="right-swipe-action-container"
+                      style={rightStyle}
+                    >
+                      <IconContext.Provider
+                        value={{
+                          color: "red",
+                          className:
+                            "swipe-action-container__icon swipe-action-container__icon--right",
+                        }}
+                      >
+                        <div>
+                          <FaTimes />
+                        </div>
+                      </IconContext.Provider>
                     </div>
                   );
                 }}
               </Motion>
 
-              <div style={{ marginLeft: -16, color }} className="header__bullet">
-                {bulletStyle === 'Fancy' ? '●' : '*'}
+              <div
+                style={{ marginLeft: -16, color }}
+                className="header__bullet"
+              >
+                {bulletStyle === "Fancy" ? "●" : "*"}
               </div>
               <TitleLine
                 header={header}
@@ -611,21 +654,23 @@ class Header extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const path = state.org.present.get('path');
-  const file = state.org.present.getIn(['files', path], Map());
-  const narrowedHeader = !!file.get('narrowedHeaderId')
-    ? headerWithId(file.get('headers'), file.get('narrowedHeaderId'))
+  const path = state.org.present.get("path");
+  const file = state.org.present.getIn(["files", path], Map());
+  const narrowedHeader = !!file.get("narrowedHeaderId")
+    ? headerWithId(file.get("headers"), file.get("narrowedHeaderId"))
     : null;
 
   return {
-    bulletStyle: state.base.get('bulletStyle'),
-    shouldLogIntoDrawer: state.base.get('shouldLogIntoDrawer'),
-    closeSubheadersRecursively: state.base.get('closeSubheadersRecursively'),
+    bulletStyle: state.base.get("bulletStyle"),
+    shouldLogIntoDrawer: state.base.get("shouldLogIntoDrawer"),
+    closeSubheadersRecursively: state.base.get("closeSubheadersRecursively"),
     narrowedHeader,
-    isNarrowed: !!narrowedHeader && narrowedHeader.get('id') === ownProps.header.get('id'),
-    showClockDisplay: state.org.present.get('showClockDisplay'),
-    showDeadlineDisplay: state.base.get('showDeadlineDisplay'),
-    headers: file.get('headers'),
+    isNarrowed:
+      !!narrowedHeader &&
+      narrowedHeader.get("id") === ownProps.header.get("id"),
+    showClockDisplay: state.org.present.get("showClockDisplay"),
+    showDeadlineDisplay: state.base.get("showDeadlineDisplay"),
+    headers: file.get("headers"),
   };
 };
 

@@ -1,4 +1,4 @@
-@import '../../../../colors.css';
+@import "../../../../colors.css";
 
 .header-list-container {
   font-family: Courier;
@@ -6,8 +6,8 @@
 
   z-index: 1;
 
-  height: '100%';
-  overflow: 'auto';
+  height: "100%";
+  overflow: "auto";
 }
 
 .header-list-container--narrowed {

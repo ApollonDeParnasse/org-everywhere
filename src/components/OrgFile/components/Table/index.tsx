@@ -1,16 +1,18 @@
-import React from 'react';
-import TableCell from './TableCell/index';
-import './stylesheet.css';
+import React from "react";
+import TableCell from "./TableCell/index";
+import "./stylesheet.css";
 
-const Table = ({ props: { filePath, table, headerIndex, descriptionItemIndex } }) => {
+const Table = ({
+  props: { filePath, table, headerIndex, descriptionItemIndex },
+}) => {
   return (
     <table className="table-part">
       <tbody>
-        {table.get('contents').map((row, rowIndex) => {
+        {table.get("contents").map((row, rowIndex) => {
           return (
-            <tr key={row.get('id')}>
-              {row.get('contents').map((cell, columnIndex) => {
-                const cellId = cell.get('id');
+            <tr key={row.get("id")}>
+              {row.get("contents").map((cell, columnIndex) => {
+                const cellId = cell.get("id");
                 const cellProps = {
                   filePath,
                   headerIndex,

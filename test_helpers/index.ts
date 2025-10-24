@@ -1,11 +1,10 @@
 /* global __dirname */
 
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 import userEvent from "@testing-library/user-event";
 import { render } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-
 
 export const setup = (jsx: React.JSX.Element) => {
   return {
@@ -23,7 +22,8 @@ export const renderWithRouter = (ui: React.ReactNode, { route = "/" } = {}) => {
   };
 };
 
-
 export default function readFixture(name) {
-  return fs.readFileSync(path.join(__dirname, `./fixtures/${name}.org`)).toString();
+  return fs
+    .readFileSync(path.join(__dirname, `./fixtures/${name}.org`))
+    .toString();
 }

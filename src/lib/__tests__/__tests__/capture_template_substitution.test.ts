@@ -1,128 +1,172 @@
 import { test, fc } from "@fast-check/vitest";
 import { describe, expect } from "vitest";
-import { size, pipe, add, over, concat } from 'lodash/fp';
-import { assertIsDisjointFrom, assertIntersection,  splitOnSpacesAndConvertToSet, convertToSet, convertArrayOfArraysToArrayOfSets } from "../../test_helpers/Asserters"
-import { fastCheckGenerateCaptureTemplateString, fastCheckGenerateCaptureTemplateStringWithCursor, fastCheckGenerateValidJSDateObject,
+import { size, pipe, add, over, concat } from "lodash/fp";
+import {
+  assertIsDisjointFrom,
+  assertIntersection,
+  splitOnSpacesAndConvertToSet,
+  convertToSet,
+  convertArrayOfArraysToArrayOfSets,
+} from "../../test_helpers/Asserters";
+import {
+  fastCheckGenerateCaptureTemplateString,
+  fastCheckGenerateCaptureTemplateStringWithCursor,
+  fastCheckGenerateValidJSDateObject,
   fastCheckGenerateCaptureTemplateStringWithCustomVariablesAndCursor,
-} from "../../test_helpers/TestDataGenerators"
-import { ACCEPTEDTEMPLATEVARIABLESSET,
+} from "../../test_helpers/TestDataGenerators";
+import {
+  ACCEPTEDTEMPLATEVARIABLESSET,
   ACCEPTEDTEMPLATEVARIABLES,
   captureTemplateSubstitution,
   getCursorIndex,
   TEMPLATEVARIABLESOBJECT,
   reduceReplace,
-} from '../capture_template_substitution';
+} from "../capture_template_substitution";
 
+describe("captureTemplateSubstitution test suite", () => {
+  describe("getCursorIndex", () => {
+    test.prop([fc.gen()])("on string with cursor", (fcGen) => {
+      const testTemplate: string =
+        fastCheckGenerateCaptureTemplateStringWithCursor(fcGen);
+      const actualCursorIndex: number | null = getCursorIndex(testTemplate);
 
-describe('captureTemplateSubstitution test suite', () => {
+      const expectedCursorIndex: number = pipe([size, add(-2)])(testTemplate);
+      expect(actualCursorIndex).toEqual(expectedCursorIndex);
+    });
 
-  
-describe('getCursorIndex', () => {
-  
-    test.prop([fc.gen()])
-   ("on string with cursor", (fcGen) => {
+    test.prop([fc.gen()])("on string without cursor", (fcGen) => {
+      const testTemplate: string =
+        fastCheckGenerateCaptureTemplateString(fcGen);
+      const actualCursorIndex: number | null = getCursorIndex(testTemplate);
+      expect(actualCursorIndex).toBeFalsy();
+    });
+  });
 
-     const testTemplate: string = fastCheckGenerateCaptureTemplateStringWithCursor(fcGen)     
-     const actualCursorIndex: number | null = getCursorIndex(testTemplate)
-     
-     const expectedCursorIndex: number = pipe([size, add(-2)])(testTemplate)
-     expect(actualCursorIndex).toEqual(expectedCursorIndex)
-     
-   });
+  describe("reduceReplace", () => {
+    test.prop([fc.gen()])("with a simple string", (fcGen) => {
+      const [testTemplate, testDate] = over<string | Date>([
+        fastCheckGenerateCaptureTemplateString,
+        fastCheckGenerateValidJSDateObject,
+      ])(fcGen);
 
-    test.prop([fc.gen()])
-   ("on string without cursor", (fcGen) => {
+      const actualExpandedString: string = reduceReplace(
+        TEMPLATEVARIABLESOBJECT,
+        {},
+        testDate,
+        testTemplate,
+      );
+      const actualExpandedStringPartsSet: Set<string> =
+        splitOnSpacesAndConvertToSet(actualExpandedString);
+      assertIsDisjointFrom(
+        actualExpandedStringPartsSet,
+        ACCEPTEDTEMPLATEVARIABLESSET,
+      );
+    });
 
-     const testTemplate: string = fastCheckGenerateCaptureTemplateString(fcGen)     
-     const actualCursorIndex: number | null = getCursorIndex(testTemplate)
-     expect(actualCursorIndex).toBeFalsy()
-     
-   });
-})
+    test.prop([fc.gen()])("string with a cursor", (fcGen) => {
+      const [testTemplate, testDate] = over<string | Date>([
+        fastCheckGenerateCaptureTemplateStringWithCursor,
+        fastCheckGenerateValidJSDateObject,
+      ])(fcGen);
 
-  describe('reduceReplace', () => {
+      const actualExpandedString: string = reduceReplace(
+        TEMPLATEVARIABLESOBJECT,
+        {},
+        testDate,
+        testTemplate,
+      );
+      const actualExpandedStringPartsSet: Set<string> =
+        splitOnSpacesAndConvertToSet(actualExpandedString);
+      assertIntersection(
+        [actualExpandedStringPartsSet, ACCEPTEDTEMPLATEVARIABLESSET],
+        convertToSet(["%?"]),
+      );
+    });
 
-    test.prop([fc.gen()])
-   ("with a simple string", (fcGen) => {
+    test.prop([fc.gen(), fc.integer({ min: 2, max: 100 })])(
+      "string with a cursor and custom variables",
+      (fcGen, testCustomVariablesCount) => {
+        const testDate: Date = fastCheckGenerateValidJSDateObject(fcGen);
 
-     const [testTemplate, testDate] = over<string|Date>([fastCheckGenerateCaptureTemplateString, fastCheckGenerateValidJSDateObject])(fcGen)
-     
-     const actualExpandedString: string = reduceReplace(TEMPLATEVARIABLESOBJECT, {}, testDate, testTemplate)     
-     const actualExpandedStringPartsSet: Set<string> = splitOnSpacesAndConvertToSet(actualExpandedString)
-     assertIsDisjointFrom(actualExpandedStringPartsSet, ACCEPTEDTEMPLATEVARIABLESSET)
-     
-   });
+        const [testTemplate, testCustomVariablesObject] =
+          fastCheckGenerateCaptureTemplateStringWithCustomVariablesAndCursor(
+            fcGen,
+            testCustomVariablesCount,
+          );
 
-  
-  test.prop([fc.gen()])
-   ("string with a cursor", (fcGen) => {
+        const actualExpandedString: string = reduceReplace(
+          TEMPLATEVARIABLESOBJECT,
+          testCustomVariablesObject,
+          testDate,
+          testTemplate,
+        );
 
-     const [testTemplate, testDate] = over<string|Date>([fastCheckGenerateCaptureTemplateStringWithCursor, fastCheckGenerateValidJSDateObject])(fcGen)
-     
-     const actualExpandedString: string = reduceReplace(TEMPLATEVARIABLESOBJECT, {}, testDate, testTemplate)     
-     const actualExpandedStringPartsSet: Set<string> = splitOnSpacesAndConvertToSet(actualExpandedString)
-     assertIntersection([actualExpandedStringPartsSet, ACCEPTEDTEMPLATEVARIABLESSET], convertToSet(["%?"]))
-   });
+        const actualExpandedStringPartsSet: Set<string> =
+          splitOnSpacesAndConvertToSet(actualExpandedString);
+        const [expectedSuperSet, expectedIntersectionSet]: Set<string> = pipe([
+          Object.values,
+          over([concat(ACCEPTEDTEMPLATEVARIABLES), concat(["%?"])]),
+          convertArrayOfArraysToArrayOfSets,
+        ])(testCustomVariablesObject);
 
-    test.prop([fc.gen(), fc.integer({min: 2, max: 100})])
-   ("string with a cursor and custom variables", (fcGen, testCustomVariablesCount) => {
+        assertIntersection(
+          [actualExpandedStringPartsSet, expectedSuperSet],
+          expectedIntersectionSet,
+        );
+      },
+    );
+  });
 
-     
-     const testDate: Date = fastCheckGenerateValidJSDateObject(fcGen)
-     
-     const [testTemplate, testCustomVariablesObject] = fastCheckGenerateCaptureTemplateStringWithCustomVariablesAndCursor(fcGen, testCustomVariablesCount)
-     
-     const actualExpandedString: string = reduceReplace(TEMPLATEVARIABLESOBJECT, testCustomVariablesObject, testDate, testTemplate)
+  describe("captureTemplateSubstitution", () => {
+    test.prop([fc.gen()])("with a simple string", (fcGen) => {
+      const testTemplate: string =
+        fastCheckGenerateCaptureTemplateString(fcGen);
+      const [actualExpandedString, actualCursorIndex] =
+        captureTemplateSubstitution({}, testTemplate);
+      const actualExpandedStringPartsSet: Set<string> =
+        splitOnSpacesAndConvertToSet(actualExpandedString);
+      assertIsDisjointFrom(
+        actualExpandedStringPartsSet,
+        ACCEPTEDTEMPLATEVARIABLESSET,
+      );
+      expect(actualCursorIndex).toBeFalsy();
+    });
 
-     const actualExpandedStringPartsSet: Set<string> = splitOnSpacesAndConvertToSet(actualExpandedString)
-     const [expectedSuperSet, expectedIntersectionSet]: Set<string> = pipe([Object.values, over([concat(ACCEPTEDTEMPLATEVARIABLES),
-       concat(["%?"])]), convertArrayOfArraysToArrayOfSets])(testCustomVariablesObject)
+    test.prop([fc.gen()])("string with a cursor", (fcGen) => {
+      const testTemplate: string =
+        fastCheckGenerateCaptureTemplateStringWithCursor(fcGen);
+      const [actualExpandedString, actualCursorIndex] =
+        captureTemplateSubstitution({}, testTemplate);
+      const actualExpandedStringPartsSet: Set<string> =
+        splitOnSpacesAndConvertToSet(actualExpandedString);
+      assertIsDisjointFrom(
+        actualExpandedStringPartsSet,
+        ACCEPTEDTEMPLATEVARIABLESSET,
+      );
+      expect(actualCursorIndex).toBeTruthy();
+    });
 
+    test.prop([fc.gen(), fc.integer({ min: 2, max: 100 })])(
+      "string with a cursor and customVariables",
+      (fcGen, testCustomVariablesCount) => {
+        const [testTemplate, testCustomVariablesObject] =
+          fastCheckGenerateCaptureTemplateStringWithCustomVariablesAndCursor(
+            fcGen,
+            testCustomVariablesCount,
+          );
 
-     assertIntersection([actualExpandedStringPartsSet, expectedSuperSet], expectedIntersectionSet)
-   });
+        const [actualExpandedString, actualCursorIndex] =
+          captureTemplateSubstitution(testCustomVariablesObject, testTemplate);
 
-  })
+        const actualExpandedStringPartsSet: Set<string> =
+          splitOnSpacesAndConvertToSet(actualExpandedString);
 
-  describe('captureTemplateSubstitution', () => {
-
-    test.prop([fc.gen()])
-   ("with a simple string", (fcGen) => {
-
-     const testTemplate: string = fastCheckGenerateCaptureTemplateString(fcGen)
-     const [actualExpandedString, actualCursorIndex] = captureTemplateSubstitution({}, testTemplate)
-     const actualExpandedStringPartsSet: Set<string> = splitOnSpacesAndConvertToSet(actualExpandedString)
-     assertIsDisjointFrom(actualExpandedStringPartsSet, ACCEPTEDTEMPLATEVARIABLESSET)
-     expect(actualCursorIndex).toBeFalsy()
-     
-   });
-
-  
-  test.prop([fc.gen()])
-   ("string with a cursor", (fcGen) => {
-
-     const testTemplate: string = fastCheckGenerateCaptureTemplateStringWithCursor(fcGen)     
-     const [actualExpandedString, actualCursorIndex] = captureTemplateSubstitution({}, testTemplate)
-     const actualExpandedStringPartsSet: Set<string> = splitOnSpacesAndConvertToSet(actualExpandedString)
-     assertIsDisjointFrom(actualExpandedStringPartsSet, ACCEPTEDTEMPLATEVARIABLESSET)
-     expect(actualCursorIndex).toBeTruthy()
-     
-   });
-
-    test.prop([fc.gen(), fc.integer({min: 2, max: 100})])
-   ("string with a cursor and customVariables", (fcGen, testCustomVariablesCount) => {
-
-     const [testTemplate, testCustomVariablesObject] = fastCheckGenerateCaptureTemplateStringWithCustomVariablesAndCursor(fcGen, testCustomVariablesCount)
-
-     const [actualExpandedString, actualCursorIndex] = captureTemplateSubstitution(testCustomVariablesObject, testTemplate)
-     
-     const actualExpandedStringPartsSet: Set<string> = splitOnSpacesAndConvertToSet(actualExpandedString)
-
-     assertIsDisjointFrom(actualExpandedStringPartsSet, ACCEPTEDTEMPLATEVARIABLESSET)
-     expect(actualCursorIndex).toBeTruthy()
-     
-   });
-
-  })
-
-})
+        assertIsDisjointFrom(
+          actualExpandedStringPartsSet,
+          ACCEPTEDTEMPLATEVARIABLESSET,
+        );
+        expect(actualCursorIndex).toBeTruthy();
+      },
+    );
+  });
+});

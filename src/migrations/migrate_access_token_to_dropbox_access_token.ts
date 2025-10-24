@@ -1,15 +1,15 @@
-import { localStorageAvailable } from '../util/settings_persister';
+import { localStorageAvailable } from "../util/settings_persister";
 
 export default () => {
   if (!localStorageAvailable) {
     return;
   }
 
-  const accessToken = localStorage.getItem('accessToken');
+  const accessToken = localStorage.getItem("accessToken");
   if (!accessToken) {
     return;
   }
 
-  localStorage.setItem('dropboxAccessToken', accessToken);
-  localStorage.removeItem('accessToken');
+  localStorage.setItem("dropboxAccessToken", accessToken);
+  localStorage.removeItem("accessToken");
 };

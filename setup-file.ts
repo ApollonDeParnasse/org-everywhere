@@ -1,8 +1,12 @@
-import { inRange, merge } from "lodash/fp"
+import { inRange, merge } from "lodash/fp";
 import { expect as baseExpect } from "vitest";
-import * as matchers from "@testing-library/jest-dom/matchers"
+import * as matchers from "@testing-library/jest-dom/matchers";
 
-export function toBeWithinRange(actual: number, floor: number, ceiling: number) {
+export function toBeWithinRange(
+  actual: number,
+  floor: number,
+  ceiling: number,
+) {
   const pass = actual >= floor && actual <= ceiling;
   if (pass) {
     return {
@@ -28,23 +32,23 @@ export function toBeWithinRange(actual: number, floor: number, ceiling: number) 
 }
 
 export const betweenZeroAnd255 = (received: number, _: number) => {
-     return {
-       pass: inRange(0,255,received),
-       message: () => `expected ${received} to be in range 255`,
-     }
-}
+  return {
+    pass: inRange(0, 255, received),
+    message: () => `expected ${received} to be in range 255`,
+  };
+};
 
 export const betweenZeroAndOne = (received: number, _: number) => {
   return {
-       pass: inRange(0,1,received),
-       message: () => `expected ${received} to be in range 255`,
-     }
-} 
+    pass: inRange(0, 1, received),
+    message: () => `expected ${received} to be in range 255`,
+  };
+};
 
 export const customMatchers = {
   betweenZeroAnd255,
   betweenZeroAndOne,
-  toBeWithinRange
+  toBeWithinRange,
 };
 
-export const expect = baseExpect.extend(merge(customMatchers, matchers))
+export const expect = baseExpect.extend(merge(customMatchers, matchers));

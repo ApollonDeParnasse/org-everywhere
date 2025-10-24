@@ -1,41 +1,49 @@
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
-import _ from 'lodash';
-import './stylesheet.css';
-import { getIcon } from "../../../UI/icons.tsx"
+import React, { PureComponent } from "react";
+import { connect } from "react-redux";
+import _ from "lodash";
+import "./stylesheet.css";
+import { getIcon } from "../../../UI/icons.tsx";
 
-
-import { isMobileBrowser } from '../../../../lib/browser_utils';
-import { createRawDescriptionText } from '../../../../lib/export_org';
-import { getCurrentTimestampAsText } from '../../../../lib/timestamps';
+import { isMobileBrowser } from "../../../../lib/browser_utils";
+import { createRawDescriptionText } from "../../../../lib/export_org";
+import { getCurrentTimestampAsText } from "../../../../lib/timestamps";
 
 class DescriptionEditorModal extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, ['handleTextareaRef', 'handleDescriptionChange', 'handleInsertTimestamp']);
+    _.bindAll(this, [
+      "handleTextareaRef",
+      "handleDescriptionChange",
+      "handleInsertTimestamp",
+    ]);
 
     this.state = {
       descriptionValue: props.editRawValues
         ? this.calculateRawDescription(props.header)
-        : props.header.get('rawDescription'),
+        : props.header.get("rawDescription"),
       editorDescriptionHeightValue: props.editorDescriptionHeightValue
         ? props.editorDescriptionHeightValue
-        : '8',
+        : "8",
     };
   }
 
   componentDidMount() {
-    this.props.setPopupCloseActionValuesAccessor(() => [this.state.descriptionValue]);
+    this.props.setPopupCloseActionValuesAccessor(() => [
+      this.state.descriptionValue,
+    ]);
   }
 
   componentDidUpdate(prevProps) {
     const { header, editRawValues } = this.props;
-    if (prevProps.header !== header || prevProps.editRawValues !== editRawValues) {
+    if (
+      prevProps.header !== header ||
+      prevProps.editRawValues !== editRawValues
+    ) {
       this.setState({
         descriptionValue: this.props.editRawValues
           ? this.calculateRawDescription(header)
-          : header.get('rawDescription'),
+          : header.get("rawDescription"),
       });
       this.textarea.focus();
     }
@@ -56,13 +64,13 @@ class DescriptionEditorModal extends PureComponent {
     const {
       target: { value },
     } = event;
-    const eachValList = value.split('\n');
+    const eachValList = value.split("\n");
     eachValList.forEach((item, index) => {
-      if (item.startsWith('* ')) {
-        eachValList[index] = '- ' + item.slice(2);
+      if (item.startsWith("* ")) {
+        eachValList[index] = "- " + item.slice(2);
       }
     });
-    return eachValList.join('\n');
+    return eachValList.join("\n");
   }
 
   handleDescriptionChange(event) {
@@ -76,7 +84,9 @@ class DescriptionEditorModal extends PureComponent {
       descriptionValue:
         descriptionValue.substring(0, insertionIndex) +
         getCurrentTimestampAsText() +
-        descriptionValue.substring(this.textarea.selectionEnd || insertionIndex),
+        descriptionValue.substring(
+          this.textarea.selectionEnd || insertionIndex,
+        ),
     });
     this.textarea.focus();
   }
@@ -85,14 +95,18 @@ class DescriptionEditorModal extends PureComponent {
     return (
       <>
         <h2 className="drawer-modal__title">
-          {this.props.editRawValues ? 'Edit full description' : 'Edit description'}
+          {this.props.editRawValues
+            ? "Edit full description"
+            : "Edit description"}
         </h2>
 
         <div className="header-content__edit-container">
           <textarea
             autoFocus
             className="textarea drag-handle"
-            rows={isMobileBrowser ? '8' : this.state.editorDescriptionHeightValue}
+            rows={
+              isMobileBrowser ? "8" : this.state.editorDescriptionHeightValue
+            }
             ref={this.handleTextareaRef}
             value={this.state.descriptionValue}
             onChange={this.handleDescriptionChange}
@@ -111,7 +125,9 @@ class DescriptionEditorModal extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-  const editorDescriptionHeightValue = state.base.get('editorDescriptionHeightValue');
+  const editorDescriptionHeightValue = state.base.get(
+    "editorDescriptionHeightValue",
+  );
   return {
     editorDescriptionHeightValue,
   };

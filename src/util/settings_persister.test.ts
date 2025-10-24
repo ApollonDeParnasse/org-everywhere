@@ -1,7 +1,7 @@
-import Store from '../store';
-import { readInitialState, subscribeToChanges } from './settings_persister';
+import Store from "../store";
+import { readInitialState, subscribeToChanges } from "./settings_persister";
 
-describe('Settings persister', () => {
+describe("Settings persister", () => {
   let store;
   beforeEach(() => {
     const initialState = readInitialState();
@@ -14,11 +14,11 @@ describe('Settings persister', () => {
   });
 
   test('Do not persist nonsense like like "false" for settings without default', () => {
-    expect(localStorage.getItem('showClockDisplay')).not.toBe('false');
-    expect(localStorage.getItem('showClockDisplay')).toBe(null);
+    expect(localStorage.getItem("showClockDisplay")).not.toBe("false");
+    expect(localStorage.getItem("showClockDisplay")).toBe(null);
   });
 
-  test('Does persist given default values, for example colorScheme', () => {
-    expect(localStorage.getItem('colorScheme')).toBe('OS');
+  test("Does persist given default values, for example colorScheme", () => {
+    expect(localStorage.getItem("colorScheme")).toBe("OS");
   });
 });

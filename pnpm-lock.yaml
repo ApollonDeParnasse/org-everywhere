@@ -147,6 +147,9 @@ importers:
       '@fast-check/vitest':
         specifier: ^0.2.1
         version: 0.2.2(vitest@3.2.4)
+      '@sctg/vite-plugin-github-pages-spa':
+        specifier: ^0.1.1
+        version: 0.1.1(vite@7.0.5(@types/node@24.1.0)(sass-embedded@1.89.2))
       '@testing-library/react':
         specifier: 12.0.0
         version: 12.0.0(react-dom@16.10.0(react@17.0.0))(react@17.0.0)
@@ -752,6 +755,11 @@ packages:
     resolution: {integrity: sha512-M/fKi4sasCdM8i0aWJjCSFm2qEnYRR8AMLG2kxp6wD13+tMGA4Z1tVAuHkNRjud5SW2EM3naLuK35w9twvf6aA==}
     cpu: [x64]
     os: [win32]
+
+  '@sctg/vite-plugin-github-pages-spa@0.1.1':
+    resolution: {integrity: sha512-l1jBVbz9otNTKM8QEQLnzMzo70odFeiVcqMMfZP9HFrOFSnPRctiUu2SEhEETRJyrh+ZogK+9Spc5/Y2pRbPrQ==}
+    peerDependencies:
+      vite: '>=6.3.0'
 
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
@@ -4229,6 +4237,10 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.45.1':
     optional: true
+
+  '@sctg/vite-plugin-github-pages-spa@0.1.1(vite@7.0.5(@types/node@24.1.0)(sass-embedded@1.89.2))':
+    dependencies:
+      vite: 7.0.5(@types/node@24.1.0)(sass-embedded@1.89.2)
 
   '@sinclair/typebox@0.27.8': {}
 

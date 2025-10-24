@@ -1,25 +1,30 @@
-import React, { useState } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import classNames from 'classnames';
-import './stylesheet.css';
-import { getIcon } from "../../../UI/icons.tsx"
+import React, { useState } from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import classNames from "classnames";
+import "./stylesheet.css";
+import { getIcon } from "../../../UI/icons.tsx";
 
-import TaskListView from './components/TaskListView';
+import TaskListView from "./components/TaskListView";
 
-import { isMobileBrowser, isIos } from '../../../../lib/browser_utils';
+import { isMobileBrowser, isIos } from "../../../../lib/browser_utils";
 
-import * as orgActions from '../../../../actions/org';
+import * as orgActions from "../../../../actions/org";
 
 // INFO: SearchModal, AgendaModal and TaskListModal are very similar
 // in structure and partially in logic. When changing one, consider
 // changing all.
 function TaskListModal(props) {
-  const { searchFilter, searchFilterValid, searchFilterSuggestions, bookmarks } = props;
+  const {
+    searchFilter,
+    searchFilterValid,
+    searchFilterSuggestions,
+    bookmarks,
+  } = props;
   const bookmarkChosen = bookmarks.contains(searchFilter);
   const canSaveBookmark = searchFilterValid && searchFilter.length !== 0;
 
-  const [dateDisplayType, setdateDisplayType] = useState('absolute');
+  const [dateDisplayType, setdateDisplayType] = useState("absolute");
 
   function handleHeaderClick(path, headerId) {
     props.onClose();
@@ -27,22 +32,24 @@ function TaskListModal(props) {
   }
 
   function handleToggleDateDisplayType() {
-    setdateDisplayType(dateDisplayType === 'absolute' ? 'relative' : 'absolute');
+    setdateDisplayType(
+      dateDisplayType === "absolute" ? "relative" : "absolute",
+    );
   }
 
   function handleFilterChange(event) {
     props.org.setSearchFilterInformation(
       event.target.value,
       event.target.selectionStart,
-      'task-list'
+      "task-list",
     );
   }
 
   function onBookmarkButtonClick() {
     if (bookmarkChosen) {
-      props.org.deleteBookmark('task-list', searchFilter);
+      props.org.deleteBookmark("task-list", searchFilter);
     } else if (canSaveBookmark) {
-      props.org.saveBookmark('task-list', searchFilter);
+      props.org.saveBookmark("task-list", searchFilter);
     }
   }
 
@@ -52,11 +59,12 @@ function TaskListModal(props) {
       <div className="search-input-container">
         <div className="search-input-line">
           <datalist id="task-list__datalist-filter">
-            {(searchFilter.length === 0 ? bookmarks : searchFilterSuggestions).map(
-              (string, idx) => (
-                <option key={idx} value={string} />
-              )
-            )}
+            {(searchFilter.length === 0
+              ? bookmarks
+              : searchFilterSuggestions
+            ).map((string, idx) => (
+              <option key={idx} value={string} />
+            ))}
           </datalist>
 
           <div className="search__input-container">
@@ -69,8 +77,9 @@ function TaskListModal(props) {
               // achieve this on Android).
               autoCapitalize="none"
               autoComplete="off"
-              className={classNames('textfield', 'task-list__filter-input', {
-                'task-list__filter-input--invalid': !!searchFilter && !searchFilterValid,
+              className={classNames("textfield", "task-list__filter-input", {
+                "task-list__filter-input--invalid":
+                  !!searchFilter && !searchFilterValid,
               })}
               placeholder="e.g. -DONE doc|man :simple|easy :assignee:nobody|none"
               list="task-list__datalist-filter"
@@ -79,12 +88,13 @@ function TaskListModal(props) {
           </div>
 
           <div
-            className={classNames('fas fa-lg bookmark__icon ', {
+            className={classNames("fas fa-lg bookmark__icon ", {
               bookmark__icon__enabled: canSaveBookmark,
             })}
-	    onClick={onBookmarkButtonClick}>
-	    {!bookmarkChosen && getIcon("star")}
-	    {bookmarkChosen && getIcon("trash")}
+            onClick={onBookmarkButtonClick}
+          >
+            {!bookmarkChosen && getIcon("star")}
+            {bookmarkChosen && getIcon("trash")}
           </div>
         </div>
       </div>
@@ -96,7 +106,7 @@ function TaskListModal(props) {
         // not work with the same event. Therefore, we're just opting
         // to scroll the whole drawer. That's not the best UX. And a
         // better CSS juggler than me is welcome to improve on it.
-        style={isMobileBrowser ? undefined : { overflow: 'auto' }}
+        style={isMobileBrowser ? undefined : { overflow: "auto" }}
       >
         <TaskListView
           onHeaderClick={handleHeaderClick}
@@ -109,10 +119,11 @@ function TaskListModal(props) {
 }
 
 const mapStateToProps = (state) => ({
-  searchFilter: state.org.present.getIn(['search', 'searchFilter']) || '',
-  searchFilterValid: state.org.present.getIn(['search', 'searchFilterValid']),
-  searchFilterSuggestions: state.org.present.getIn(['search', 'searchFilterSuggestions']) || [],
-  bookmarks: state.org.present.getIn(['bookmarks', 'task-list']),
+  searchFilter: state.org.present.getIn(["search", "searchFilter"]) || "",
+  searchFilterValid: state.org.present.getIn(["search", "searchFilterValid"]),
+  searchFilterSuggestions:
+    state.org.present.getIn(["search", "searchFilterSuggestions"]) || [],
+  bookmarks: state.org.present.getIn(["bookmarks", "task-list"]),
 });
 
 const mapDispatchToProps = (dispatch) => ({

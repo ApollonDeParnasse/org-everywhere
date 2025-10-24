@@ -1,22 +1,22 @@
 const parseQueryString = (str) => {
   var ret = Object.create(null);
 
-  if (typeof str !== 'string') {
+  if (typeof str !== "string") {
     return ret;
   }
 
-  str = str.trim().replace(/^(\?|#|&)/, '');
+  str = str.trim().replace(/^(\?|#|&)/, "");
 
   if (!str) {
     return ret;
   }
 
-  str.split('&').forEach(function (param) {
-    var parts = param.replace(/\+/g, ' ').split('=');
+  str.split("&").forEach(function (param) {
+    var parts = param.replace(/\+/g, " ").split("=");
     // Firefox (pre 40) decodes `%3D` to `=`
     // https://github.com/sindresorhus/query-string/pull/37
     var key = parts.shift();
-    var val = parts.length > 0 ? parts.join('=') : undefined;
+    var val = parts.length > 0 ? parts.join("=") : undefined;
 
     key = decodeURIComponent(key);
 

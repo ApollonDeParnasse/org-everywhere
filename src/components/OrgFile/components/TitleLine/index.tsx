@@ -1,25 +1,29 @@
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import React, { PureComponent } from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import {bindAll} from 'lodash';
-import classNames from 'classnames';
+import { bindAll } from "lodash";
+import classNames from "classnames";
 
-import * as orgActions from '../../../../actions/org';
-import * as baseActions from '../../../../actions/base';
+import * as orgActions from "../../../../actions/org";
+import * as baseActions from "../../../../actions/base";
 
-import { createIsTodoKeywordInDoneState } from '../../../../lib/org_utils';
+import { createIsTodoKeywordInDoneState } from "../../../../lib/org_utils";
 
-import { generateTitleLine } from '../../../../lib/export_org';
-import AttributedString from '../AttributedString';
+import { generateTitleLine } from "../../../../lib/export_org";
+import AttributedString from "../AttributedString";
 
 class TitleLine extends PureComponent {
   constructor(props) {
     super(props);
 
-    bindAll(this, ['handleTitleClick', 'handleTodoClick', 'handleTimestampClick']);
+    bindAll(this, [
+      "handleTitleClick",
+      "handleTodoClick",
+      "handleTimestampClick",
+    ]);
 
     this.state = {
       titleValue: this.calculateRawTitle(props.header),
@@ -46,7 +50,7 @@ class TitleLine extends PureComponent {
         {
           titleValue: this.calculateRawTitle(header),
         },
-        () => this.storeContainerWidth()
+        () => this.storeContainerWidth(),
       );
     }
   }
@@ -56,27 +60,37 @@ class TitleLine extends PureComponent {
   }
 
   handleTitleClick() {
-    const { header, hasContent, isSelected, onClick, closeSubheadersRecursively } = this.props;
+    const {
+      header,
+      hasContent,
+      isSelected,
+      onClick,
+      closeSubheadersRecursively,
+    } = this.props;
 
     if (!!onClick) {
       onClick();
     } else {
-      if (hasContent && (!header.get('opened') || isSelected)) {
-        this.props.org.toggleHeaderOpened(header.get('id'), closeSubheadersRecursively);
+      if (hasContent && (!header.get("opened") || isSelected)) {
+        this.props.org.toggleHeaderOpened(
+          header.get("id"),
+          closeSubheadersRecursively,
+        );
       }
 
-      this.props.org.selectHeader(header.get('id'));
+      this.props.org.selectHeader(header.get("id"));
     }
   }
 
   handleTodoClick(event) {
-    const { header, shouldTapTodoToAdvance, setShouldLogIntoDrawer, onClick } = this.props;
+    const { header, shouldTapTodoToAdvance, setShouldLogIntoDrawer, onClick } =
+      this.props;
 
     if (!!onClick) {
       onClick();
       event.stopPropagation();
     } else {
-      this.props.org.selectHeader(header.get('id'));
+      this.props.org.selectHeader(header.get("id"));
 
       if (shouldTapTodoToAdvance) {
         this.props.org.advanceTodoState(null, setShouldLogIntoDrawer);
@@ -89,8 +103,8 @@ class TitleLine extends PureComponent {
   }
 
   handleTimestampClick(timestampId) {
-    this.props.base.activatePopup('timestamp-editor', {
-      headerId: this.props.header.get('id'),
+    this.props.base.activatePopup("timestamp-editor", {
+      headerId: this.props.header.get("id"),
       timestampId,
     });
   }
@@ -111,27 +125,28 @@ class TitleLine extends PureComponent {
     } = this.props;
     const { containerWidth } = this.state;
 
-    const isTodoKeywordInDoneState = createIsTodoKeywordInDoneState(todoKeywordSets);
-    const todoKeyword = header.getIn(['titleLine', 'todoKeyword']);
+    const isTodoKeywordInDoneState =
+      createIsTodoKeywordInDoneState(todoKeywordSets);
+    const todoKeyword = header.getIn(["titleLine", "todoKeyword"]);
 
     const titleStyle = {
       color,
-      wordBreak: 'break-word',
+      wordBreak: "break-word",
     };
 
     const additionStyle = {
       color,
-      minWidth: '5em',
-      textAlign: 'right',
-      marginRight: '2em',
-      whiteSpace: 'nowrap',
+      minWidth: "5em",
+      textAlign: "right",
+      marginRight: "2em",
+      whiteSpace: "nowrap",
     };
 
     return (
       <div
         className="title-line"
         onClick={this.handleTitleClick}
-        style={{ width: shouldDisableExplicitWidth ? '' : containerWidth }}
+        style={{ width: shouldDisableExplicitWidth ? "" : containerWidth }}
       >
         {!!todoKeyword ? (
           <span
@@ -142,46 +157,48 @@ class TitleLine extends PureComponent {
             // is.
             // Relevant issue: https://github.com/200ok-ch/organice/issues/16
             className={classNames(
-              'todo-keyword',
-              isTodoKeywordInDoneState(todoKeyword) ? 'todo-keyword--done-state' : null
+              "todo-keyword",
+              isTodoKeywordInDoneState(todoKeyword)
+                ? "todo-keyword--done-state"
+                : null,
             )}
             onClick={this.handleTodoClick}
           >
             {todoKeyword}
           </span>
         ) : (
-          ''
+          ""
         )}
 
         {
-          <div style={{ width: '100%' }}>
+          <div style={{ width: "100%" }}>
             <div className="title-line-text">
               <span style={titleStyle}>
                 <AttributedString
-                  parts={header.getIn(['titleLine', 'title'])}
+                  parts={header.getIn(["titleLine", "title"])}
                   subPartDataAndHandlers={{
                     onTimestampClick: this.handleTimestampClick,
                     shouldDisableActions,
                   }}
                 />
-                {!header.get('opened') && hasContent ? '...' : ''}
+                {!header.get("opened") && hasContent ? "..." : ""}
               </span>
               {addition ? <span style={additionStyle}>{addition}</span> : null}
               {showDeadlineDisplay && headerDeadlineMap && (
                 <span
-                  className={classNames('header-deadline', {
-                    'header-deadline--overdue': isOverdue,
+                  className={classNames("header-deadline", {
+                    "header-deadline--overdue": isOverdue,
                   })}
                 >
-                  {addition ? ' ' : ''}
+                  {addition ? " " : ""}
                   {deadlineString}
                 </span>
               )}
             </div>
-            {header.getIn(['titleLine', 'tags']).size > 0 && (
+            {header.getIn(["titleLine", "tags"]).size > 0 && (
               <div>
                 {header
-                  .getIn(['titleLine', 'tags'])
+                  .getIn(["titleLine", "tags"])
                   .toSet()
                   .toList()
                   .filter((tag) => !!tag)
@@ -200,14 +217,14 @@ class TitleLine extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const path = state.org.present.get('path');
-  const file = state.org.present.getIn(['files', path]);
+  const path = state.org.present.get("path");
+  const file = state.org.present.getIn(["files", path]);
   return {
-    setShouldLogIntoDrawer: state.base.get('shouldLogIntoDrawer'),
-    shouldTapTodoToAdvance: state.base.get('shouldTapTodoToAdvance'),
-    closeSubheadersRecursively: state.base.get('closeSubheadersRecursively'),
-    isSelected: file.get('selectedHeaderId') === ownProps.header.get('id'),
-    todoKeywordSets: file.get('todoKeywordSets'),
+    setShouldLogIntoDrawer: state.base.get("shouldLogIntoDrawer"),
+    shouldTapTodoToAdvance: state.base.get("shouldTapTodoToAdvance"),
+    closeSubheadersRecursively: state.base.get("closeSubheadersRecursively"),
+    isSelected: file.get("selectedHeaderId") === ownProps.header.get("id"),
+    todoKeywordSets: file.get("todoKeywordSets"),
   };
 };
 

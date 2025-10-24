@@ -1,21 +1,21 @@
-import React, { Fragment, useState, useMemo, useRef } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import React, { Fragment, useState, useMemo, useRef } from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
 
-import { Motion, spring } from 'react-motion';
+import { Motion, spring } from "react-motion";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import { List, Map } from 'immutable';
+import { List, Map } from "immutable";
 
-import * as orgActions from '../../../../actions/org';
-import * as captureActions from '../../../../actions/capture';
-import * as baseActions from '../../../../actions/base';
+import * as orgActions from "../../../../actions/org";
+import * as captureActions from "../../../../actions/capture";
+import * as baseActions from "../../../../actions/base";
 
-import sampleCaptureTemplates from '../../../../lib/sample_capture_templates';
+import sampleCaptureTemplates from "../../../../lib/sample_capture_templates";
 
-import ActionButton from './components/ActionButton/';
-import { determineIncludedFiles } from '../../../../reducers/org';
+import ActionButton from "./components/ActionButton/";
+import { determineIncludedFiles } from "../../../../reducers/org";
 
 const ActionDrawer = ({
   org,
@@ -31,85 +31,98 @@ const ActionDrawer = ({
   shouldDisableSyncButtons,
   activeClocks,
 }) => {
-  const [isDisplayingArrowButtons, setIsDisplayingArrowButtons] = useState(false);
-  const [isDisplayingCaptureButtons, setIsDisplayingCaptureButtons] = useState(false);
+  const [isDisplayingArrowButtons, setIsDisplayingArrowButtons] =
+    useState(false);
+  const [isDisplayingCaptureButtons, setIsDisplayingCaptureButtons] =
+    useState(false);
 
   const mainArrowButton = useRef(null);
 
   const mainArrowButtonBoundingRect = useMemo(
-    () => (!!mainArrowButton.current ? mainArrowButton.current.getBoundingClientRect() : null),
-    [mainArrowButton]
+    () =>
+      !!mainArrowButton.current
+        ? mainArrowButton.current.getBoundingClientRect()
+        : null,
+    [mainArrowButton],
   );
 
   const handleUpClick = () =>
     !!selectedHeaderId
       ? org.moveHeaderUp(selectedHeaderId)
       : !!selectedTableCellId
-      ? org.moveTableRowUp()
-      : org.moveListItemUp();
+        ? org.moveTableRowUp()
+        : org.moveListItemUp();
 
   const handleDownClick = () =>
     !!selectedHeaderId
       ? org.moveHeaderDown(selectedHeaderId)
       : !!selectedTableCellId
-      ? org.moveTableRowDown()
-      : org.moveListItemDown();
+        ? org.moveTableRowDown()
+        : org.moveListItemDown();
 
   const handleLeftClick = () =>
     !!selectedHeaderId
       ? org.moveHeaderLeft(selectedHeaderId)
       : !!selectedTableCellId
-      ? org.moveTableColumnLeft()
-      : org.moveListItemLeft();
+        ? org.moveTableColumnLeft()
+        : org.moveListItemLeft();
 
   const handleRightClick = () =>
     !!selectedHeaderId
       ? org.moveHeaderRight(selectedHeaderId)
       : !!selectedTableCellId
-      ? org.moveTableColumnRight()
-      : org.moveListItemRight();
+        ? org.moveTableColumnRight()
+        : org.moveListItemRight();
 
   const handleMoveSubtreeLeftClick = () =>
-    !!selectedHeaderId ? org.moveSubtreeLeft(selectedHeaderId) : org.moveListSubtreeLeft();
+    !!selectedHeaderId
+      ? org.moveSubtreeLeft(selectedHeaderId)
+      : org.moveListSubtreeLeft();
 
   const handleMoveSubtreeRightClick = () =>
-    !!selectedHeaderId ? org.moveSubtreeRight(selectedHeaderId) : org.moveListSubtreeRight();
+    !!selectedHeaderId
+      ? org.moveSubtreeRight(selectedHeaderId)
+      : org.moveListSubtreeRight();
 
   const handleCaptureButtonClick = (templateId) => () => {
     setIsDisplayingCaptureButtons(false);
-    base.activatePopup('capture', { templateId });
+    base.activatePopup("capture", { templateId });
   };
 
   const getSampleCaptureTemplates = () => sampleCaptureTemplates;
 
   const getAvailableCaptureTemplates = () =>
-    staticFile === 'sample'
+    staticFile === "sample"
       ? getSampleCaptureTemplates()
       : captureTemplates.filter(
           (template) =>
-            template.get('isAvailableInAllOrgFiles') ||
+            template.get("isAvailableInAllOrgFiles") ||
             template
-              .get('orgFilesWhereAvailable')
+              .get("orgFilesWhereAvailable")
               .map((availablePath) =>
-                availablePath.trim().startsWith('/')
+                availablePath.trim().startsWith("/")
                   ? availablePath.trim()
-                  : '/' + availablePath.trim()
+                  : "/" + availablePath.trim(),
               )
-              .includes((path || '').trim())
+              .includes((path || "").trim()),
         );
 
-  const handleSync = () => org.sync({ forceAction: 'manual' });
+  const handleSync = () => org.sync({ forceAction: "manual" });
 
-  const handleMainArrowButtonClick = () => setIsDisplayingArrowButtons(!isDisplayingArrowButtons);
+  const handleMainArrowButtonClick = () =>
+    setIsDisplayingArrowButtons(!isDisplayingArrowButtons);
 
   const handleSearchButtonClick = () => {
-    base.activatePopup('search');
+    base.activatePopup("search");
   };
 
   const handleMainCaptureButtonClick = () => {
-    if (!isDisplayingCaptureButtons && getAvailableCaptureTemplates().size === 0) {
+    if (
+      !isDisplayingCaptureButtons &&
+      getAvailableCaptureTemplates().size === 0
+    ) {
       alert(
-        `You don't have any capture templates set up for this file! Add some in Settings > Capture Templates`
+        `You don't have any capture templates set up for this file! Add some in Settings > Capture Templates`,
       );
       return;
     }
@@ -121,18 +134,18 @@ const ActionDrawer = ({
     const availableCaptureTemplates = getAvailableCaptureTemplates();
 
     const baseCaptureButtonStyle = {
-      position: 'absolute',
+      position: "absolute",
       zIndex: 0,
       left: 0,
       opacity: isDisplayingArrowButtons ? 0 : 1,
     };
     if (!isDisplayingCaptureButtons) {
-      baseCaptureButtonStyle.boxShadow = 'none';
+      baseCaptureButtonStyle.boxShadow = "none";
     }
 
     const mainButtonStyle = {
       opacity: isDisplayingArrowButtons ? 0 : 1,
-      position: 'relative',
+      position: "relative",
       zIndex: 1,
     };
 
@@ -145,24 +158,29 @@ const ActionDrawer = ({
         {(style) => (
           <div className="action-drawer__capture-buttons-container">
             <ActionButton
-              iconName={isDisplayingCaptureButtons ? 'times' : 'plus'}
+              iconName={isDisplayingCaptureButtons ? "times" : "plus"}
               isDisabled={false}
               onClick={handleMainCaptureButtonClick}
               style={mainButtonStyle}
               tooltip={
-                isDisplayingCaptureButtons ? 'Hide capture templates' : 'Show capture templates'
+                isDisplayingCaptureButtons
+                  ? "Hide capture templates"
+                  : "Show capture templates"
               }
             />
 
             {availableCaptureTemplates.map((template, index) => (
               <ActionButton
-                key={template.get('id')}
-                letter={template.get('letter')}
-                iconName={template.get('iconName')}
+                key={template.get("id")}
+                letter={template.get("letter")}
+                iconName={template.get("iconName")}
                 isDisabled={false}
-                onClick={handleCaptureButtonClick(template.get('id'))}
-                style={{ ...baseCaptureButtonStyle, bottom: style.bottom * (index + 1) }}
-                tooltip={`Activate "${template.get('description')}" capture template`}
+                onClick={handleCaptureButtonClick(template.get("id"))}
+                style={{
+                  ...baseCaptureButtonStyle,
+                  bottom: style.bottom * (index + 1),
+                }}
+                tooltip={`Activate "${template.get("description")}" capture template`}
               />
             ))}
           </div>
@@ -176,7 +194,7 @@ const ActionDrawer = ({
       opacity: isDisplayingCaptureButtons ? 0 : 1,
     };
     if (!isDisplayingArrowButtons) {
-      baseArrowButtonStyle.boxShadow = 'none';
+      baseArrowButtonStyle.boxShadow = "none";
     }
 
     let centerXOffset = 0;
@@ -187,9 +205,15 @@ const ActionDrawer = ({
     }
 
     const animatedStyles = {
-      centerXOffset: spring(isDisplayingArrowButtons ? centerXOffset : 0, { stiffness: 300 }),
-      topRowYOffset: spring(isDisplayingArrowButtons ? 150 : 0, { stiffness: 300 }),
-      bottomRowYOffset: spring(isDisplayingArrowButtons ? 80 : 0, { stiffness: 300 }),
+      centerXOffset: spring(isDisplayingArrowButtons ? centerXOffset : 0, {
+        stiffness: 300,
+      }),
+      topRowYOffset: spring(isDisplayingArrowButtons ? 150 : 0, {
+        stiffness: 300,
+      }),
+      bottomRowYOffset: spring(isDisplayingArrowButtons ? 80 : 0, {
+        stiffness: 300,
+      }),
       firstColumnXOffset: spring(isDisplayingArrowButtons ? 70 : 0, {
         stiffness: 300,
       }),
@@ -199,22 +223,22 @@ const ActionDrawer = ({
     };
 
     let subIconNameStr = null;
-    let tooltipUpStr = 'Move header up';
-    let tooltipDownStr = 'Move header down';
-    let tooltipLeftStr = 'Move header left';
-    let tooltipRightStr = 'Move header right';
+    let tooltipUpStr = "Move header up";
+    let tooltipDownStr = "Move header down";
+    let tooltipLeftStr = "Move header left";
+    let tooltipRightStr = "Move header right";
     if (!!selectedTableCellId) {
-      subIconNameStr = 'table';
-      tooltipUpStr = 'Move row up';
-      tooltipDownStr = 'Move row down';
-      tooltipLeftStr = 'Move column left';
-      tooltipRightStr = 'Move column right';
+      subIconNameStr = "table";
+      tooltipUpStr = "Move row up";
+      tooltipDownStr = "Move row down";
+      tooltipLeftStr = "Move column left";
+      tooltipRightStr = "Move column right";
     } else if (!!selectedListItemId) {
-      subIconNameStr = 'list';
-      tooltipUpStr = 'Move list up';
-      tooltipDownStr = 'Move list down';
-      tooltipLeftStr = 'Move list left';
-      tooltipRightStr = 'Move list right';
+      subIconNameStr = "list";
+      tooltipUpStr = "Move list up";
+      tooltipDownStr = "Move list down";
+      tooltipLeftStr = "Move list left";
+      tooltipRightStr = "Move list right";
     }
 
     return (
@@ -239,7 +263,10 @@ const ActionDrawer = ({
               subIconName={subIconNameStr}
               isDisabled={false}
               onClick={handleDownClick}
-              style={{ ...baseArrowButtonStyle, bottom: style.bottomRowYOffset }}
+              style={{
+                ...baseArrowButtonStyle,
+                bottom: style.bottomRowYOffset,
+              }}
               tooltip={tooltipDownStr}
             />
             <ActionButton
@@ -300,13 +327,17 @@ const ActionDrawer = ({
             )}
 
             <ActionButton
-              iconName={isDisplayingArrowButtons ? 'times' : 'arrows-alt'}
+              iconName={isDisplayingArrowButtons ? "times" : "arrows-alt"}
               subIconName={subIconNameStr}
               additionalClassName="action-drawer__main-arrow-button"
               isDisabled={false}
               onClick={handleMainArrowButtonClick}
               style={{ opacity: isDisplayingCaptureButtons ? 0 : 1 }}
-              tooltip={isDisplayingArrowButtons ? 'Hide movement buttons' : 'Show movement buttons'}
+              tooltip={
+                isDisplayingArrowButtons
+                  ? "Hide movement buttons"
+                  : "Show movement buttons"
+              }
               onRef={mainArrowButton}
             />
           </div>
@@ -315,7 +346,7 @@ const ActionDrawer = ({
     );
   };
 
-  const handleAgendaClick = () => base.activatePopup('agenda');
+  const handleAgendaClick = () => base.activatePopup("agenda");
 
   return (
     <div className="action-drawer-container nice-scroll">
@@ -328,7 +359,8 @@ const ActionDrawer = ({
             isDisabled={shouldDisableSyncButtons || !online}
             onClick={handleSync}
             style={{
-              opacity: isDisplayingArrowButtons || isDisplayingCaptureButtons ? 0 : 1,
+              opacity:
+                isDisplayingArrowButtons || isDisplayingCaptureButtons ? 0 : 1,
             }}
             tooltip="Sync changes"
           />
@@ -338,7 +370,8 @@ const ActionDrawer = ({
             isDisabled={false}
             onClick={handleAgendaClick}
             style={{
-              opacity: isDisplayingArrowButtons || isDisplayingCaptureButtons ? 0 : 1,
+              opacity:
+                isDisplayingArrowButtons || isDisplayingCaptureButtons ? 0 : 1,
             }}
             tooltip="Show agenda"
           />
@@ -346,13 +379,16 @@ const ActionDrawer = ({
           {renderMovementButtons()}
 
           <ActionButton
-            iconName={'search'}
+            iconName={"search"}
             isDisabled={false}
             onClick={handleSearchButtonClick}
-            additionalClassName={activeClocks !== 0 ? 'active-clock-indicator' : undefined}
+            additionalClassName={
+              activeClocks !== 0 ? "active-clock-indicator" : undefined
+            }
             style={{
-              opacity: isDisplayingArrowButtons || isDisplayingCaptureButtons ? 0 : 1,
-              position: 'relative',
+              opacity:
+                isDisplayingArrowButtons || isDisplayingCaptureButtons ? 0 : 1,
+              position: "relative",
               zIndex: 1,
             }}
             tooltip="Show Search / Task List"
@@ -366,24 +402,32 @@ const ActionDrawer = ({
 };
 
 const mapStateToProps = (state) => {
-  const path = state.org.present.get('path');
-  const files = state.org.present.get('files');
-  const file = state.org.present.getIn(['files', path], Map());
-  const fileSettings = state.org.present.get('fileSettings');
-  const searchFiles = determineIncludedFiles(files, fileSettings, path, 'includeInSearch', false);
-  const activeClocks = Object.values(
-    searchFiles.map((f) => (f.get('headers').size ? f.get('activeClocks') : 0)).toJS()
-  ).reduce((acc, val) => (typeof val === 'number' ? acc + val : acc), 0);
-  return {
-    selectedHeaderId: file.get('selectedHeaderId'),
-    isDirty: file.get('isDirty'),
-    isNarrowedHeaderActive: !!file.get('narrowedHeaderId'),
-    selectedTableCellId: file.get('selectedTableCellId'),
-    selectedListItemId: file.get('selectedListItemId'),
-    captureTemplates: state.capture.get('captureTemplates', List()),
+  const path = state.org.present.get("path");
+  const files = state.org.present.get("files");
+  const file = state.org.present.getIn(["files", path], Map());
+  const fileSettings = state.org.present.get("fileSettings");
+  const searchFiles = determineIncludedFiles(
+    files,
+    fileSettings,
     path,
-    isLoading: !state.base.get('isLoading').isEmpty(),
-    online: state.base.get('online'),
+    "includeInSearch",
+    false,
+  );
+  const activeClocks = Object.values(
+    searchFiles
+      .map((f) => (f.get("headers").size ? f.get("activeClocks") : 0))
+      .toJS(),
+  ).reduce((acc, val) => (typeof val === "number" ? acc + val : acc), 0);
+  return {
+    selectedHeaderId: file.get("selectedHeaderId"),
+    isDirty: file.get("isDirty"),
+    isNarrowedHeaderActive: !!file.get("narrowedHeaderId"),
+    selectedTableCellId: file.get("selectedTableCellId"),
+    selectedListItemId: file.get("selectedListItemId"),
+    captureTemplates: state.capture.get("captureTemplates", List()),
+    path,
+    isLoading: !state.base.get("isLoading").isEmpty(),
+    online: state.base.get("online"),
     activeClocks,
   };
 };

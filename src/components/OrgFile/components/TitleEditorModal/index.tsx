@@ -1,34 +1,34 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent } from "react";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import {bindAll} from 'lodash';
-import {FaPlus} from 'react-icons/fa';
+import { bindAll } from "lodash";
+import { FaPlus } from "react-icons/fa";
 
-import TabButtons from '../../../UI/TabButtons';
+import TabButtons from "../../../UI/TabButtons";
 
-import { generateTitleLine } from '../../../../lib/export_org';
-import { getCurrentTimestampAsText } from '../../../../lib/timestamps';
-import { todoKeywordSetForKeyword } from '../../../../lib/org_utils';
+import { generateTitleLine } from "../../../../lib/export_org";
+import { getCurrentTimestampAsText } from "../../../../lib/timestamps";
+import { todoKeywordSetForKeyword } from "../../../../lib/org_utils";
 
 export default class TitleEditorModal extends PureComponent {
   constructor(props) {
     super(props);
 
     bindAll(this, [
-      'handleTextareaRef',
-      'handleTextareaFocus',
-      'handleTitleChange',
-      'handleTitleFieldClick',
-      'handleInsertTimestamp',
-      'chooseTodoKeywordSet',
-      'handleTodoChange',
-      'handleNextTodoKeywordSet',
+      "handleTextareaRef",
+      "handleTextareaFocus",
+      "handleTitleChange",
+      "handleTitleFieldClick",
+      "handleInsertTimestamp",
+      "chooseTodoKeywordSet",
+      "handleTodoChange",
+      "handleNextTodoKeywordSet",
     ]);
 
     const todoKeywordSet = this.chooseTodoKeywordSet(
       props.todoKeywordSets,
-      props.header.getIn(['titleLine', 'todoKeyword'])
+      props.header.getIn(["titleLine", "todoKeyword"]),
     );
 
     this.state = {
@@ -36,7 +36,7 @@ export default class TitleEditorModal extends PureComponent {
       todoKeywordSetIndex: props.todoKeywordSets.indexOf(todoKeywordSet),
       titleValue: props.editRawValues
         ? this.calculateRawTitle(props.header)
-        : props.header.getIn(['titleLine', 'rawTitle']),
+        : props.header.getIn(["titleLine", "rawTitle"]),
     };
   }
 
@@ -50,11 +50,14 @@ export default class TitleEditorModal extends PureComponent {
 
   componentDidUpdate(prevProps) {
     const { header, editRawValues } = this.props;
-    if (prevProps.header !== header || prevProps.editRawValues !== editRawValues) {
+    if (
+      prevProps.header !== header ||
+      prevProps.editRawValues !== editRawValues
+    ) {
       this.setState({
         titleValue: editRawValues
           ? this.calculateRawTitle(header)
-          : header.getIn(['titleLine', 'rawTitle']),
+          : header.getIn(["titleLine", "rawTitle"]),
       });
       this.textarea.focus();
     }
@@ -62,8 +65,8 @@ export default class TitleEditorModal extends PureComponent {
 
   handleTextareaFocus(event) {
     const { header } = this.props;
-    const rawTitle = header.getIn(['titleLine', 'rawTitle']);
-    if (rawTitle === '') {
+    const rawTitle = header.getIn(["titleLine", "rawTitle"]);
+    if (rawTitle === "") {
       const text = event.target.value;
       event.target.selectionStart = text.length;
       event.target.selectionEnd = text.length;
@@ -76,7 +79,7 @@ export default class TitleEditorModal extends PureComponent {
     const lastCharacter = newTitle[newTitle.length - 1];
     if (
       this.state.titleValue === newTitle.substring(0, newTitle.length - 1) &&
-      lastCharacter === '\n'
+      lastCharacter === "\n"
     ) {
       this.props.onClose(newTitle);
       return;
@@ -113,11 +116,14 @@ export default class TitleEditorModal extends PureComponent {
   }
 
   handleTodoChange(newTodoKeyword) {
-    const currentTodoKeyword = this.props.header.getIn(['titleLine', 'todoKeyword']);
+    const currentTodoKeyword = this.props.header.getIn([
+      "titleLine",
+      "todoKeyword",
+    ]);
     // Unselecting a keyword happens by writing an empty string as
     // keyword. Checking if the newly clicked todo keyword is the same
     // as the currently set todo keyword.
-    const keyword = currentTodoKeyword === newTodoKeyword ? '' : newTodoKeyword;
+    const keyword = currentTodoKeyword === newTodoKeyword ? "" : newTodoKeyword;
     this.props.saveTitle(this.state.titleValue);
     this.props.onTodoClicked(keyword);
   }
@@ -129,7 +135,9 @@ export default class TitleEditorModal extends PureComponent {
         ? this.state.todoKeywordSetIndex + 1
         : 0;
     const newTodoKeywordSet =
-      newIndex !== todoKeywordSets.size ? todoKeywordSets.get(newIndex) : todoKeywordSets.get(0);
+      newIndex !== todoKeywordSets.size
+        ? todoKeywordSets.get(newIndex)
+        : todoKeywordSets.get(0);
     this.setState({
       todoKeywordSet: newTodoKeywordSet,
       todoKeywordSetIndex: newIndex,
@@ -140,28 +148,34 @@ export default class TitleEditorModal extends PureComponent {
     return (
       <>
         <h2 className="drawer-modal__title">
-          {this.props.editRawValues ? 'Edit full title' : 'Edit title'}
+          {this.props.editRawValues ? "Edit full title" : "Edit title"}
         </h2>
 
         {this.props.editRawValues ? null : (
           <div className="todo-container">
             <TabButtons
               buttons={this.state.todoKeywordSet
-                .get('keywords')
+                .get("keywords")
                 .filter(
                   (todo) =>
                     this.state.todoKeywordSet
-                      .get('completedKeywords')
-                      .filter((completed) => todo === completed).size === 0
+                      .get("completedKeywords")
+                      .filter((completed) => todo === completed).size === 0,
                 )}
-              selectedButton={this.props.header.getIn(['titleLine', 'todoKeyword'])}
+              selectedButton={this.props.header.getIn([
+                "titleLine",
+                "todoKeyword",
+              ])}
               onSelect={this.handleTodoChange}
             />
             <TabButtons
               buttons={this.state.todoKeywordSet
-                .get('completedKeywords')
-                .filter((todo) => todo !== '')}
-              selectedButton={this.props.header.getIn(['titleLine', 'todoKeyword'])}
+                .get("completedKeywords")
+                .filter((todo) => todo !== "")}
+              selectedButton={this.props.header.getIn([
+                "titleLine",
+                "todoKeyword",
+              ])}
               onSelect={this.handleTodoChange}
             />
 
@@ -189,7 +203,10 @@ export default class TitleEditorModal extends PureComponent {
             onChange={this.handleTitleChange}
             onClick={this.handleTitleFieldClick}
           />
-          <div className="title-line__insert-timestamp-button" onClick={this.handleInsertTimestamp}>
+          <div
+            className="title-line__insert-timestamp-button"
+            onClick={this.handleInsertTimestamp}
+          >
             <FaPlus />
             Insert timestamp
           </div>

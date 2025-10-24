@@ -1,4 +1,4 @@
-@import 'colors.css';
+@import "colors.css";
 
 /* INFO: This file is always loaded, so it should be written in a way
    that it always makes sense (i.e. for the landing page and the
@@ -108,7 +108,7 @@ body,
   margin: 4px 0 0;
 }
 
-.App:not(.landing-page) div[tabindex='-1']:focus {
+.App:not(.landing-page) div[tabindex="-1"]:focus {
   outline: 0;
 }
 

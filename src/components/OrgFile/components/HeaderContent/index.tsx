@@ -1,44 +1,44 @@
-import React, { PureComponent, Fragment } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import React, { PureComponent, Fragment } from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import PlanningItems from './components/PlanningItems';
-import PropertyListItems from './components/PropertyListItems';
-import LogBookEntries from './components/LogBookEntries';
+import PlanningItems from "./components/PlanningItems";
+import PropertyListItems from "./components/PropertyListItems";
+import LogBookEntries from "./components/LogBookEntries";
 
-import {bindAll} from 'lodash';
+import { bindAll } from "lodash";
 
-import * as orgActions from '../../../../actions/org';
-import * as baseActions from '../../../../actions/base';
+import * as orgActions from "../../../../actions/org";
+import * as baseActions from "../../../../actions/base";
 
-import { getCurrentTimestampAsText } from '../../../../lib/timestamps';
-import { createRawDescriptionText } from '../../../../lib/export_org';
+import { getCurrentTimestampAsText } from "../../../../lib/timestamps";
+import { createRawDescriptionText } from "../../../../lib/export_org";
 
-import AttributedString from '../AttributedString';
+import AttributedString from "../AttributedString";
 
 class HeaderContent extends PureComponent {
   constructor(props) {
     super(props);
 
     bindAll(this, [
-      'handleTableSelect',
-      'handleCheckboxClick',
-      'handleListItemSelect',
-      'handleEnterListTitleEditMode',
-      'handleExitListTitleEditMode',
-      'handleListTitleValueUpdate',
-      'handleEnterListContentsEditMode',
-      'handleExitListContentsEditMode',
-      'handleListContentsValueUpdate',
-      'handleAddNewListItem',
-      'handleRemoveListItem',
-      'handleTimestampClick',
-      'handleLogEntryTimestampClick',
-      'handleInsertTimestamp',
-      'handlePlanningItemTimestampClick',
-      'handlePropertyListEdit',
+      "handleTableSelect",
+      "handleCheckboxClick",
+      "handleListItemSelect",
+      "handleEnterListTitleEditMode",
+      "handleExitListTitleEditMode",
+      "handleListTitleValueUpdate",
+      "handleEnterListContentsEditMode",
+      "handleExitListContentsEditMode",
+      "handleListContentsValueUpdate",
+      "handleAddNewListItem",
+      "handleRemoveListItem",
+      "handleTimestampClick",
+      "handleLogEntryTimestampClick",
+      "handleInsertTimestamp",
+      "handlePlanningItemTimestampClick",
+      "handlePropertyListEdit",
     ]);
 
     this.state = {
@@ -66,7 +66,7 @@ class HeaderContent extends PureComponent {
         {
           descriptionValue: this.calculateRawDescription(header),
         },
-        () => this.storeContainerWidth()
+        () => this.storeContainerWidth(),
       );
     }
   }
@@ -78,11 +78,11 @@ class HeaderContent extends PureComponent {
   }
 
   handleTableSelect(tableId, descriptionItemIndex) {
-    this.props.org.selectHeader(this.props.header.get('id'));
+    this.props.org.selectHeader(this.props.header.get("id"));
     this.props.org.selectHeaderIndex(this.props.headerIndex);
     this.props.org.setSelectedDescriptionItemIndex(descriptionItemIndex);
     this.props.org.setSelectedTableId(tableId);
-    this.props.base.activatePopup('table-editor');
+    this.props.base.activatePopup("table-editor");
   }
 
   handleCheckboxClick(listItemId) {
@@ -94,7 +94,7 @@ class HeaderContent extends PureComponent {
   }
 
   handleEnterListTitleEditMode() {
-    this.props.org.enterEditMode('list-title');
+    this.props.org.enterEditMode("list-title");
   }
 
   handleExitListTitleEditMode() {
@@ -106,7 +106,7 @@ class HeaderContent extends PureComponent {
   }
 
   handleEnterListContentsEditMode() {
-    this.props.org.enterEditMode('list-contents');
+    this.props.org.enterEditMode("list-contents");
   }
 
   handleExitListContentsEditMode() {
@@ -126,15 +126,15 @@ class HeaderContent extends PureComponent {
   }
 
   handleTimestampClick(timestampId) {
-    this.props.base.activatePopup('timestamp-editor', {
+    this.props.base.activatePopup("timestamp-editor", {
       timestampId,
-      headerId: this.props.header.get('id'),
+      headerId: this.props.header.get("id"),
     });
   }
 
   handleLogEntryTimestampClick(headerId) {
     return (logEntryIndex, entryType) =>
-      this.props.base.activatePopup('timestamp-editor', {
+      this.props.base.activatePopup("timestamp-editor", {
         headerId,
         logEntryIndex,
         entryType,
@@ -152,7 +152,9 @@ class HeaderContent extends PureComponent {
       descriptionValue:
         descriptionValue.substring(0, insertionIndex) +
         getCurrentTimestampAsText() +
-        descriptionValue.substring(this.textarea.selectionEnd || insertionIndex),
+        descriptionValue.substring(
+          this.textarea.selectionEnd || insertionIndex,
+        ),
     });
     this.textarea.focus();
   }
@@ -161,16 +163,18 @@ class HeaderContent extends PureComponent {
     return (planningType, planningItemIndex) => {
       const popupType =
         {
-          DEADLINE: 'deadline-editor',
-          SCHEDULED: 'scheduled-editor',
-        }[planningType] || 'timestamp-editor';
+          DEADLINE: "deadline-editor",
+          SCHEDULED: "scheduled-editor",
+        }[planningType] || "timestamp-editor";
       this.props.base.activatePopup(popupType, { headerId, planningItemIndex });
     };
   }
 
   handlePropertyListEdit() {
     const { header } = this.props;
-    this.props.base.activatePopup('property-list-editor', { headerId: header.get('id') });
+    this.props.base.activatePopup("property-list-editor", {
+      headerId: header.get("id"),
+    });
   }
 
   render() {
@@ -183,46 +187,54 @@ class HeaderContent extends PureComponent {
     } = this.props;
     const { containerWidth } = this.state;
 
-    if (!header.get('opened')) {
+    if (!header.get("opened")) {
       return <div />;
     }
 
     return (
-      <div className="header-content-container nice-scroll" style={{ width: containerWidth }}>
+      <div
+        className="header-content-container nice-scroll"
+        style={{ width: containerWidth }}
+      >
         {
           <Fragment>
             <PlanningItems
-              planningItems={header.get('planningItems')}
-              onClick={this.handlePlanningItemTimestampClick(header.get('id'))}
+              planningItems={header.get("planningItems")}
+              onClick={this.handlePlanningItemTimestampClick(header.get("id"))}
             />
             <PropertyListItems
-              propertyListItems={header.get('propertyListItems')}
+              propertyListItems={header.get("propertyListItems")}
               onTimestampClick={this.handleTimestampClick}
               shouldDisableActions={shouldDisableActions}
               onEdit={this.handlePropertyListEdit}
             />
             <AttributedString
-              parts={header.get('logNotes')}
+              parts={header.get("logNotes")}
               subPartDataAndHandlers={{
                 onTimestampClick: this.handleTimestampClick,
                 shouldDisableActions,
               }}
             />
             <LogBookEntries
-              logBookEntries={header.get('logBookEntries')}
-              onTimestampClick={this.handleLogEntryTimestampClick(header.get('id'))}
+              logBookEntries={header.get("logBookEntries")}
+              onTimestampClick={this.handleLogEntryTimestampClick(
+                header.get("id"),
+              )}
               shouldDisableActions={shouldDisableActions}
             />
             <AttributedString
-              parts={header.get('description')}
+              parts={header.get("description")}
               subPartDataAndHandlers={{
-                onTableSelect: shouldDisableActions ? undefined : this.handleTableSelect,
+                onTableSelect: shouldDisableActions
+                  ? undefined
+                  : this.handleTableSelect,
                 onCheckboxClick: this.handleCheckboxClick,
                 onListItemSelect: this.handleListItemSelect,
                 onEnterListTitleEditMode: this.handleEnterListTitleEditMode,
                 onExitListTitleEditMode: this.handleExitListTitleEditMode,
                 onListTitleValueUpdate: this.handleListTitleValueUpdate,
-                onEnterListContentsEditMode: this.handleEnterListContentsEditMode,
+                onEnterListContentsEditMode:
+                  this.handleEnterListContentsEditMode,
                 onExitListContentsEditMode: this.handleExitListContentsEditMode,
                 onListContentsValueUpdate: this.handleListContentsValueUpdate,
                 onAddNewListItem: this.handleAddNewListItem,
@@ -242,14 +254,14 @@ class HeaderContent extends PureComponent {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const path = state.org.present.get('path');
-  const file = state.org.present.getIn(['files', path]);
+  const path = state.org.present.get("path");
+  const file = state.org.present.getIn(["files", path]);
   return {
-    isSelected: file.get('selectedHeaderId') === ownProps.header.get('id'),
-    dontIndent: state.base.get('shouldNotIndentOnExport'),
-    selectedListItemId: file.get('selectedListItemId'),
-    inListTitleEditMode: file.get('editMode') === 'list-title',
-    inListContentsEditMode: file.get('editMode') === 'list-contents',
+    isSelected: file.get("selectedHeaderId") === ownProps.header.get("id"),
+    dontIndent: state.base.get("shouldNotIndentOnExport"),
+    selectedListItemId: file.get("selectedListItemId"),
+    inListTitleEditMode: file.get("editMode") === "list-title",
+    inListContentsEditMode: file.get("editMode") === "list-contents",
   };
 };
 

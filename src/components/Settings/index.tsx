@@ -1,18 +1,18 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import React from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
 
-import { withRouter, Link, useHistory } from 'react-router-dom';
+import { withRouter, Link, useHistory } from "react-router-dom";
 
-import * as syncBackendActions from '../../actions/sync_backend';
-import * as baseActions from '../../actions/base';
-import * as orgActions from '../../actions/org';
+import * as syncBackendActions from "../../actions/sync_backend";
+import * as baseActions from "../../actions/base";
+import * as orgActions from "../../actions/org";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import TabButtons from '../UI/TabButtons';
-import Switch from '../UI/Switch';
-import ExternalLink from '../UI/ExternalLink';
+import TabButtons from "../UI/TabButtons";
+import Switch from "../UI/Switch";
+import ExternalLink from "../UI/ExternalLink";
 
 const Settings = ({
   fontSize,
@@ -46,30 +46,37 @@ const Settings = ({
   // of organice has a valid link to documentation. Self-building does
   // not insure that, because building and hosting docs is not part of
   // the application itself.
-  const documentationHost = window.location.origin.match(/staging.organice.200ok.ch/)
-    ? 'https://staging.organice.200ok.ch'
-    : 'https://organice.200ok.ch';
+  const documentationHost = window.location.origin.match(
+    /staging.organice.200ok.ch/,
+  )
+    ? "https://staging.organice.200ok.ch"
+    : "https://organice.200ok.ch";
 
   const handleSignOutClick = () => {
-    if (window.confirm('Are you sure you want to sign out?')) {
+    if (window.confirm("Are you sure you want to sign out?")) {
       syncBackend.signOut();
-      history.push('/');
+      history.push("/");
     }
   };
 
-  const handleKeyboardShortcutsClick = () => base.pushModalPage('keyboard_shortcuts_editor');
+  const handleKeyboardShortcutsClick = () =>
+    base.pushModalPage("keyboard_shortcuts_editor");
 
-  const handleCaptureTemplatesClick = () => base.pushModalPage('capture_templates_editor');
+  const handleCaptureTemplatesClick = () =>
+    base.pushModalPage("capture_templates_editor");
 
-  const handleFileSettingsClick = () => base.pushModalPage('file_settings_editor');
+  const handleFileSettingsClick = () =>
+    base.pushModalPage("file_settings_editor");
 
   const handleFontSizeChange = (newFontSize) => base.setFontSize(newFontSize);
 
-  const handleColorSchemeClick = (colorScheme) => base.setColorScheme(colorScheme);
+  const handleColorSchemeClick = (colorScheme) =>
+    base.setColorScheme(colorScheme);
 
   const handleThemeClick = (theme) => base.setTheme(theme);
 
-  const handleBulletStyleChange = (newBulletStyle) => base.setBulletStyle(newBulletStyle);
+  const handleBulletStyleChange = (newBulletStyle) =>
+    base.setBulletStyle(newBulletStyle);
 
   const handleShouldTapTodoToAdvanceChange = () =>
     base.setShouldTapTodoToAdvance(!shouldTapTodoToAdvance);
@@ -83,11 +90,14 @@ const Settings = ({
   const handleAgendaDefaultDeadlineDelayUnitChange = (newDelayUnit) =>
     base.setAgendaDefaultDeadlineDelayUnit(newDelayUnit);
 
-  const handleAgendaStartOnWeekdayChange = (value) => base.setAgendaStartOnWeekday(value);
+  const handleAgendaStartOnWeekdayChange = (value) =>
+    base.setAgendaStartOnWeekday(value);
 
-  const handleShouldLiveSyncChange = () => base.setShouldLiveSync(!shouldLiveSync);
+  const handleShouldLiveSyncChange = () =>
+    base.setShouldLiveSync(!shouldLiveSync);
 
-  const handleShowDeadlineDisplayChange = () => base.setShowDeadlineDisplay(!showDeadlineDisplay);
+  const handleShowDeadlineDisplayChange = () =>
+    base.setShowDeadlineDisplay(!showDeadlineDisplay);
 
   const handleShouldSyncOnBecomingVisibleChange = () =>
     base.setShouldSyncOnBecomingVisibile(!shouldSyncOnBecomingVisibile);
@@ -95,7 +105,8 @@ const Settings = ({
   const handleShouldShowTitleInOrgFile = () =>
     base.setShouldShowTitleInOrgFile(!shouldShowTitleInOrgFile);
 
-  const handleShouldLogIntoDrawer = () => base.setShouldLogIntoDrawer(!shouldLogIntoDrawer);
+  const handleShouldLogIntoDrawer = () =>
+    base.setShouldLogIntoDrawer(!shouldLogIntoDrawer);
 
   const handleCloseSubheadersRecursively = () =>
     base.setCloseSubheadersRecursively(!closeSubheadersRecursively);
@@ -106,16 +117,18 @@ const Settings = ({
   const handleShouldStoreSettingsInSyncBackendChange = () =>
     base.setShouldStoreSettingsInSyncBackend(!shouldStoreSettingsInSyncBackend);
 
-  const handleShowClockDisplayClick = () => org.setShowClockDisplay(!showClockDisplay);
+  const handleShowClockDisplayClick = () =>
+    org.setShowClockDisplay(!showClockDisplay);
 
-  const handlePreferEditRawValues = () => base.setPreferEditRawValues(!preferEditRawValues);
+  const handlePreferEditRawValues = () =>
+    base.setPreferEditRawValues(!preferEditRawValues);
 
   return (
     <div className="settings-container">
       <div className="setting-container">
         <div className="setting-label">Font size</div>
         <TabButtons
-          buttons={['Regular', 'Large']}
+          buttons={["Regular", "Large"]}
           selectedButton={fontSize}
           onSelect={handleFontSizeChange}
         />
@@ -124,7 +137,7 @@ const Settings = ({
       <div className="setting-container">
         <div className="setting-label">Color scheme</div>
         <TabButtons
-          buttons={['OS', 'Light', 'Dark']}
+          buttons={["OS", "Light", "Dark"]}
           selectedButton={colorScheme}
           onSelect={handleColorSchemeClick}
         />
@@ -133,7 +146,7 @@ const Settings = ({
       <div className="setting-container">
         <div className="setting-label">Theme</div>
         <TabButtons
-          buttons={['Solarized', 'One', 'Gruvbox', 'Smyck', 'Code']}
+          buttons={["Solarized", "One", "Gruvbox", "Smyck", "Code"]}
           selectedButton={theme}
           onSelect={handleThemeClick}
         />
@@ -142,7 +155,7 @@ const Settings = ({
       <div className="setting-container">
         <div className="setting-label">Bullet style</div>
         <TabButtons
-          buttons={['Classic', 'Fancy']}
+          buttons={["Classic", "Fancy"]}
           selectedButton={bulletStyle}
           onSelect={handleBulletStyleChange}
         />
@@ -150,26 +163,33 @@ const Settings = ({
 
       <div className="setting-container">
         <div className="setting-label">Tap TODO to advance state</div>
-        <Switch isEnabled={shouldTapTodoToAdvance} onToggle={handleShouldTapTodoToAdvanceChange} />
+        <Switch
+          isEnabled={shouldTapTodoToAdvance}
+          onToggle={handleShouldTapTodoToAdvanceChange}
+        />
       </div>
 
       <div className="setting-container">
         <div className="setting-label">
           Live sync
           <div className="setting-label__description">
-            If enabled, changes are automatically pushed to the sync backend as you make them.
+            If enabled, changes are automatically pushed to the sync backend as
+            you make them.
           </div>
         </div>
-        <Switch isEnabled={shouldLiveSync} onToggle={handleShouldLiveSyncChange} />
+        <Switch
+          isEnabled={shouldLiveSync}
+          onToggle={handleShouldLiveSyncChange}
+        />
       </div>
 
       <div className="setting-container">
         <div className="setting-label">
           Sync on application becoming visible
           <div className="setting-label__description">
-            If enabled, the current org file is pulled from the sync backend when the browser tab
-            becomes visible. This prevents you from having a stale file before starting to make
-            changes to it.
+            If enabled, the current org file is pulled from the sync backend
+            when the browser tab becomes visible. This prevents you from having
+            a stale file before starting to make changes to it.
           </div>
         </div>
         <Switch
@@ -185,32 +205,40 @@ const Settings = ({
             When in an Org file view, it shows the filename in the HeaderBar.
           </div>
         </div>
-        <Switch isEnabled={shouldShowTitleInOrgFile} onToggle={handleShouldShowTitleInOrgFile} />
+        <Switch
+          isEnabled={shouldShowTitleInOrgFile}
+          onToggle={handleShouldShowTitleInOrgFile}
+        />
       </div>
 
       <div className="setting-container">
         <div className="setting-label">
           Log into LOGBOOK drawer when item repeats
           <div className="setting-label__description">
-            Log TODO state changes (currently only for repeating items) into the LOGBOOK drawer
-            instead of into the body of the heading (default). See the Orgmode documentation on{' '}
+            Log TODO state changes (currently only for repeating items) into the
+            LOGBOOK drawer instead of into the body of the heading (default).
+            See the Orgmode documentation on{" "}
             <ExternalLink href="https://www.gnu.org/software/emacs/manual/html_node/org/Tracking-TODO-state-changes.html">
               <code>org-log-into-drawer</code>
-            </ExternalLink>{' '}
+            </ExternalLink>{" "}
             for more information.
           </div>
         </div>
-        <Switch isEnabled={shouldLogIntoDrawer} onToggle={handleShouldLogIntoDrawer} />
+        <Switch
+          isEnabled={shouldLogIntoDrawer}
+          onToggle={handleShouldLogIntoDrawer}
+        />
       </div>
 
       <div className="setting-container">
         <div className="setting-label">
           When folding a header, fold all subheaders too
           <div className="setting-label__description">
-            When folding a header, fold recursively all its subheaders, so that when the header is
-            reopened all subheaders are folded, regardless of their state prior to folding. This is
-            the default in Emacs Org mode. If this turned off, the fold-state of the subheaders is
-            preserved when the header is unfolded.
+            When folding a header, fold recursively all its subheaders, so that
+            when the header is reopened all subheaders are folded, regardless of
+            their state prior to folding. This is the default in Emacs Org mode.
+            If this turned off, the fold-state of the subheaders is preserved
+            when the header is unfolded.
           </div>
         </div>
         <Switch
@@ -223,24 +251,28 @@ const Settings = ({
         <div className="setting-label">
           Disable hard indent on Org export
           <div className="setting-label__description">
-            By default, the metadata body (including deadlines and drawers) of an exported org
-            heading is indented according to its level. If instead you prefer to keep your body text
-            flush-left, i.e.{' '}
+            By default, the metadata body (including deadlines and drawers) of
+            an exported org heading is indented according to its level. If
+            instead you prefer to keep your body text flush-left, i.e.{" "}
             <ExternalLink href="https://orgmode.org/manual/Hard-indentation.html">
               <code>(setq org-adapt-indentation nil)</code>
             </ExternalLink>
-            , then activate this setting. The raw content text is left unchanged.
+            , then activate this setting. The raw content text is left
+            unchanged.
           </div>
         </div>
-        <Switch isEnabled={shouldNotIndentOnExport} onToggle={handleShouldNotIndentOnExport} />
+        <Switch
+          isEnabled={shouldNotIndentOnExport}
+          onToggle={handleShouldNotIndentOnExport}
+        />
       </div>
 
       <div className="setting-container">
         <div className="setting-label">
           Store settings in sync backend
           <div className="setting-label__description">
-            Store settings and keyboard shortcuts in a .organice-config.json file in your sync
-            backend to sync between multiple devices.
+            Store settings and keyboard shortcuts in a .organice-config.json
+            file in your sync backend to sync between multiple devices.
           </div>
         </div>
         <Switch
@@ -262,7 +294,7 @@ const Settings = ({
           />
 
           <TabButtons
-            buttons={'hdwmy'.split('')}
+            buttons={"hdwmy".split("")}
             selectedButton={agendaDefaultDeadlineDelayUnit}
             onSelect={handleAgendaDefaultDeadlineDelayUnitChange}
           />
@@ -272,9 +304,10 @@ const Settings = ({
       <div className="setting-container setting-container--vertical">
         <div className="setting-label">Description editor height</div>
         <div className="setting-label__description">
-          This setting controls the height of the description editor on computers only. The height
-          will be limited to ensure that all buttons are always visible. On mobile devices this
-          setting is ignored and the editor will always be 8 rows high.
+          This setting controls the height of the description editor on
+          computers only. The height will be limited to ensure that all buttons
+          are always visible. On mobile devices this setting is ignored and the
+          editor will always be 8 rows high.
         </div>
 
         <div className="default-deadline-warning-container">
@@ -292,16 +325,24 @@ const Settings = ({
         <div className="setting-label">
           Start of week for weekly agenda
           <div className="setting-label__description">
-            Akin to{' '}
+            Akin to{" "}
             <ExternalLink href="https://orgmode.org/manual/Weekly_002fdaily-agenda.html">
               <code>org-agenda-start-on-weekday</code>
             </ExternalLink>
           </div>
         </div>
         <TabButtons
-          buttons={['S', 'M', 'T', 'W', 'T', 'F', 'S', 'Today']}
+          buttons={["S", "M", "T", "W", "T", "F", "S", "Today"]}
           values={[0, 1, 2, 3, 4, 5, 6, -1]}
-          titles={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']}
+          titles={[
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+          ]}
           selectedButton={agendaStartOnWeekday}
           onSelect={handleAgendaStartOnWeekdayChange}
         />
@@ -311,11 +352,15 @@ const Settings = ({
         <div className="setting-label">
           Display time summaries
           <div className="setting-label__description">
-            This puts overlays at the end of each headline, showing the total time recorded under
-            that heading, including the time of any subheadings.
+            This puts overlays at the end of each headline, showing the total
+            time recorded under that heading, including the time of any
+            subheadings.
           </div>
         </div>
-        <Switch isEnabled={showClockDisplay} onToggle={handleShowClockDisplayClick} />
+        <Switch
+          isEnabled={showClockDisplay}
+          onToggle={handleShowClockDisplayClick}
+        />
       </div>
 
       <div className="setting-container">
@@ -325,28 +370,41 @@ const Settings = ({
             If enabled, the deadline will displayed on each header line.
           </div>
         </div>
-        <Switch isEnabled={showDeadlineDisplay} onToggle={handleShowDeadlineDisplayChange} />
+        <Switch
+          isEnabled={showDeadlineDisplay}
+          onToggle={handleShowDeadlineDisplayChange}
+        />
       </div>
 
       <div className="setting-container">
         <div className="setting-label">
           Prefer raw values
           <div className="setting-label__description">
-            When editing title or description of a header, you can switch between editing the text
-            part or the full content (including text representation of todo keywords, tags, schedule
-            items, properties etc.) by clicking the "edit title" or "edit description" icon in the
-            popup. This option allows you to view the full content first instead of on a second
-            click.
+            When editing title or description of a header, you can switch
+            between editing the text part or the full content (including text
+            representation of todo keywords, tags, schedule items, properties
+            etc.) by clicking the "edit title" or "edit description" icon in the
+            popup. This option allows you to view the full content first instead
+            of on a second click.
           </div>
         </div>
-        <Switch isEnabled={preferEditRawValues} onToggle={handlePreferEditRawValues} />
+        <Switch
+          isEnabled={preferEditRawValues}
+          onToggle={handlePreferEditRawValues}
+        />
       </div>
 
       <div className="settings-buttons-container">
-        <button className="btn settings-btn" onClick={handleCaptureTemplatesClick}>
+        <button
+          className="btn settings-btn"
+          onClick={handleCaptureTemplatesClick}
+        >
           Capture templates
         </button>
-        <button className="btn settings-btn" onClick={handleKeyboardShortcutsClick}>
+        <button
+          className="btn settings-btn"
+          onClick={handleKeyboardShortcutsClick}
+        >
           Keyboard shortcuts
         </button>
         <button className="btn settings-btn" onClick={handleFileSettingsClick}>
@@ -373,14 +431,14 @@ const Settings = ({
           <ExternalLink href={`${documentationHost}/documentation.html`}>
             Documentation
             <i className="fas fa-external-link-alt fa-sm" />
-          </ExternalLink>{' '}
+          </ExternalLink>{" "}
         </button>
 
         <button className="btn settings-btn">
           <ExternalLink href="https://github.com/200ok-ch/organice">
             Github repo
             <i className="fas fa-external-link-alt fa-sm" />
-          </ExternalLink>{' '}
+          </ExternalLink>{" "}
         </button>
 
         <hr className="settings-button-separator" />
@@ -397,28 +455,36 @@ const mapStateToProps = (state) => {
   // The default values here only relate to the settings view. To set
   // defaults which get loaded on an initial run of organice, look at
   // `util/settings_persister.js::persistableFields`.
-  const agendaStartOnWeekday = state.base.get('agendaStartOnWeekday');
+  const agendaStartOnWeekday = state.base.get("agendaStartOnWeekday");
   return {
-    fontSize: state.base.get('fontSize') || 'Regular',
-    bulletStyle: state.base.get('bulletStyle'),
-    shouldTapTodoToAdvance: state.base.get('shouldTapTodoToAdvance'),
-    editorDescriptionHeightValue: state.base.get('editorDescriptionHeightValue') || 8,
-    agendaDefaultDeadlineDelayValue: state.base.get('agendaDefaultDeadlineDelayValue') || 5,
-    agendaDefaultDeadlineDelayUnit: state.base.get('agendaDefaultDeadlineDelayUnit') || 'd',
-    agendaStartOnWeekday: agendaStartOnWeekday == null ? 1 : +agendaStartOnWeekday,
-    shouldStoreSettingsInSyncBackend: state.base.get('shouldStoreSettingsInSyncBackend'),
-    shouldLiveSync: state.base.get('shouldLiveSync'),
-    showDeadlineDisplay: state.base.get('showDeadlineDisplay'),
-    shouldSyncOnBecomingVisibile: state.base.get('shouldSyncOnBecomingVisibile'),
-    shouldShowTitleInOrgFile: state.base.get('shouldShowTitleInOrgFile'),
-    shouldLogIntoDrawer: state.base.get('shouldLogIntoDrawer'),
-    closeSubheadersRecursively: state.base.get('closeSubheadersRecursively'),
-    shouldNotIndentOnExport: state.base.get('shouldNotIndentOnExport'),
-    hasUnseenChangelog: state.base.get('hasUnseenChangelog'),
-    showClockDisplay: state.org.present.get('showClockDisplay'),
-    preferEditRawValues: state.base.get('preferEditRawValues'),
-    colorScheme: state.base.get('colorScheme'),
-    theme: state.base.get('theme'),
+    fontSize: state.base.get("fontSize") || "Regular",
+    bulletStyle: state.base.get("bulletStyle"),
+    shouldTapTodoToAdvance: state.base.get("shouldTapTodoToAdvance"),
+    editorDescriptionHeightValue:
+      state.base.get("editorDescriptionHeightValue") || 8,
+    agendaDefaultDeadlineDelayValue:
+      state.base.get("agendaDefaultDeadlineDelayValue") || 5,
+    agendaDefaultDeadlineDelayUnit:
+      state.base.get("agendaDefaultDeadlineDelayUnit") || "d",
+    agendaStartOnWeekday:
+      agendaStartOnWeekday == null ? 1 : +agendaStartOnWeekday,
+    shouldStoreSettingsInSyncBackend: state.base.get(
+      "shouldStoreSettingsInSyncBackend",
+    ),
+    shouldLiveSync: state.base.get("shouldLiveSync"),
+    showDeadlineDisplay: state.base.get("showDeadlineDisplay"),
+    shouldSyncOnBecomingVisibile: state.base.get(
+      "shouldSyncOnBecomingVisibile",
+    ),
+    shouldShowTitleInOrgFile: state.base.get("shouldShowTitleInOrgFile"),
+    shouldLogIntoDrawer: state.base.get("shouldLogIntoDrawer"),
+    closeSubheadersRecursively: state.base.get("closeSubheadersRecursively"),
+    shouldNotIndentOnExport: state.base.get("shouldNotIndentOnExport"),
+    hasUnseenChangelog: state.base.get("hasUnseenChangelog"),
+    showClockDisplay: state.org.present.get("showClockDisplay"),
+    preferEditRawValues: state.base.get("preferEditRawValues"),
+    colorScheme: state.base.get("colorScheme"),
+    theme: state.base.get("theme"),
   };
 };
 
@@ -430,4 +496,6 @@ const mapDispatchToProps = (dispatch) => {
   };
 };
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Settings));
+export default withRouter(
+  connect(mapStateToProps, mapDispatchToProps)(Settings),
+);

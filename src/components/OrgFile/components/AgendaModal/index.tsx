@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import './stylesheet.css';
-import { getIcon } from "../../../UI/icons.tsx"
-import AgendaDay from './components/AgendaDay';
-import TabButtons from '../../../UI/TabButtons';
+import React, { useState } from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import "./stylesheet.css";
+import { getIcon } from "../../../UI/icons.tsx";
+import AgendaDay from "./components/AgendaDay";
+import TabButtons from "../../../UI/TabButtons";
 
-import { isMobileBrowser } from '../../../../lib/browser_utils';
-import * as baseActions from '../../../../actions/base';
-import * as orgActions from '../../../../actions/org';
-import { determineIncludedFiles } from '../../../../reducers/org';
+import { isMobileBrowser } from "../../../../lib/browser_utils";
+import * as baseActions from "../../../../actions/base";
+import * as orgActions from "../../../../actions/org";
+import { determineIncludedFiles } from "../../../../reducers/org";
 
-import { range } from 'lodash';
+import { range } from "lodash";
 import {
   addDays,
   addWeeks,
@@ -23,9 +23,8 @@ import {
   startOfWeek,
   startOfMonth,
   getDaysInMonth,
-  format
-} from 'date-fns';
-
+  format,
+} from "date-fns";
 
 // INFO: SearchModal, AgendaModal and TaskListModal are very similar
 // in structure and partially in logic. When changing one, consider
@@ -41,9 +40,10 @@ function AgendaModal(props) {
   } = props;
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [dateDisplayType, setDateDisplayType] = useState('absolute');
+  const [dateDisplayType, setDateDisplayType] = useState("absolute");
 
-  const weekStartsOn = agendaStartOnWeekday < 0 ? getDay(selectedDate) : agendaStartOnWeekday;
+  const weekStartsOn =
+    agendaStartOnWeekday < 0 ? getDay(selectedDate) : agendaStartOnWeekday;
 
   function handleTimeframeTypeChange(agendaTimeframe) {
     props.base.setAgendaTimeframe(agendaTimeframe);
@@ -51,17 +51,17 @@ function AgendaModal(props) {
 
   function handleNextDateClick() {
     switch (agendaTimeframe) {
-      case 'Day':
+      case "Day":
         setSelectedDate(addDays(selectedDate, 1));
         break;
-      case 'Week':
+      case "Week":
         setSelectedDate(addWeeks(selectedDate, 1));
         break;
-      case 'Month':
+      case "Month":
         setSelectedDate(addMonths(selectedDate, 1));
         break;
       default:
-        return '';
+        return "";
     }
   }
 
@@ -72,55 +72,57 @@ function AgendaModal(props) {
 
   function handlePreviousDateClick() {
     switch (agendaTimeframe) {
-      case 'Day':
+      case "Day":
         setSelectedDate(subDays(selectedDate, 1));
         break;
-      case 'Week':
+      case "Week":
         setSelectedDate(subWeeks(selectedDate, 1));
         break;
-      case 'Month':
+      case "Month":
         setSelectedDate(subMonths(selectedDate, 1));
         break;
       default:
-        return '';
+        return "";
     }
   }
 
   function handleToggleDateDisplayType() {
-    setDateDisplayType(dateDisplayType === 'absolute' ? 'relative' : 'absolute');
+    setDateDisplayType(
+      dateDisplayType === "absolute" ? "relative" : "absolute",
+    );
   }
 
   function calculateTimeframeHeader() {
     switch (agendaTimeframe) {
-      case 'Day':
-        return format(selectedDate, 'MMMM do');
-      case 'Week':
+      case "Day":
+        return format(selectedDate, "MMMM do");
+      case "Week":
         const weekStart = startOfWeek(selectedDate, { weekStartsOn });
         const weekEnd = addWeeks(weekStart, 1);
-        return `${format(weekStart, 'MMM do')} - ${format(weekEnd, 'MMM do')} (W${format(
+        return `${format(weekStart, "MMM do")} - ${format(weekEnd, "MMM do")} (W${format(
           weekStart,
-          'w'
+          "w",
         )})`;
-      case 'Month':
-        return format(selectedDate, 'MMMM');
+      case "Month":
+        return format(selectedDate, "MMMM");
       default:
-        return '';
+        return "";
     }
   }
 
   let dates = [];
   switch (agendaTimeframe) {
-    case 'Day':
+    case "Day":
       dates = [selectedDate];
       break;
-    case 'Week':
+    case "Week":
       const weekStart = startOfWeek(selectedDate, { weekStartsOn });
       dates = range(7).map((daysAfter) => addDays(weekStart, daysAfter));
       break;
-    case 'Month':
+    case "Month":
       const monthStart = startOfMonth(selectedDate);
       dates = range(getDaysInMonth(selectedDate)).map((daysAfter) =>
-        addDays(monthStart, daysAfter)
+        addDays(monthStart, daysAfter),
       );
       break;
     default:
@@ -132,26 +134,31 @@ function AgendaModal(props) {
 
       <div className="agenda__tab-container">
         <TabButtons
-          buttons={['Day', 'Week', 'Month']}
+          buttons={["Day", "Week", "Month"]}
           selectedButton={agendaTimeframe}
           onSelect={handleTimeframeTypeChange}
           useEqualWidthTabs
         />
       </div>
 
-      <div className="agenda__timeframe-header-container" onClick={handlePreviousDateClick}>
-	{getIcon("chevron-left")}
-        <div className="agenda__timeframe-header" onClick={handleNextDateClick}>{calculateTimeframeHeader()}</div>
-	{getIcon("chevron-right")}
+      <div
+        className="agenda__timeframe-header-container"
+        onClick={handlePreviousDateClick}
+      >
+        {getIcon("chevron-left")}
+        <div className="agenda__timeframe-header" onClick={handleNextDateClick}>
+          {calculateTimeframeHeader()}
+        </div>
+        {getIcon("chevron-right")}
       </div>
 
       <div
         className="agenda__days-container"
-        style={isMobileBrowser ? undefined : { overflow: 'auto' }}
+        style={isMobileBrowser ? undefined : { overflow: "auto" }}
       >
         {dates.map((date) => (
           <AgendaDay
-            key={format(date, 'yyyy MM dd')}
+            key={format(date, "yyyy MM dd")}
             date={date}
             files={files}
             onHeaderClick={handleHeaderClick}
@@ -170,18 +177,27 @@ function AgendaModal(props) {
 }
 
 const mapStateToProps = (state) => {
-  const path = state.org.present.get('path');
-  const file = state.org.present.getIn(['files', path]);
-  const allFiles = state.org.present.get('files');
-  const fileSettings = state.org.present.get('fileSettings');
-  const agendaStartOnWeekday = state.base.get('agendaStartOnWeekday');
+  const path = state.org.present.get("path");
+  const file = state.org.present.getIn(["files", path]);
+  const allFiles = state.org.present.get("files");
+  const fileSettings = state.org.present.get("fileSettings");
+  const agendaStartOnWeekday = state.base.get("agendaStartOnWeekday");
   return {
-    files: determineIncludedFiles(allFiles, fileSettings, path, 'includeInAgenda', false),
-    todoKeywordSets: file.get('todoKeywordSets'),
-    agendaTimeframe: state.base.get('agendaTimeframe'),
-    agendaDefaultDeadlineDelayValue: state.base.get('agendaDefaultDeadlineDelayValue') || 5,
-    agendaDefaultDeadlineDelayUnit: state.base.get('agendaDefaultDeadlineDelayUnit') || 'd',
-    agendaStartOnWeekday: agendaStartOnWeekday == null ? 1 : +agendaStartOnWeekday,
+    files: determineIncludedFiles(
+      allFiles,
+      fileSettings,
+      path,
+      "includeInAgenda",
+      false,
+    ),
+    todoKeywordSets: file.get("todoKeywordSets"),
+    agendaTimeframe: state.base.get("agendaTimeframe"),
+    agendaDefaultDeadlineDelayValue:
+      state.base.get("agendaDefaultDeadlineDelayValue") || 5,
+    agendaDefaultDeadlineDelayUnit:
+      state.base.get("agendaDefaultDeadlineDelayUnit") || "d",
+    agendaStartOnWeekday:
+      agendaStartOnWeekday == null ? 1 : +agendaStartOnWeekday,
   };
 };
 

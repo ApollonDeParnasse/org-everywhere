@@ -1,11 +1,11 @@
-import React from 'react';
-import thunk  from 'redux-thunk';
-import readFixture from '../../../../../test_helpers/index';
-import { MemoryRouter } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
+import React from "react";
+import thunk from "redux-thunk";
+import readFixture from "../../../../../test_helpers/index";
+import { MemoryRouter } from "react-router-dom";
+import { Provider } from "react-redux";
+import { createStore, applyMiddleware } from "redux";
 
-import rootReducer from '../../../../reducers/';
+import rootReducer from "../../../../reducers/";
 
 import {
   setPath,
@@ -15,16 +15,19 @@ import {
   setSelectedDescriptionItemIndex,
   setSelectedTableId,
   enterEditMode,
-} from '../../../../actions/org';
-import { getCurrentTimestampAsText } from '../../../../lib/timestamps';
-import { STATIC_FILE_PREFIX, getSelectedTable } from '../../../../lib/org_utils';
+} from "../../../../actions/org";
+import { getCurrentTimestampAsText } from "../../../../lib/timestamps";
+import {
+  STATIC_FILE_PREFIX,
+  getSelectedTable,
+} from "../../../../lib/org_utils";
 
-import { Map, Set, fromJS, List } from 'immutable';
-import { shuffle, first, trim, pipe, range, take, curry } from 'lodash/fp';
-import { render, fireEvent, cleanup } from '@testing-library/react';
-import Table from './index';
+import { Map, Set, fromJS, List } from "immutable";
+import { shuffle, first, trim, pipe, range, take, curry } from "lodash/fp";
+import { render, fireEvent, cleanup } from "@testing-library/react";
+import Table from "./index";
 
-import '@testing-library/jest-dom/extend-expect';
+import "@testing-library/jest-dom/extend-expect";
 
 const capture = Map({ captureTemplates: [] });
 const testBaseState = {
@@ -34,12 +37,12 @@ const testBaseState = {
       files: Map(),
       fileSettings: [],
       search: Map({
-        searchFilter: '',
+        searchFilter: "",
         searchFilterExpr: [],
       }),
       bookmarks: Map({
         search: List(),
-        'task-list': List(),
+        "task-list": List(),
         refile: List(),
       }),
     }),
@@ -53,28 +56,29 @@ const testBaseState = {
     customKeybindings: {},
     shouldTapTodoToAdvance: true,
     isLoading: Set(),
-    finderTab: 'Search',
-    agendaTimeframe: 'Week',
+    finderTab: "Search",
+    agendaTimeframe: "Week",
     preferEditRawValues: false,
   }),
 };
 
-describe('Table tests', () => {
+describe("Table tests", () => {
   afterEach(cleanup);
 
-  const testOrgFile = readFixture('multiple_tables');
-  const testFilePath = STATIC_FILE_PREFIX + 'fixtureTestFile.org';
+  const testOrgFile = readFixture("multiple_tables");
+  const testFilePath = STATIC_FILE_PREFIX + "fixtureTestFile.org";
   const testHeaderIndex = 2;
   const testDescriptionItemIndex = 1;
 
-  const editCellContainerId = 'edit-cell-container';
+  const editCellContainerId = "edit-cell-container";
 
   const randomArrayValue = pipe([shuffle, first]);
   const randomArrayIndex = pipe([range(0), randomArrayValue]);
   const threeRandomArrayIndices = pipe([range(0), shuffle, take(3)]);
 
-  const getTableTotalColumnsCount = (table) => table.getIn(['contents', 0, 'contents']).size;
-  const getTableTotalRowsCount = (table) => table.getIn(['contents']).size;
+  const getTableTotalColumnsCount = (table) =>
+    table.getIn(["contents", 0, "contents"]).size;
+  const getTableTotalRowsCount = (table) => table.getIn(["contents"]).size;
 
   let testStore,
     testTable,
@@ -94,35 +98,36 @@ describe('Table tests', () => {
 
     const testState = testStore.getState();
     const testHeaderId = testState.org.present.getIn([
-      'files',
+      "files",
       testFilePath,
-      'headers',
+      "headers",
       testHeaderIndex,
-      'id',
+      "id",
     ]);
     const testTableId = testState.org.present.getIn([
-      'files',
+      "files",
       testFilePath,
-      'headers',
+      "headers",
       testHeaderIndex,
-      'description',
+      "description",
       testDescriptionItemIndex,
-      'id',
+      "id",
     ]);
 
     testStore.dispatch(setSelectedTableId(testTableId));
     testStore.dispatch(selectHeader(testHeaderId));
     testStore.dispatch(selectHeaderIndex(testHeaderIndex));
-    testStore.dispatch(setSelectedDescriptionItemIndex(testDescriptionItemIndex));
+    testStore.dispatch(
+      setSelectedDescriptionItemIndex(testDescriptionItemIndex),
+    );
 
     testTable = getSelectedTable(testStore.getState());
 
-    const testTableContents = testTable.get('contents');
+    const testTableContents = testTable.get("contents");
     const testTableTotalRows = getTableTotalRowsCount(testTable);
     const testTableTotalColumns = getTableTotalColumnsCount(testTable);
 
     const testRandomRowIndex = randomArrayIndex(testTableTotalRows);
-
 
     const [
       testFirstRandomColumnIndex,
@@ -132,31 +137,34 @@ describe('Table tests', () => {
 
     const testFirstCell = testTableContents.getIn([
       testRandomRowIndex,
-      'contents',
+      "contents",
       testFirstRandomColumnIndex,
     ]);
     const testSecondCell = testTableContents.getIn([
       testRandomRowIndex,
-      'contents',
+      "contents",
       testSecondRandomColumnIndex,
     ]);
     const testThirdCell = testTableContents.getIn([
       testRandomRowIndex,
-      'contents',
+      "contents",
       testThirdRandomColumnIndex,
     ]);
 
-    testTextOfFirstCell = trim(testFirstCell.get('rawContents'));
-    testTextOfSecondCell = trim(testSecondCell.get('rawContents'));
-    testTextOfThirdCell = trim(testThirdCell.get('rawContents'));
+    testTextOfFirstCell = trim(testFirstCell.get("rawContents"));
+    testTextOfSecondCell = trim(testSecondCell.get("rawContents"));
+    testTextOfThirdCell = trim(testThirdCell.get("rawContents"));
 
     const tableRenderer = curry((testStore, testProps) => {
       return render(
-        <MemoryRouter keyLength={0} initialEntries={['/file/dir1/dir2/fixtureTestFile.org']}>
+        <MemoryRouter
+          keyLength={0}
+          initialEntries={["/file/dir1/dir2/fixtureTestFile.org"]}
+        >
           <Provider store={testStore}>
             <Table props={testProps} />
           </Provider>
-        </MemoryRouter>
+        </MemoryRouter>,
       );
     });
 
@@ -169,25 +177,27 @@ describe('Table tests', () => {
     };
   });
 
-  test('Render table', () => {
+  test("Render table", () => {
     const { getByText } = testTableRenderer(testProps);
-    testTable.get('contents').forEach((row) => {
-      row.get('contents').forEach((cell) => {
-        const expectedText = trim(cell.get('rawContents'));
+    testTable.get("contents").forEach((row) => {
+      row.get("contents").forEach((cell) => {
+        const expectedText = trim(cell.get("rawContents"));
         expect(getByText(expectedText)).toBeTruthy();
       });
     });
   });
 
-  test('Render table cells, change text, then click on another cell', () => {
+  test("Render table cells, change text, then click on another cell", () => {
     const { getByText, getByTestId } = testTableRenderer(testProps);
     fireEvent.click(getByText(testTextOfFirstCell));
 
     fireEvent.click(getByText(testTextOfSecondCell));
-    testStore.dispatch(enterEditMode('table'));
+    testStore.dispatch(enterEditMode("table"));
 
-    const newValue = 'new';
-    fireEvent.change(getByTestId(editCellContainerId), { target: { value: newValue } });
+    const newValue = "new";
+    fireEvent.change(getByTestId(editCellContainerId), {
+      target: { value: newValue },
+    });
 
     expect(getByText(newValue)).toBeTruthy();
     expect(() => getByText(testTextOfSecondCell)).toThrowError();
@@ -196,13 +206,15 @@ describe('Table tests', () => {
     expect(getByText(testTextOfFirstCell)).toBeTruthy();
   });
 
-  test('Render table cells, add timestamp, then click on another cell', () => {
+  test("Render table cells, add timestamp, then click on another cell", () => {
     const { getByText } = testTableRenderer(testProps);
     fireEvent.click(getByText(testTextOfFirstCell));
     fireEvent.click(getByText(testTextOfSecondCell));
-    testStore.dispatch(enterEditMode('table'));
+    testStore.dispatch(enterEditMode("table"));
 
-    fireEvent.click(document.querySelector('.table-cell__insert-timestamp-button'));
+    fireEvent.click(
+      document.querySelector(".table-cell__insert-timestamp-button"),
+    );
     const expectedTimestamp = getCurrentTimestampAsText();
 
     fireEvent.click(getByText(testTextOfThirdCell));

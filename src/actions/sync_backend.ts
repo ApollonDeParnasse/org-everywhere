@@ -1,41 +1,54 @@
-import { ActionCreators } from 'redux-undo';
+import { ActionCreators } from "redux-undo";
 
-import { setLoadingMessage, hideLoadingMessage, clearModalStack, setIsLoading } from './base';
-import { parseFile, setDirty, setLastSyncAt, setOrgFileErrorMessage } from './org';
-import { localStorageAvailable, persistField } from '../util/settings_persister';
-import { createGitlabOAuth } from '../sync_backend_clients/gitlab_sync_backend_client';
+import {
+  setLoadingMessage,
+  hideLoadingMessage,
+  clearModalStack,
+  setIsLoading,
+} from "./base";
+import {
+  parseFile,
+  setDirty,
+  setLastSyncAt,
+  setOrgFileErrorMessage,
+} from "./org";
+import {
+  localStorageAvailable,
+  persistField,
+} from "../util/settings_persister";
+import { createGitlabOAuth } from "../sync_backend_clients/gitlab_sync_backend_client";
 
-import { addSeconds } from 'date-fns';
+import { addSeconds } from "date-fns";
 
-import _ from 'lodash';
+import _ from "lodash";
 
-import pathParse from 'path-parse';
+import pathParse from "path-parse";
 
 export const signOut = () => (dispatch, getState) => {
-  switch (getState().syncBackend.get('client', {}).type) {
-    case 'WebDAV':
-      ['Endpoint', 'Username', 'Password'].forEach((e) => {
-        persistField('webdav' + e, null);
+  switch (getState().syncBackend.get("client", {}).type) {
+    case "WebDAV":
+      ["Endpoint", "Username", "Password"].forEach((e) => {
+        persistField("webdav" + e, null);
       });
       break;
-    case 'Dropbox':
+    case "Dropbox":
       // `dropboxAccessToken` is a legacy token that was relevant
       // prior to switching to OAuth 2 and PKCE. Still deleting it
       // here for a consistent state in users localStorage.
-      persistField('dropboxAccessToken', null);
-      persistField('dropboxRefreshToken', null);
-      persistField('codeVerifier', null);
+      persistField("dropboxAccessToken", null);
+      persistField("dropboxRefreshToken", null);
+      persistField("codeVerifier", null);
       break;
-    case 'GitLab':
-      persistField('gitLabProject', null);
+    case "GitLab":
+      persistField("gitLabProject", null);
       createGitlabOAuth().reset();
       break;
     default:
   }
 
-  persistField('authenticatedSyncService', null);
+  persistField("authenticatedSyncService", null);
 
-  dispatch({ type: 'SIGN_OUT' });
+  dispatch({ type: "SIGN_OUT" });
   dispatch(clearModalStack());
   dispatch(hideLoadingMessage());
 
@@ -48,9 +61,9 @@ export const setCurrentFileBrowserDirectoryListing = (
   directoryListing,
   hasMore,
   additionalSyncBackendState,
-  path
+  path,
 ) => ({
-  type: 'SET_CURRENT_FILE_BROWSER_DIRECTORY_LISTING',
+  type: "SET_CURRENT_FILE_BROWSER_DIRECTORY_LISTING",
   directoryListing,
   hasMore,
   additionalSyncBackendState,
@@ -58,29 +71,37 @@ export const setCurrentFileBrowserDirectoryListing = (
 });
 
 export const setIsLoadingMoreDirectoryListing = (isLoadingMore) => ({
-  type: 'SET_IS_LOADING_MORE_DIRECTORY_LISTING',
+  type: "SET_IS_LOADING_MORE_DIRECTORY_LISTING",
   isLoadingMore,
 });
 
 export const getDirectoryListing = (path) => (dispatch, getState) => {
-  dispatch(setLoadingMessage('Getting listing...'));
+  dispatch(setLoadingMessage("Getting listing..."));
 
-  const client = getState().syncBackend.get('client');
+  const client = getState().syncBackend.get("client");
   client
     .getDirectoryListing(path)
     .then(({ listing, hasMore, additionalSyncBackendState }) => {
       dispatch(
-        setCurrentFileBrowserDirectoryListing(listing, hasMore, additionalSyncBackendState, path)
+        setCurrentFileBrowserDirectoryListing(
+          listing,
+          hasMore,
+          additionalSyncBackendState,
+          path,
+        ),
       );
       dispatch(hideLoadingMessage());
     })
     .catch((error) => {
       dispatch(hideLoadingMessage());
-      const error_summary = _.get(error, 'error.error_summary') || '';
-      if ([400, 401].includes(error.status) || error_summary.includes('expired_access_token')) {
+      const error_summary = _.get(error, "error.error_summary") || "";
+      if (
+        [400, 401].includes(error.status) ||
+        error_summary.includes("expired_access_token")
+      ) {
         dispatch(signOut());
       } else {
-        alert('There was an error retrieving files!');
+        alert("There was an error retrieving files!");
         console.error(error);
       }
     });
@@ -89,16 +110,24 @@ export const getDirectoryListing = (path) => (dispatch, getState) => {
 export const loadMoreDirectoryListing = () => (dispatch, getState) => {
   dispatch(setIsLoadingMoreDirectoryListing(true));
 
-  const client = getState().syncBackend.get('client');
+  const client = getState().syncBackend.get("client");
   const currentFileBrowserDirectoryListing = getState().syncBackend.get(
-    'currentFileBrowserDirectoryListing'
+    "currentFileBrowserDirectoryListing",
   );
   client
-    .getMoreDirectoryListing(currentFileBrowserDirectoryListing.get('additionalSyncBackendState'))
+    .getMoreDirectoryListing(
+      currentFileBrowserDirectoryListing.get("additionalSyncBackendState"),
+    )
     .then(({ listing, hasMore, additionalSyncBackendState }) => {
-      const extendedListing = currentFileBrowserDirectoryListing.get('listing').concat(listing);
+      const extendedListing = currentFileBrowserDirectoryListing
+        .get("listing")
+        .concat(listing);
       dispatch(
-        setCurrentFileBrowserDirectoryListing(extendedListing, hasMore, additionalSyncBackendState)
+        setCurrentFileBrowserDirectoryListing(
+          extendedListing,
+          hasMore,
+          additionalSyncBackendState,
+        ),
       );
       dispatch(setIsLoadingMoreDirectoryListing(false));
     });
@@ -106,13 +135,13 @@ export const loadMoreDirectoryListing = () => (dispatch, getState) => {
 
 export const pushBackup = (pathOrFileId, contents) => {
   return (dispatch, getState) => {
-    const client = getState().syncBackend.get('client');
+    const client = getState().syncBackend.get("client");
     switch (client.type) {
-      case 'Dropbox':
-      case 'WebDAV':
+      case "Dropbox":
+      case "WebDAV":
         client.createFile(`${pathOrFileId}.organice-bak`, contents);
         break;
-      case 'GitLab':
+      case "GitLab":
         // No-op for GitLab, because the beauty of version control makes backup files redundant.
         break;
       default:
@@ -124,7 +153,7 @@ export const downloadFile = (path) => {
   return (dispatch, getState) => {
     dispatch(setLoadingMessage(`Downloading file ...`));
     getState()
-      .syncBackend.get('client')
+      .syncBackend.get("client")
       .getFileContents(path)
       .then((fileContents) => {
         dispatch(hideLoadingMessage());
@@ -153,7 +182,7 @@ export const createFile = (path, content) => {
   return (dispatch, getState) => {
     dispatch(setLoadingMessage(`Creating file: ${path}`));
     getState()
-      .syncBackend.get('client')
+      .syncBackend.get("client")
       .createFile(path, content)
       .then(() => {
         dispatch(setLastSyncAt(addSeconds(new Date(), 5), path));

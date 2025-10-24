@@ -1,16 +1,16 @@
-import React, { useEffect } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import React, { useEffect } from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
 
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 
-import ActionDrawer from './components/ActionDrawer';
+import ActionDrawer from "./components/ActionDrawer";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import classNames from 'classnames';
+import classNames from "classnames";
 
-import * as syncBackendActions from '../../actions/sync_backend';
+import * as syncBackendActions from "../../actions/sync_backend";
 
 const FileBrowser = ({
   path,
@@ -29,22 +29,24 @@ const FileBrowser = ({
 
   const getParentDirectoryPath = () => {
     switch (syncBackendType) {
-      case 'Dropbox':
-      case 'GitLab':
-      case 'WebDAV':
-        const pathParts = path.split('/');
-        return pathParts.slice(0, pathParts.length - 1).join('/');
+      case "Dropbox":
+      case "GitLab":
+      case "WebDAV":
+        const pathParts = path.split("/");
+        return pathParts.slice(0, pathParts.length - 1).join("/");
       default:
         return null;
     }
   };
 
-  const isTopLevelDirectory = path === '';
+  const isTopLevelDirectory = path === "";
 
   return (
     <div className="file-browser-container">
-      {syncBackendType === 'Dropbox' && (
-        <h3 className="file-browser__header">Directory: {isTopLevelDirectory ? '/' : path}</h3>
+      {syncBackendType === "Dropbox" && (
+        <h3 className="file-browser__header">
+          Directory: {isTopLevelDirectory ? "/" : path}
+        </h3>
       )}
 
       <ActionDrawer />
@@ -53,39 +55,40 @@ const FileBrowser = ({
         {!isTopLevelDirectory && (
           <Link to={`/files${getParentDirectoryPath()}`}>
             <li className="file-browser__file-list__element">
-              <i className="fas fa-folder file-browser__file-list__icon--directory" /> ..
+              <i className="fas fa-folder file-browser__file-list__icon--directory" />{" "}
+              ..
             </li>
           </Link>
         )}
 
         {(listing || []).map((file) => {
-          const isDirectory = file.get('isDirectory');
-          const isBackupFile = file.get('name').endsWith('.organice-bak');
-          const isOrgFile = file.get('name').endsWith('.org');
-          const isSettingsFile = file.get('name') === '.organice-config.json';
+          const isDirectory = file.get("isDirectory");
+          const isBackupFile = file.get("name").endsWith(".organice-bak");
+          const isOrgFile = file.get("name").endsWith(".org");
+          const isSettingsFile = file.get("name") === ".organice-config.json";
 
-          const iconClass = classNames('file-browser__file-list__icon fas', {
-            'fa-folder': isDirectory,
-            'file-browser__file-list__icon--directory': isDirectory,
-            'fa-file': !isDirectory && !isBackupFile && !isSettingsFile,
-            'file-browser__file-list__icon--not-org': !isOrgFile,
-            'fa-copy': isBackupFile,
-            'fa-cogs': isSettingsFile,
+          const iconClass = classNames("file-browser__file-list__icon fas", {
+            "fa-folder": isDirectory,
+            "file-browser__file-list__icon--directory": isDirectory,
+            "fa-file": !isDirectory && !isBackupFile && !isSettingsFile,
+            "file-browser__file-list__icon--not-org": !isOrgFile,
+            "fa-copy": isBackupFile,
+            "fa-cogs": isSettingsFile,
           });
 
-          if (file.get('isDirectory')) {
+          if (file.get("isDirectory")) {
             return (
-              <Link to={`/files${file.get('path')}`} key={file.get('id')}>
+              <Link to={`/files${file.get("path")}`} key={file.get("id")}>
                 <li className="file-browser__file-list__element">
-                  <i className={iconClass} /> {file.get('name')}/
+                  <i className={iconClass} /> {file.get("name")}/
                 </li>
               </Link>
             );
           } else {
             return (
-              <Link to={`/file${file.get('path')}`} key={file.get('id')}>
+              <Link to={`/file${file.get("path")}`} key={file.get("id")}>
                 <li className="file-browser__file-list__element">
-                  <i className={iconClass} /> {file.get('name')}
+                  <i className={iconClass} /> {file.get("name")}
                 </li>
               </Link>
             );
@@ -112,21 +115,22 @@ const FileBrowser = ({
 
 const mapStateToProps = (state) => {
   const currentFileBrowserDirectoryListing = state.syncBackend.get(
-    'currentFileBrowserDirectoryListing'
+    "currentFileBrowserDirectoryListing",
   );
   return {
-    syncBackendType: state.syncBackend.get('client').type,
+    syncBackendType: state.syncBackend.get("client").type,
     listing: !!currentFileBrowserDirectoryListing
-      ? currentFileBrowserDirectoryListing.get('listing')
+      ? currentFileBrowserDirectoryListing.get("listing")
       : null,
     hasMore:
-      !!currentFileBrowserDirectoryListing && currentFileBrowserDirectoryListing.get('hasMore'),
+      !!currentFileBrowserDirectoryListing &&
+      currentFileBrowserDirectoryListing.get("hasMore"),
     isLoadingMore:
       !!currentFileBrowserDirectoryListing &&
-      currentFileBrowserDirectoryListing.get('isLoadingMore'),
+      currentFileBrowserDirectoryListing.get("isLoadingMore"),
     additionalSyncBackendState:
       !!currentFileBrowserDirectoryListing &&
-      currentFileBrowserDirectoryListing.get('additionalSyncBackendState'),
+      currentFileBrowserDirectoryListing.get("additionalSyncBackendState"),
   };
 };
 

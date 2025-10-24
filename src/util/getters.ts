@@ -36,7 +36,7 @@ import {
   subtract,
   add,
   multiply,
-  divide
+  divide,
 } from "lodash/fp";
 
 export const isTrue = isEqual(true);
@@ -68,7 +68,6 @@ export const getSumOfFlattenedArray = pipe([flatten, sum]);
 
 export const getCountOfObjectKeys = pipe([Object.keys, size]);
 export const getCountOfObjectValues = pipe([Object.values, size]);
-
 
 export const getCountOfItemsFromArrayForPredicateWithTransformation = curry(
   <T, V>(
@@ -126,7 +125,8 @@ export const getCountOfItemsFromArrayThatStartWithX = curry(
     ])(prefix),
 );
 
-export const getCountOfItemsFromArrayThatAreGreaterThanZero = getCountOfItemsFromArrayForPredicate(lt(0))
+export const getCountOfItemsFromArrayThatAreGreaterThanZero =
+  getCountOfItemsFromArrayForPredicate(lt(0));
 
 export const getCountOfItemsForPredicatePerArrayChunk = curry(
   <T>(
@@ -141,24 +141,23 @@ export const getCountOfItemsForPredicatePerArrayChunk = curry(
   },
 );
 
-export const getCountOfUniqueItemsPerArrayChunk = curry(<T>(chunkSize: number,
-  array: Array<T>): Array<number> => {
-    return pipe([
-      chunk(chunkSize),
-      map(pipe([uniq, size])),      
-    ])(array)
-})
+export const getCountOfUniqueItemsPerArrayChunk = curry(
+  <T>(chunkSize: number, array: Array<T>): Array<number> => {
+    return pipe([chunk(chunkSize), map(pipe([uniq, size]))])(array);
+  },
+);
 
 export const getLengthOfLinearRange = pipe([
   pipe([reverse, spread(subtract)]),
-  add(-1)
+  add(-1),
 ]);
 
-export const getRangeStep = curry((range: [number, number], cycles: number, itemsCount: number): number => {
-  return pipe([
-    getLengthOfLinearRange,
-    multiply(cycles),
-    partialRight(divide, [itemsCount]),
-  ])(range)
-})
-
+export const getRangeStep = curry(
+  (range: [number, number], cycles: number, itemsCount: number): number => {
+    return pipe([
+      getLengthOfLinearRange,
+      multiply(cycles),
+      partialRight(divide, [itemsCount]),
+    ])(range);
+  },
+);

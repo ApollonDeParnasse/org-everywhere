@@ -1,4 +1,4 @@
-@import '../../../../colors.css';
+@import "../../../../colors.css";
 
 .no-tags-message {
   color: var(--base0);

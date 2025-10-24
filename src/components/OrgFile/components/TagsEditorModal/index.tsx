@@ -1,20 +1,16 @@
-import React, { PureComponent, Fragment } from 'react';
-import { IconContext } from "react-icons"
-import {
-  FaBars,
-  FaTimes,
-  FaPlus
-} from "react-icons/fa";
-import { Droppable, Draggable } from 'react-beautiful-dnd';
-import {bindAll} from 'lodash';
-import classNames from 'classnames';
-import './stylesheet.css';
+import React, { PureComponent, Fragment } from "react";
+import { IconContext } from "react-icons";
+import { FaBars, FaTimes, FaPlus } from "react-icons/fa";
+import { Droppable, Draggable } from "react-beautiful-dnd";
+import { bindAll } from "lodash";
+import classNames from "classnames";
+import "./stylesheet.css";
 
 export default class TagsEditorModal extends PureComponent {
   constructor(props) {
     super(props);
 
-    bindAll(this, ['handleRemoveTag', 'handleAddNewTag', 'handleTagChange']);
+    bindAll(this, ["handleRemoveTag", "handleAddNewTag", "handleTagChange"]);
 
     this.state = {
       allTags: props.allTags,
@@ -22,9 +18,9 @@ export default class TagsEditorModal extends PureComponent {
   }
 
   componentDidUpdate(prevProps) {
-    const prevTags = prevProps.header.getIn(['titleLine', 'tags']);
-    const currentTags = this.props.header.getIn(['titleLine', 'tags']);
-    if (prevTags.size === currentTags.size - 1 && currentTags.last() === '') {
+    const prevTags = prevProps.header.getIn(["titleLine", "tags"]);
+    const currentTags = this.props.header.getIn(["titleLine", "tags"]);
+    if (prevTags.size === currentTags.size - 1 && currentTags.last() === "") {
       if (this.lastTextfield) {
         this.lastTextfield.focus();
       }
@@ -33,26 +29,28 @@ export default class TagsEditorModal extends PureComponent {
 
   handleTagChange(tagIndex) {
     return (event) => {
-      const tags = this.props.header.getIn(['titleLine', 'tags']);
-      this.props.onChange(tags.set(tagIndex, event.target.value.replace(/(\s+|:)/g, '')));
+      const tags = this.props.header.getIn(["titleLine", "tags"]);
+      this.props.onChange(
+        tags.set(tagIndex, event.target.value.replace(/(\s+|:)/g, "")),
+      );
     };
   }
 
   handleRemoveTag(tagIndex) {
     return () => {
-      const tags = this.props.header.getIn(['titleLine', 'tags']);
+      const tags = this.props.header.getIn(["titleLine", "tags"]);
       this.props.onChange(tags.delete(tagIndex));
     };
   }
 
   handleAddNewTag() {
-    const tags = this.props.header.getIn(['titleLine', 'tags']);
-    this.props.onChange(tags.push(''));
+    const tags = this.props.header.getIn(["titleLine", "tags"]);
+    this.props.onChange(tags.push(""));
   }
 
   handleExistingTagClick(newTag) {
     return () => {
-      const tags = this.props.header.getIn(['titleLine', 'tags']);
+      const tags = this.props.header.getIn(["titleLine", "tags"]);
       if (tags.includes(newTag)) {
         this.props.onChange(tags.filter((tag) => tag !== newTag));
       } else {
@@ -65,7 +63,7 @@ export default class TagsEditorModal extends PureComponent {
     const { header } = this.props;
     const { allTags } = this.state;
 
-    const headerTags = header.getIn(['titleLine', 'tags']);
+    const headerTags = header.getIn(["titleLine", "tags"]);
 
     return (
       <>
@@ -82,20 +80,28 @@ export default class TagsEditorModal extends PureComponent {
             This header doesn't have any tags.
             <br />
             <br />
-            Click the <FaPlus /> button to add a new one, or choose from the list
-            of all of your tags below.
+            Click the <FaPlus /> button to add a new one, or choose from the
+            list of all of your tags below.
           </div>
         ) : (
           <Droppable droppableId="tags-editor-droppable" type="TAG">
             {(provided, _snapshot) => (
-              <div className="tags-container" ref={provided.innerRef} {...provided.droppableProps}>
+              <div
+                className="tags-container"
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+              >
                 <Fragment>
                   {headerTags.map((tag, index) => (
-                    <Draggable draggableId={`tag--${index}`} index={index} key={index}>
+                    <Draggable
+                      draggableId={`tag--${index}`}
+                      index={index}
+                      key={index}
+                    >
                       {(provided, snapshot) => (
                         <div
-                          className={classNames('tag-container', {
-                            'tag-container--dragging': snapshot.isDragging,
+                          className={classNames("tag-container", {
+                            "tag-container--dragging": snapshot.isDragging,
                           })}
                           ref={provided.innerRef}
                           {...provided.draggableProps}
@@ -105,17 +111,24 @@ export default class TagsEditorModal extends PureComponent {
                             className="textfield tag-container__textfield"
                             value={tag}
                             onChange={this.handleTagChange(index)}
-                            ref={(textfield) => (this.lastTextfield = textfield)}
+                            ref={(textfield) =>
+                              (this.lastTextfield = textfield)
+                            }
                             list="drawer-modal__datalist-tag-names"
                           />
                           <div className="tag-container__actions-container">
-			    <FaTimes />
-			    <IconContext.Provider value={{ className: "tag-container__drag-handle drag-handle" }}>
-			      <div>
-				<FaBars />
-				  {...provided.dragHandleProps}
-			      </div>
-			    </IconContext.Provider>			                                                           
+                            <FaTimes />
+                            <IconContext.Provider
+                              value={{
+                                className:
+                                  "tag-container__drag-handle drag-handle",
+                              }}
+                            >
+                              <div>
+                                <FaBars />
+                                {...provided.dragHandleProps}
+                              </div>
+                            </IconContext.Provider>
                           </div>
                         </div>
                       )}
@@ -131,8 +144,8 @@ export default class TagsEditorModal extends PureComponent {
 
         <div className="tags-editor__add-new-container">
           <button className="btn btn--circle" onClick={this.handleAddNewTag}>
-	    <FaPlus />
-	  </button>
+            <FaPlus />
+          </button>
         </div>
 
         <hr className="tags-editor__separator" />
@@ -143,12 +156,16 @@ export default class TagsEditorModal extends PureComponent {
           {allTags
             .filter((tag) => !!tag)
             .map((tag) => {
-              const className = classNames('all-tags__tag', {
-                'all-tags__tag--in-use': headerTags.includes(tag),
+              const className = classNames("all-tags__tag", {
+                "all-tags__tag--in-use": headerTags.includes(tag),
               });
 
               return (
-                <div className={className} key={tag} onClick={this.handleExistingTagClick(tag)}>
+                <div
+                  className={className}
+                  key={tag}
+                  onClick={this.handleExistingTagClick(tag)}
+                >
                   {tag}
                 </div>
               );

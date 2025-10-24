@@ -3,7 +3,7 @@
  * @returns {boolean} True if Web Share API is supported
  */
 export const isWebShareSupported = () => {
-  return navigator.share && typeof navigator.share === 'function';
+  return navigator.share && typeof navigator.share === "function";
 };
 
 /**
@@ -27,10 +27,10 @@ export const shareContent = async (options) => {
       if (files) shareData.files = files;
 
       await navigator.share(shareData);
-      return { success: true, method: 'web-share' };
+      return { success: true, method: "web-share" };
     } catch (error) {
-      if (error.name === 'AbortError') {
-        return { success: false, method: 'web-share', error: 'user-cancelled' };
+      if (error.name === "AbortError") {
+        return { success: false, method: "web-share", error: "user-cancelled" };
       }
       // Fall through to fallback
     }
@@ -48,14 +48,14 @@ export const shareContent = async (options) => {
  * @returns {Object} Result object
  */
 const fallbackToEmail = ({ title, text }) => {
-  const subject = title || 'Shared from organice';
-  const body = text || '';
+  const subject = title || "Shared from organice";
+  const body = text || "";
   const mailtoURI = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
-    body
+    body,
   )}`;
 
   window.open(mailtoURI);
-  return { success: true, method: 'email' };
+  return { success: true, method: "email" };
 };
 
 /**
@@ -64,11 +64,15 @@ const fallbackToEmail = ({ title, text }) => {
  * @param {string} filename - Name of the file
  * @param {string} mimeType - MIME type of the file (default: 'text/plain')
  */
-export const createDownloadableFile = (content, filename, mimeType = 'text/plain') => {
+export const createDownloadableFile = (
+  content,
+  filename,
+  mimeType = "text/plain",
+) => {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
 
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
   link.download = filename;
   document.body.appendChild(link);

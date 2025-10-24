@@ -1,4 +1,4 @@
-import Bowser from 'bowser';
+import Bowser from "bowser";
 
 const browser = Bowser.getParser(window.navigator.userAgent);
 
@@ -8,12 +8,12 @@ export const isMobileSafari13 = (() => {
   return (
     browser.satisfies({
       mobile: {
-        safari: '>=13',
+        safari: ">=13",
       },
     }) &&
     browser.satisfies({
       mobile: {
-        safari: '<13.0.4',
+        safari: "<13.0.4",
       },
     })
   );
@@ -21,25 +21,30 @@ export const isMobileSafari13 = (() => {
 
 /** Is the OS iOS or Android? */
 export const isMobileBrowser = (() => {
-  return browser.getPlatformType() !== 'desktop';
+  return browser.getPlatformType() !== "desktop";
 })();
 
 export const isIos = () => {
-  return browser.getOS().name === 'iOS';
+  return browser.getOS().name === "iOS";
 };
 
 /** Is iPhone Model X (tested with Xs) */
 export const isIphoneX = window.matchMedia
-  ? window.matchMedia('(max-device-width: 812px) and (-webkit-device-pixel-ratio : 3)').matches
+  ? window.matchMedia(
+      "(max-device-width: 812px) and (-webkit-device-pixel-ratio : 3)",
+    ).matches
   : false;
 
 /** Is iPhone Model 6, 7 or 8 (tested with 6s) */
 export const isIphone678 = window.matchMedia
-  ? window.matchMedia('(min-device-width: 375px) and (-webkit-device-pixel-ratio : 2)').matches
+  ? window.matchMedia(
+      "(min-device-width: 375px) and (-webkit-device-pixel-ratio : 2)",
+    ).matches
   : false;
 
 /** Is running in standalone mode (not in Mobile Safari) */
-export const isRunningAsPWA = 'standalone' in window.navigator && window.navigator.standalone;
+export const isRunningAsPWA =
+  "standalone" in window.navigator && window.navigator.standalone;
 
 /** Is running in Landscape Mode (as opposed to Portrait Mode) */
 export function isInLandscapeMode() {

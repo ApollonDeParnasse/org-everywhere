@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Motion, spring } from 'react-motion';
+import React, { useState, useEffect } from "react";
+import { Motion, spring } from "react-motion";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
 export default ({ message }) => {
   const [shouldRenderIndicator, setShouldRenderIndicator] = useState(true);

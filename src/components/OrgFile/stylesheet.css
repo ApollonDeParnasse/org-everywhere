@@ -1,4 +1,4 @@
-@import '../../colors.css';
+@import "../../colors.css";
 
 .org-file__parsing-error-message {
   text-align: center;

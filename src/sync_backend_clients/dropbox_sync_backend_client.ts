@@ -1,15 +1,15 @@
 /* global process */
 
-import { isEmpty } from 'lodash';
-import { orgFileExtensions } from '../lib/org_utils';
+import { isEmpty } from "lodash";
+import { orgFileExtensions } from "../lib/org_utils";
 
-import { persistField, getPersistedField } from '../util/settings_persister';
+import { persistField, getPersistedField } from "../util/settings_persister";
 
-import { Dropbox } from 'dropbox';
+import { Dropbox } from "dropbox";
 
-import parseQueryString from '../util/parse_query_string';
+import parseQueryString from "../util/parse_query_string";
 
-import { fromJS, Map } from 'immutable';
+import { fromJS, Map } from "immutable";
 
 /**
  * Gets a directory listing ready to be rendered by organice.
@@ -21,13 +21,13 @@ import { fromJS, Map } from 'immutable';
 export const filterAndSortDirectoryListing = (listing) => {
   const filteredListing = listing.filter((file) => {
     // Show all folders
-    if (file['.tag'] === 'folder') return true;
+    if (file[".tag"] === "folder") return true;
     // Filter out all non-org files
     return file.name.match(orgFileExtensions);
   });
   return filteredListing.sort((a, b) => {
     // Folders before files
-    if (a['.tag'] === 'folder' && b['.tag'] === 'file') {
+    if (a[".tag"] === "folder" && b[".tag"] === "file") {
       return -1;
     } else {
       // Sorth both folders and files alphabetically
@@ -51,9 +51,9 @@ export default () => {
       sortedListing.map((entry) => ({
         id: entry.id,
         name: entry.name,
-        isDirectory: entry['.tag'] === 'folder',
+        isDirectory: entry[".tag"] === "folder",
         path: entry.path_display,
-      }))
+      })),
     );
   };
 
@@ -75,7 +75,7 @@ export default () => {
     });
 
   const getMoreDirectoryListing = (additionalSyncBackendState) => {
-    const cursor = additionalSyncBackendState.get('cursor');
+    const cursor = additionalSyncBackendState.get("cursor");
     return new Promise((resolve, reject) =>
       dbxPromise.then((dbx) => {
         dbx.filesListFolderContinue({ cursor }).then((response) =>
@@ -85,9 +85,9 @@ export default () => {
             additionalSyncBackendState: Map({
               cursor: response.result.cursor,
             }),
-          })
+          }),
         );
-      })
+      }),
     );
   };
 
@@ -99,13 +99,13 @@ export default () => {
             path,
             contents,
             mode: {
-              '.tag': 'overwrite',
+              ".tag": "overwrite",
             },
             autorename: true,
           })
           .then(resolve)
           .catch(reject);
-      })
+      }),
     );
 
   const updateFile = uploadFile;
@@ -118,11 +118,11 @@ export default () => {
           .filesDownload({ path })
           .then((response) => {
             const reader = new FileReader();
-            reader.addEventListener('loadend', () =>
+            reader.addEventListener("loadend", () =>
               resolve({
                 contents: reader.result,
                 lastModifiedAt: response.result.server_modified,
-              })
+              }),
             );
             reader.readAsText(response.result.fileBlob);
           })
@@ -141,27 +141,30 @@ export default () => {
             // https://github.com/200ok-ch/organice/issues/108
             const objectContainsTagErrorP = (function () {
               try {
-                return JSON.parse(error.error).error.path['.tag'] === 'not_found';
+                return (
+                  JSON.parse(error.error).error.path[".tag"] === "not_found"
+                );
               } catch (e) {
                 return false;
               }
             })();
             if (
-              (typeof error === 'string' && error.match(/missing required field 'path'/)) ||
+              (typeof error === "string" &&
+                error.match(/missing required field 'path'/)) ||
               objectContainsTagErrorP
             ) {
               reject();
             }
           });
-      })
+      }),
     );
 
   const getFileContents = (path) => {
-    if (isEmpty(path)) return Promise.reject('No path given');
+    if (isEmpty(path)) return Promise.reject("No path given");
     return new Promise((resolve, reject) =>
       getFileContentsAndMetadata(path)
         .then(({ contents }) => resolve(contents))
-        .catch(reject)
+        .catch(reject),
     );
   };
 
@@ -171,8 +174,10 @@ export default () => {
         dbx
           .filesDelete({ path })
           .then(resolve)
-          .catch((error) => reject(error.error.error['.tag'] === 'path_lookup', error));
-      })
+          .catch((error) =>
+            reject(error.error.error[".tag"] === "path_lookup", error),
+          );
+      }),
     );
 
   /* Dropbox documentation on OAuth2 and PKCE:
@@ -184,10 +189,10 @@ export default () => {
   -  SDK Docs: https://dropbox.github.io/dropbox-sdk-js/index.html
   -  Migrating App Permissions and Access Tokens: https://dropbox.tech/developers/migrating-app-permissions-and-access-tokens */
 
-  const REDIRECT_URI = window.location.origin + '/';
+  const REDIRECT_URI = window.location.origin + "/";
 
   dbxPromise = new Promise((resolve, reject) => {
-    const clientId = import.meta.env.VITE_REACT_APP_DROPBOX_CLIENT_ID
+    const clientId = import.meta.env.VITE_REACT_APP_DROPBOX_CLIENT_ID;
     const dbx = new Dropbox({
       clientId,
       fetch: fetch.bind(window),
@@ -195,12 +200,12 @@ export default () => {
     const dbxAuth = dbx.auth;
 
     if (getCodeFromUrl()) {
-      dbxAuth.setCodeVerifier(getPersistedField('codeVerifier'));
+      dbxAuth.setCodeVerifier(getPersistedField("codeVerifier"));
       dbxAuth
         .getAccessTokenFromCode(REDIRECT_URI, getCodeFromUrl())
         .then((response) => {
           dbxAuth.setRefreshToken(response.result.refresh_token);
-          persistField('dropboxRefreshToken', response.result.refresh_token);
+          persistField("dropboxRefreshToken", response.result.refresh_token);
 
           resolve(dbx);
         })
@@ -208,14 +213,14 @@ export default () => {
           console.error(error);
         });
     } else {
-      dbxAuth.setCodeVerifier(getPersistedField('codeVerifier'));
-      dbxAuth.setRefreshToken(getPersistedField('dropboxRefreshToken'));
+      dbxAuth.setCodeVerifier(getPersistedField("codeVerifier"));
+      dbxAuth.setRefreshToken(getPersistedField("dropboxRefreshToken"));
       resolve(dbx);
     }
   });
 
   return {
-    type: 'Dropbox',
+    type: "Dropbox",
     isSignedIn,
     getDirectoryListing,
     getMoreDirectoryListing,

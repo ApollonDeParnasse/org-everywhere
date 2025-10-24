@@ -1,23 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import { capitalize } from 'lodash';
+import React, { useState, useEffect, useRef } from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
+import { capitalize } from "lodash";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import classNames from 'classnames';
-import HeaderListView from './components/HeaderListView';
+import classNames from "classnames";
+import HeaderListView from "./components/HeaderListView";
 
-import { isMobileBrowser, isIos } from '../../../../lib/browser_utils';
-import { millisDuration } from '../../../../lib/timestamps';
+import { isMobileBrowser, isIos } from "../../../../lib/browser_utils";
+import { millisDuration } from "../../../../lib/timestamps";
 
-import * as orgActions from '../../../../actions/org';
+import * as orgActions from "../../../../actions/org";
 
 // INFO: SearchModal, AgendaModal and TaskListModal are very similar
 // in structure and partially in logic. When changing one, consider
 // changing all.
 function SearchModal(props) {
-  const [dateDisplayType, setdateDisplayType] = useState('absolute');
+  const [dateDisplayType, setdateDisplayType] = useState("absolute");
   const searchInputRef = useRef(null);
   const {
     searchFilter,
@@ -38,11 +38,17 @@ function SearchModal(props) {
   }
 
   function handleToggleDateDisplayType() {
-    setdateDisplayType(dateDisplayType === 'absolute' ? 'relative' : 'absolute');
+    setdateDisplayType(
+      dateDisplayType === "absolute" ? "relative" : "absolute",
+    );
   }
 
   function handleFilterChange(event) {
-    props.org.setSearchFilterInformation(event.target.value, event.target.selectionStart, context);
+    props.org.setSearchFilterInformation(
+      event.target.value,
+      event.target.selectionStart,
+      context,
+    );
   }
 
   function onBookmarkButtonClick() {
@@ -65,7 +71,12 @@ function SearchModal(props) {
   //    will need to tap the input field to activate it. This provides a
   //    more stable experience on iOS.
   useEffect(() => {
-    if (!isIos() && searchInputRef.current && context !== 'Clock List' && !activeClocks) {
+    if (
+      !isIos() &&
+      searchInputRef.current &&
+      context !== "Clock List" &&
+      !activeClocks
+    ) {
       const timerId = setTimeout(() => {
         if (searchInputRef.current) {
           searchInputRef.current.focus();
@@ -77,7 +88,7 @@ function SearchModal(props) {
 
   return (
     <>
-      {context === 'search' ? (
+      {context === "search" ? (
         <div className="task-list__modal-title_search">
           {showClockedTimes ? (
             <span title="Sum of time logged on all search results directly (not including time logged on their children)">
@@ -95,11 +106,12 @@ function SearchModal(props) {
         <div className="search-input-container">
           <div className="search-input-line">
             <datalist id="task-list__datalist-filter">
-              {(searchFilter.length === 0 ? bookmarks : searchFilterSuggestions).map(
-                (string, idx) => (
-                  <option key={idx} value={string} />
-                )
-              )}
+              {(searchFilter.length === 0
+                ? bookmarks
+                : searchFilterSuggestions
+              ).map((string, idx) => (
+                <option key={idx} value={string} />
+              ))}
             </datalist>
 
             <div className="search__input-container">
@@ -111,8 +123,9 @@ function SearchModal(props) {
                 ref={searchInputRef}
                 autoCapitalize="none"
                 autoComplete="off"
-                className={classNames('textfield', 'task-list__filter-input', {
-                  'task-list__filter-input--invalid': !!searchFilter && !searchFilterValid,
+                className={classNames("textfield", "task-list__filter-input", {
+                  "task-list__filter-input--invalid":
+                    !!searchFilter && !searchFilterValid,
                 })}
                 placeholder="e.g. -DONE doc|man :simple|easy :assignee:nobody|none"
                 list="task-list__datalist-filter"
@@ -121,9 +134,9 @@ function SearchModal(props) {
             </div>
 
             <i
-              className={classNames('fas fa-lg bookmark__icon ', {
-                'fa-star': !bookmarkChosen,
-                'fa-trash': bookmarkChosen,
+              className={classNames("fas fa-lg bookmark__icon ", {
+                "fa-star": !bookmarkChosen,
+                "fa-trash": bookmarkChosen,
                 bookmark__icon__enabled: canSaveBookmark,
               })}
               onClick={onBookmarkButtonClick}
@@ -139,13 +152,13 @@ function SearchModal(props) {
         // not work with the same event. Therefore, we're just opting
         // to scroll the whole drawer. That's not the best UX. And a
         // better CSS juggler than me is welcome to improve on it.
-        style={isMobileBrowser ? undefined : { overflow: 'auto' }}
+        style={isMobileBrowser ? undefined : { overflow: "auto" }}
       >
         <HeaderListView
           onHeaderClick={handleHeaderClick}
           dateDisplayType={dateDisplayType}
           onToggleDateDisplayType={handleToggleDateDisplayType}
-          context={activeClocks ? 'Clock List' : context}
+          context={activeClocks ? "Clock List" : context}
         />
       </div>
     </>
@@ -154,13 +167,14 @@ function SearchModal(props) {
 
 const mapStateToProps = (state) => {
   return {
-    path: state.org.present.get('path'),
-    searchFilter: state.org.present.getIn(['search', 'searchFilter']),
-    searchFilterValid: state.org.present.getIn(['search', 'searchFilterValid']),
-    searchFilterSuggestions: state.org.present.getIn(['search', 'searchFilterSuggestions']) || [],
-    allBookmarks: state.org.present.get('bookmarks'),
-    showClockedTimes: state.org.present.getIn(['search', 'showClockedTimes']),
-    clockedTime: state.org.present.getIn(['search', 'clockedTime']),
+    path: state.org.present.get("path"),
+    searchFilter: state.org.present.getIn(["search", "searchFilter"]),
+    searchFilterValid: state.org.present.getIn(["search", "searchFilterValid"]),
+    searchFilterSuggestions:
+      state.org.present.getIn(["search", "searchFilterSuggestions"]) || [],
+    allBookmarks: state.org.present.get("bookmarks"),
+    showClockedTimes: state.org.present.getIn(["search", "showClockedTimes"]),
+    clockedTime: state.org.present.getIn(["search", "clockedTime"]),
   };
 };
 

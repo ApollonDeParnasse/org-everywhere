@@ -6,17 +6,17 @@
 // ensures rendering either a static page or a dynamic application
 // component.
 
-import React from 'react';
-import { connect } from 'react-redux';
+import React from "react";
+import { connect } from "react-redux";
 
-import { Route, Switch, Redirect, withRouter } from 'react-router-dom';
+import { Route, Switch, Redirect, withRouter } from "react-router-dom";
 
-import Landing from '../Landing';
-import Entry from '../Entry';
-import PrivacyPolicy from '../PrivacyPolicy';
-import SyncServiceSignIn from '../SyncServiceSignIn';
-import OrgFile from '../OrgFile';
-import HeaderBar from '../HeaderBar';
+import Landing from "../Landing";
+import Entry from "../Entry";
+import PrivacyPolicy from "../PrivacyPolicy";
+import SyncServiceSignIn from "../SyncServiceSignIn";
+import OrgFile from "../OrgFile";
+import HeaderBar from "../HeaderBar";
 
 const Turnout = ({ isAuthenticated }) => {
   if (isAuthenticated) return <Entry />;
@@ -64,7 +64,7 @@ const Turnout = ({ isAuthenticated }) => {
 
 const mapStateToProps = (state) => {
   return {
-    isAuthenticated: state.syncBackend.get('isAuthenticated'),
+    isAuthenticated: state.syncBackend.get("isAuthenticated"),
   };
 };
 

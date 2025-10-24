@@ -1,17 +1,17 @@
-import React, { Fragment } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import React, { Fragment } from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
 
-import { Droppable } from 'react-beautiful-dnd';
+import { Droppable } from "react-beautiful-dnd";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import * as orgActions from '../../actions/org';
+import * as orgActions from "../../actions/org";
 
-import FileSetting from './components/FileSetting';
+import FileSetting from "./components/FileSetting";
 
-import { List } from 'immutable';
-import { STATIC_FILE_PREFIX } from '../../lib/org_utils';
+import { List } from "immutable";
+import { STATIC_FILE_PREFIX } from "../../lib/org_utils";
 
 const FileSettingsEditor = ({
   fileSettings,
@@ -26,11 +26,15 @@ const FileSettingsEditor = ({
 
   const handleDeleteSetting = (settingId) => org.deleteFileSetting(settingId);
 
-  const handleReorderSetting = (fromIndex, toIndex) => org.reorderFileSetting(fromIndex, toIndex);
+  const handleReorderSetting = (fromIndex, toIndex) =>
+    org.reorderFileSetting(fromIndex, toIndex);
 
   return (
     <div>
-      <Droppable droppableId="file-setting-editor-droppable" type="FILE-SETTING">
+      <Droppable
+        droppableId="file-setting-editor-droppable"
+        type="FILE-SETTING"
+      >
         {(provided) => (
           <div
             className="file-setting-container"
@@ -39,18 +43,19 @@ const FileSettingsEditor = ({
           >
             {fileSettings.size === 0 ? (
               <div className="no-file-setting-message">
-                You don't currently have any file settings - add one by pressing the{' '}
-                <i className="fas fa-plus" /> button.
+                You don't currently have any file settings - add one by pressing
+                the <i className="fas fa-plus" /> button.
                 <br />
                 <br />
-                File settings allow you to configure how specific files are handeled when multiple
-                files are loaded. Make sure a file is loaded to create a setting entry.
+                File settings allow you to configure how specific files are
+                handeled when multiple files are loaded. Make sure a file is
+                loaded to create a setting entry.
               </div>
             ) : (
               <Fragment>
                 {fileSettings.map((setting, index) => (
                   <FileSetting
-                    key={setting.get('id')}
+                    key={setting.get("id")}
                     index={index}
                     setting={setting}
                     path={currentPathIfWithoutFileSetting}
@@ -81,16 +86,20 @@ const FileSettingsEditor = ({
 };
 
 const mapStateToProps = (state) => {
-  const path = state.base.get('lastViewedPath');
-  const fileSettings = state.org.present.get('fileSettings', List());
-  const existingSettings = fileSettings.map((setting) => setting.get('path'));
-  const paths = state.org.present.get('files', List()).keySeq();
-  const currentPathIfWithoutFileSetting = !existingSettings.find((filePath) => filePath === path)
+  const path = state.base.get("lastViewedPath");
+  const fileSettings = state.org.present.get("fileSettings", List());
+  const existingSettings = fileSettings.map((setting) => setting.get("path"));
+  const paths = state.org.present.get("files", List()).keySeq();
+  const currentPathIfWithoutFileSetting = !existingSettings.find(
+    (filePath) => filePath === path,
+  )
     ? path
     : null;
   const loadedFilepaths = paths
     .filter((path) => !path.startsWith(STATIC_FILE_PREFIX))
-    .filter((path) => !existingSettings.find((settingPath) => settingPath === path))
+    .filter(
+      (path) => !existingSettings.find((settingPath) => settingPath === path),
+    )
     .toJS();
   return {
     fileSettings,

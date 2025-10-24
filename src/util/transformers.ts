@@ -34,16 +34,9 @@ import {
   inRange,
   partialRight,
   floor,
-  multiply
+  multiply,
 } from "lodash/fp";
-import {
-  addDays,
-  subDays,
-  addWeeks,
-  addMonths,
-  addYears,
-} from "date-fns/fp";
-
+import { addDays, subDays, addWeeks, addMonths, addYears } from "date-fns/fp";
 
 export const mapSum = map(sum);
 
@@ -119,7 +112,6 @@ export const unfoldBooleanCountTuplesIntoShuffledArrayOfBooleans = pipe([
   unfoldBooleanCountTuplesIntoArrayOfBooleans,
   shuffle,
 ]);
-
 
 export const apply = <T>(func: (arg: T) => T, arg: T) => func(arg);
 
@@ -230,14 +222,14 @@ export const convertObjectKeysIntoSet = pipe([Object.keys, convertToSet]);
 export const zipDivide = zipWith(divide);
 export const spreadZipDivide = spread(zipDivide);
 export const spreadDivide = spread(divide);
-export const divideByTwo = partialRight(divide, [2])
+export const divideByTwo = partialRight(divide, [2]);
 
 export const spreadMultiply = spread(multiply);
 export const spreadAdd = spread(add);
 export const addOne = add(1);
 export const minusOne = add(-1);
 export const multiplyByTwo = multiply(2);
-export const half = partialRight(divide, [2])
+export const half = partialRight(divide, [2]);
 export const convertIntegerToPercentage = multiply(0.01);
 export const convertIntegersToPercentages = map(convertIntegerToPercentage);
 export const addMinusOne = curry((intOne: number, intTwo: number) =>
@@ -254,7 +246,6 @@ export const mod = curry(
 export const getBaseLog = curry((baseLog: number, of: number) => {
   return Math.log(of) / Math.log(baseLog);
 });
-
 
 export const accumulate = curry(
   <T>([func, initial]: [Function, T], array: Array<T>): Array<T> => {
@@ -350,7 +341,6 @@ export const nonZeroBoundedModularAddition = curry(
   },
 );
 
-
 export const splitOnUnderscores = split("_");
 export const joinOnUnderscores = join("_");
 export const splitOnUnderscoresAndParseInts = pipe([
@@ -370,7 +360,6 @@ export const convertCharacterCodeIntoCharacter = String.fromCharCode;
 export const convertArrayOfIntegersIntoArrayOfCharacters = map(
   convertCharacterIntoCharacterCode,
 );
-
 
 export const addOneDay = addDays(1);
 export const subOneDay = subDays(1);

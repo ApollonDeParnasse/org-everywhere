@@ -1,5 +1,5 @@
 .drawer-modal__title {
-  overflowX: 'auto';
-  overflowY: 'auto';
-  touchAction: 'manipulation'
+  overflowx: "auto";
+  overflowy: "auto";
+  touchaction: "manipulation";
 }

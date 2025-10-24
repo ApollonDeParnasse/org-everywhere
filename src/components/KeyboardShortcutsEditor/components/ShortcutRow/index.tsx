@@ -1,15 +1,15 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent } from "react";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import _ from 'lodash';
-import classNames from 'classnames';
+import _ from "lodash";
+import classNames from "classnames";
 
 export default class ShortcutRow extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, ['handleRebindClick', 'handleKeyPress']);
+    _.bindAll(this, ["handleRebindClick", "handleKeyPress"]);
 
     this.state = {
       isEditMode: false,
@@ -17,39 +17,41 @@ export default class ShortcutRow extends PureComponent {
   }
 
   componentDidMount() {
-    this.rebindArea.addEventListener('blur', () => this.setState({ isEditMode: false }));
+    this.rebindArea.addEventListener("blur", () =>
+      this.setState({ isEditMode: false }),
+    );
   }
 
   handleRebindClick() {
     this.setState({ isEditMode: true });
-    document.addEventListener('keypress', this.handleKeyPress);
+    document.addEventListener("keypress", this.handleKeyPress);
   }
 
   handleKeyPress(event) {
     this.setState({ isEditMode: false });
-    document.removeEventListener('keypress', this.handleKeyPress);
+    document.removeEventListener("keypress", this.handleKeyPress);
 
     let key = null;
-    if (event.code.startsWith('Key')) {
+    if (event.code.startsWith("Key")) {
       key = event.code.substr(3).toLowerCase();
-    } else if (event.code.startsWith('Digit')) {
+    } else if (event.code.startsWith("Digit")) {
       key = event.code.substr(5);
     } else {
       key = {
-        Minus: '-',
-        Equal: '=',
-        Backspace: 'backspace',
-        Enter: 'enter',
-        Return: 'return',
-        Tab: 'tab',
-        BracketLeft: '[',
-        BracketRight: ']',
-        Semicolon: ';',
+        Minus: "-",
+        Equal: "=",
+        Backspace: "backspace",
+        Enter: "enter",
+        Return: "return",
+        Tab: "tab",
+        BracketLeft: "[",
+        BracketRight: "]",
+        Semicolon: ";",
         Quote: '"',
-        Backslash: '\\',
-        Comma: ',',
-        Period: '.',
-        Slash: '/',
+        Backslash: "\\",
+        Comma: ",",
+        Period: ".",
+        Slash: "/",
       }[event.code];
     }
 
@@ -58,45 +60,46 @@ export default class ShortcutRow extends PureComponent {
     }
 
     const modifiers = [
-      ['ctrlKey', 'ctrl'],
-      ['altKey', 'alt'],
-      ['metaKey', 'meta'],
-      ['shiftKey', 'shift'],
+      ["ctrlKey", "ctrl"],
+      ["altKey", "alt"],
+      ["metaKey", "meta"],
+      ["shiftKey", "shift"],
     ];
 
     const newModifiers = modifiers
       .filter(([modifier, _]) => event[modifier])
       .map(([_, symbol]) => symbol)
-      .join('+');
-    const newBinding = `${newModifiers}${!!newModifiers ? '+' : ''}${key}`;
+      .join("+");
+    const newBinding = `${newModifiers}${!!newModifiers ? "+" : ""}${key}`;
 
     this.props.onBindingChange(this.props.name, newBinding);
   }
 
   symbolizeKeybinding(binding) {
     if (!binding) {
-      return '';
+      return "";
     }
 
     const replacements = [
-      ['ctrl', '^'],
-      ['alt', '⌥'],
-      ['option', '⌥'],
-      ['command', '⌘'],
-      ['meta', '⌘'],
-      ['shift', '⇧'],
-      ['backspace', '⌫'],
-      ['return', '⏎'],
-      ['enter', '⏎'],
-      ['left', '←'],
-      ['right', '→'],
-      ['up', '↑'],
-      ['down', '↓'],
+      ["ctrl", "^"],
+      ["alt", "⌥"],
+      ["option", "⌥"],
+      ["command", "⌘"],
+      ["meta", "⌘"],
+      ["shift", "⇧"],
+      ["backspace", "⌫"],
+      ["return", "⏎"],
+      ["enter", "⏎"],
+      ["left", "←"],
+      ["right", "→"],
+      ["up", "↑"],
+      ["down", "↓"],
     ];
 
     return replacements.reduce(
-      (currentBinding, [name, symbol]) => currentBinding.replace(RegExp(`${name}\\+?`), symbol),
-      binding
+      (currentBinding, [name, symbol]) =>
+        currentBinding.replace(RegExp(`${name}\\+?`), symbol),
+      binding,
     );
   }
 
@@ -104,9 +107,12 @@ export default class ShortcutRow extends PureComponent {
     const { name, binding } = this.props;
     const { isEditMode } = this.state;
 
-    const rebindAreaClassName = classNames('keyboard-shortcut-container__shortcut-key', {
-      'keyboard-shortcut-container__shortcut-key--edit-mode': isEditMode,
-    });
+    const rebindAreaClassName = classNames(
+      "keyboard-shortcut-container__shortcut-key",
+      {
+        "keyboard-shortcut-container__shortcut-key--edit-mode": isEditMode,
+      },
+    );
 
     return (
       <div className="keyboard-shortcut-container">
@@ -117,7 +123,7 @@ export default class ShortcutRow extends PureComponent {
           tabIndex="-1"
           ref={(div) => (this.rebindArea = div)}
         >
-          {isEditMode ? '...' : this.symbolizeKeybinding(binding)}
+          {isEditMode ? "..." : this.symbolizeKeybinding(binding)}
         </div>
       </div>
     );

@@ -1,16 +1,16 @@
-import React, { useEffect } from 'react';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
+import React, { useEffect } from "react";
+import { bindActionCreators } from "redux";
+import { connect } from "react-redux";
 
-import { Map } from 'immutable';
+import { Map } from "immutable";
 
-import * as orgActions from '../../../../../../actions/org';
-import './stylesheet.css';
+import * as orgActions from "../../../../../../actions/org";
+import "./stylesheet.css";
 
-import { millisDuration } from '../../../../../../lib/timestamps';
+import { millisDuration } from "../../../../../../lib/timestamps";
 
-import TitleLine from '../../../TitleLine';
-import { getBreadcrumbsStringFunction } from '../../../../../../lib/org_utils';
+import TitleLine from "../../../TitleLine";
+import { getBreadcrumbsStringFunction } from "../../../../../../lib/org_utils";
 
 function HeaderListView(props) {
   const { context } = props;
@@ -22,10 +22,10 @@ function HeaderListView(props) {
   useEffect(() => {
     // No specific searchFilter and cursorPosition, but set the
     // context (like 'search' or 'refile')
-    if (context === 'Clock List') {
-      props.org.setSearchFilterInformation('clock:now', 0, 'search');
+    if (context === "Clock List") {
+      props.org.setSearchFilterInformation("clock:now", 0, "search");
     } else {
-      props.org.setSearchFilterInformation('', 0, context);
+      props.org.setSearchFilterInformation("", 0, context);
     }
   }, [context, props.org]);
 
@@ -38,8 +38,13 @@ function HeaderListView(props) {
           const getBreadcrumbs = getBreadcrumbsStringFunction(allHeaders, path);
           return headersOfFile.map((header) => {
             return (
-              <div key={header.get('id')} className="agenda-day__header-container">
-                <div className="search__breadcrumbs">{getBreadcrumbs(header)}</div>
+              <div
+                key={header.get("id")}
+                className="agenda-day__header-container"
+              >
+                <div className="search__breadcrumbs">
+                  {getBreadcrumbs(header)}
+                </div>
                 <div className="agenda-day__header__header-container">
                   <TitleLine
                     header={header}
@@ -48,10 +53,13 @@ function HeaderListView(props) {
                     isSelected={false}
                     shouldDisableActions
                     shouldDisableExplicitWidth
-                    onClick={handleHeaderClick(path, header.get('id'))}
+                    onClick={handleHeaderClick(path, header.get("id"))}
                     addition={
-                      showClockedTimes && header.get('totalFilteredTimeLoggedRecursive') !== 0
-                        ? millisDuration(header.get('totalFilteredTimeLoggedRecursive'))
+                      showClockedTimes &&
+                      header.get("totalFilteredTimeLoggedRecursive") !== 0
+                        ? millisDuration(
+                            header.get("totalFilteredTimeLoggedRecursive"),
+                          )
                         : null
                     }
                   />
@@ -66,11 +74,11 @@ function HeaderListView(props) {
 }
 
 const mapStateToProps = (state) => {
-  const files = state.org.present.get('files');
+  const files = state.org.present.get("files");
   return {
-    allHeaders: files.map((file) => file.get('headers')),
-    headers: state.org.present.getIn(['search', 'filteredHeaders']) || Map(),
-    showClockedTimes: state.org.present.getIn(['search', 'showClockedTimes']),
+    allHeaders: files.map((file) => file.get("headers")),
+    headers: state.org.present.getIn(["search", "filteredHeaders"]) || Map(),
+    showClockedTimes: state.org.present.getIn(["search", "showClockedTimes"]),
   };
 };
 

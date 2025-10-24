@@ -17,7 +17,7 @@ import {
   setHours,
   getMinutes,
   setMinutes,
-} from 'date-fns';
+} from "date-fns";
 
 export const renderAsText = (timestamp) => {
   const {
@@ -40,33 +40,40 @@ export const renderAsText = (timestamp) => {
     delayUnit,
   } = timestamp.toJS();
 
-  let timestampText = '';
-  timestampText += isActive ? '<' : '[';
+  let timestampText = "";
+  timestampText += isActive ? "<" : "[";
   timestampText += `${year}-${month}-${day}`;
-  timestampText += !!dayName ? ` ${dayName}` : '';
-  timestampText += !!startHour ? ` ${startHour}:${startMinute}` : '';
-  timestampText += !!endHour ? `-${endHour}:${endMinute}` : '';
-  timestampText += !!repeaterType ? ` ${repeaterType}${repeaterValue}${repeaterUnit}` : '';
+  timestampText += !!dayName ? ` ${dayName}` : "";
+  timestampText += !!startHour ? ` ${startHour}:${startMinute}` : "";
+  timestampText += !!endHour ? `-${endHour}:${endMinute}` : "";
+  timestampText += !!repeaterType
+    ? ` ${repeaterType}${repeaterValue}${repeaterUnit}`
+    : "";
   timestampText +=
     !!repeaterType && !!repeaterDeadlineValue
       ? `/${repeaterDeadlineValue}${repeaterDeadlineUnit}`
-      : '';
-  timestampText += !!delayType ? ` ${delayType}${delayValue}${delayUnit}` : '';
-  timestampText += isActive ? '>' : ']';
+      : "";
+  timestampText += !!delayType ? ` ${delayType}${delayValue}${delayUnit}` : "";
+  timestampText += isActive ? ">" : "]";
 
   return timestampText;
 };
 
-export const getCurrentTimestamp = ({ isActive = true, withStartTime = false } = {}) =>
-  timestampForDate(new Date(), { isActive, withStartTime });
+export const getCurrentTimestamp = ({
+  isActive = true,
+  withStartTime = false,
+} = {}) => timestampForDate(new Date(), { isActive, withStartTime });
 
-export const timestampForDate = (time, { isActive = true, withStartTime = false } = {}) => {
+export const timestampForDate = (
+  time,
+  { isActive = true, withStartTime = false } = {},
+) => {
   const timestamp = {
     isActive,
-    year: format(time, 'yyyy'),
-    month: format(time, 'MM'),
-    day: format(time, 'dd'),
-    dayName: format(time, 'eee'),
+    year: format(time, "yyyy"),
+    month: format(time, "MM"),
+    day: format(time, "dd"),
+    dayName: format(time, "eee"),
     startHour: null,
     startMinute: null,
     endHour: null,
@@ -82,20 +89,25 @@ export const timestampForDate = (time, { isActive = true, withStartTime = false 
   };
 
   if (withStartTime) {
-    timestamp.startHour = format(time, 'HH');
-    timestamp.startMinute = format(time, 'mm');
+    timestamp.startHour = format(time, "HH");
+    timestamp.startMinute = format(time, "mm");
   }
 
   return timestamp;
 };
 
 // To get around the heavy-weight renderAsText(fromJS(getCurrentTimestampAsText()))
-export const getCurrentTimestampAsText = ({ isActive = true, withStartTime = false } = {}) =>
-  getTimestampAsText(new Date(), { isActive, withStartTime });
-export const getTimestampAsText = (time, { isActive = true, withStartTime = false } = {}) => {
-  const bracketPair = isActive ? '<>' : '[]';
-  let formatString = 'yyyy-MM-dd eee';
-  if (withStartTime) formatString += ' HH:mm';
+export const getCurrentTimestampAsText = ({
+  isActive = true,
+  withStartTime = false,
+} = {}) => getTimestampAsText(new Date(), { isActive, withStartTime });
+export const getTimestampAsText = (
+  time,
+  { isActive = true, withStartTime = false } = {},
+) => {
+  const bracketPair = isActive ? "<>" : "[]";
+  let formatString = "yyyy-MM-dd eee";
+  if (withStartTime) formatString += " HH:mm";
   return `${bracketPair[0]}${format(time, formatString)}${bracketPair[1]}`;
 };
 
@@ -104,41 +116,45 @@ export const dateForTimestamp = (timestamp) => {
 
   let timestampString = `${year}-${month}-${day}`;
   if (startHour && startMinute) {
-    timestampString += ` ${startHour.padStart(2, '0')}:${startMinute}`;
+    timestampString += ` ${startHour.padStart(2, "0")}:${startMinute}`;
   } else {
-    timestampString += ' 12:00';
+    timestampString += " 12:00";
   }
-  return parse(timestampString, 'yyyy-MM-dd HH:mm', new Date());
+  return parse(timestampString, "yyyy-MM-dd HH:mm", new Date());
 };
 
 export const addTimestampUnitToDate = (date, numUnits, timestampUnit) => {
   switch (timestampUnit) {
-    case 'h':
+    case "h":
       return addHours(date, numUnits);
-    case 'd':
+    case "d":
       return addDays(date, numUnits);
-    case 'w':
+    case "w":
       return addWeeks(date, numUnits);
-    case 'm':
+    case "m":
       return addMonths(date, numUnits);
-    case 'y':
+    case "y":
       return addYears(date, numUnits);
     default:
       return date;
   }
 };
 
-export const subtractTimestampUnitFromDate = (date, numUnits, timestampUnit) => {
+export const subtractTimestampUnitFromDate = (
+  date,
+  numUnits,
+  timestampUnit,
+) => {
   switch (timestampUnit) {
-    case 'h':
+    case "h":
       return subHours(date, numUnits);
-    case 'd':
+    case "d":
       return subDays(date, numUnits);
-    case 'w':
+    case "w":
       return subWeeks(date, numUnits);
-    case 'm':
+    case "m":
       return subMonths(date, numUnits);
-    case 'y':
+    case "y":
       return subYears(date, numUnits);
     default:
       return date;
@@ -146,60 +162,65 @@ export const subtractTimestampUnitFromDate = (date, numUnits, timestampUnit) => 
 };
 
 export const applyRepeater = (timestamp, currentDate) => {
-  if (!timestamp.get('repeaterType')) {
+  if (!timestamp.get("repeaterType")) {
     return timestamp;
   }
 
   let newDate = null;
-  switch (timestamp.get('repeaterType')) {
-    case '+':
+  switch (timestamp.get("repeaterType")) {
+    case "+":
       newDate = addTimestampUnitToDate(
         dateForTimestamp(timestamp),
-        timestamp.get('repeaterValue'),
-        timestamp.get('repeaterUnit')
+        timestamp.get("repeaterValue"),
+        timestamp.get("repeaterUnit"),
       );
       break;
-    case '++':
+    case "++":
       newDate = addTimestampUnitToDate(
         dateForTimestamp(timestamp),
-        timestamp.get('repeaterValue'),
-        timestamp.get('repeaterUnit')
+        timestamp.get("repeaterValue"),
+        timestamp.get("repeaterUnit"),
       );
       while (isBefore(newDate, currentDate)) {
         newDate = addTimestampUnitToDate(
           newDate,
-          timestamp.get('repeaterValue'),
-          timestamp.get('repeaterUnit')
+          timestamp.get("repeaterValue"),
+          timestamp.get("repeaterUnit"),
         );
       }
       break;
-    case '.+':
+    case ".+":
       newDate = addTimestampUnitToDate(
         currentDate,
-        timestamp.get('repeaterValue'),
-        timestamp.get('repeaterUnit')
+        timestamp.get("repeaterValue"),
+        timestamp.get("repeaterUnit"),
       );
-      if (timestamp.get('repeaterUnit') !== 'h') {
+      if (timestamp.get("repeaterUnit") !== "h") {
         let timestampDate = dateForTimestamp(timestamp);
         newDate = setHours(newDate, getHours(timestampDate));
         newDate = setMinutes(newDate, getMinutes(timestampDate));
       }
       break;
     default:
-      console.error(`Unrecognized timestamp repeater type: ${timestamp.get('repeaterType')}`);
+      console.error(
+        `Unrecognized timestamp repeater type: ${timestamp.get("repeaterType")}`,
+      );
       return timestamp;
   }
 
   timestamp = timestamp
-    .set('day', format(newDate, 'dd'))
-    .set('dayName', format(newDate, 'eee'))
-    .set('month', format(newDate, 'MM'))
-    .set('year', format(newDate, 'yyyy'));
+    .set("day", format(newDate, "dd"))
+    .set("dayName", format(newDate, "eee"))
+    .set("month", format(newDate, "MM"))
+    .set("year", format(newDate, "yyyy"));
 
-  if (timestamp.get('startHour') !== undefined && timestamp.get('startHour') !== null) {
+  if (
+    timestamp.get("startHour") !== undefined &&
+    timestamp.get("startHour") !== null
+  ) {
     timestamp = timestamp
-      .set('startHour', format(newDate, 'HH'))
-      .set('startMinute', format(newDate, 'mm'));
+      .set("startHour", format(newDate, "HH"))
+      .set("startMinute", format(newDate, "mm"));
   }
 
   return timestamp;
@@ -211,15 +232,15 @@ export const timestampDuration = (startTimestamp, endTimestamp) => {
 };
 
 export const dateDuration = (start, end) => {
-  let pad = ' ';
+  let pad = " ";
   if (start > end) {
-    pad = '-';
+    pad = "-";
     [start, end] = [end, start];
   }
   const minDiff = differenceInMinutes(end, start);
   const hours = Math.floor(minDiff / 60);
   if (hours >= 10) {
-    pad = '';
+    pad = "";
   }
   const minutes = minDiff % 60;
   const minutesText = minutes >= 10 ? minutes : `0${minutes}`;
@@ -228,7 +249,7 @@ export const dateDuration = (start, end) => {
 
 export const millisDuration = (millis) => {
   if (millis === undefined) {
-    return '';
+    return "";
   }
   return dateDuration(new Date(0), new Date(millis));
 };

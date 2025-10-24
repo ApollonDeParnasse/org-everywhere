@@ -1,23 +1,23 @@
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import React, { PureComponent } from "react";
+import { connect } from "react-redux";
+import { bindActionCreators } from "redux";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import * as baseActions from '../../../../actions/base';
-import * as orgActions from '../../../../actions/org';
+import * as baseActions from "../../../../actions/base";
+import * as orgActions from "../../../../actions/org";
 
-import {bindAll} from 'lodash';
+import { bindAll } from "lodash";
 
 class NoteEditorModal extends PureComponent {
   constructor(props) {
     super(props);
 
-    bindAll(this, ['handleTextareaRef', 'addNote', 'handleDescriptionChange']);
+    bindAll(this, ["handleTextareaRef", "addNote", "handleDescriptionChange"]);
 
     this.state = {
       allTags: props.allTags,
-      note: '',
+      note: "",
     };
   }
 
@@ -31,7 +31,7 @@ class NoteEditorModal extends PureComponent {
     if (!note) return;
 
     this.props.org.addNote(note, new Date());
-    this.setState({ note: '' });
+    this.setState({ note: "" });
   }
 
   handleNoteFieldClick(event) {
@@ -57,7 +57,10 @@ class NoteEditorModal extends PureComponent {
           onClick={this.handleNoteFieldClick}
           onChange={this.handleDescriptionChange}
         />
-        <button className="btn note-editor__done-btn" onClick={() => this.addNote()}>
+        <button
+          className="btn note-editor__done-btn"
+          onClick={() => this.addNote()}
+        >
           Add
         </button>
       </>

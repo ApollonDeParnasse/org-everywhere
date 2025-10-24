@@ -1,5 +1,5 @@
-import readFixture from '../../test_helpers/index';
-import { parseOrg } from './parse_org.js';
+import readFixture from "../../test_helpers/index";
+import { parseOrg } from "./parse_org.js";
 
 import {
   setPath,
@@ -9,14 +9,14 @@ import {
   setSelectedDescriptionItemIndex,
   setSelectedTableId,
   setSelectedTableCellId,
-} from '../actions/org';
+} from "../actions/org";
 
-import { fromJS, Map, List, Set } from 'immutable';
-import { pipe, shuffle, first, range } from 'lodash/fp';
-import format from 'date-fns/format';
-import { createStore, applyMiddleware } from 'redux';
-import thunk  from 'redux-thunk';
-import rootReducer from '../reducers/';
+import { fromJS, Map, List, Set } from "immutable";
+import { pipe, shuffle, first, range } from "lodash/fp";
+import format from "date-fns/format";
+import { createStore, applyMiddleware } from "redux";
+import thunk from "redux-thunk";
+import rootReducer from "../reducers/";
 import {
   STATIC_FILE_PREFIX,
   extractAllOrgProperties,
@@ -26,40 +26,47 @@ import {
   getTable,
   getSelectedTable,
   getTableCell,
-} from './org_utils';
+} from "./org_utils";
 
-describe('Extracting and computing property names and values', () => {
-  const testOrgFile = readFixture('properties_extended');
+describe("Extracting and computing property names and values", () => {
+  const testOrgFile = readFixture("properties_extended");
   const parsedFile = parseOrg(testOrgFile);
-  const headers = parsedFile.get('headers');
+  const headers = parsedFile.get("headers");
   const allProperties = extractAllOrgProperties(headers);
-  test('Did we got all properties?', () => {
+  test("Did we got all properties?", () => {
     expect(allProperties.size).toEqual(8);
   });
-  describe('Compute property names', () => {
-    test('Computes distinct property names (alphabetical order)', () => {
+  describe("Compute property names", () => {
+    test("Computes distinct property names (alphabetical order)", () => {
       const result = computeAllPropertyNames(allProperties);
-      expect(result.toJS()).toEqual(['bar', 'bay', 'baz', 'emptyprop', 'foo', 'foo2']);
+      expect(result.toJS()).toEqual([
+        "bar",
+        "bay",
+        "baz",
+        "emptyprop",
+        "foo",
+        "foo2",
+      ]);
     });
   });
-  describe('Compute property values for a certain property', () => {
-    test('Computes distinct property values for a property (alphabetical order)', () => {
-      const result = computeAllPropertyValuesFor(allProperties, 'bar');
-      expect(result.toJS()).toEqual(['xyz', 'zyx']);
+  describe("Compute property values for a certain property", () => {
+    test("Computes distinct property values for a property (alphabetical order)", () => {
+      const result = computeAllPropertyValuesFor(allProperties, "bar");
+      expect(result.toJS()).toEqual(["xyz", "zyx"]);
     });
-    test('Handles the case of empty values', () => {
-      const result = computeAllPropertyValuesFor(allProperties, 'emptyprop');
-      expect(result.toJS()).toEqual(['']);
+    test("Handles the case of empty values", () => {
+      const result = computeAllPropertyValuesFor(allProperties, "emptyprop");
+      expect(result.toJS()).toEqual([""]);
     });
-    test('Handles the case of no values for a non-existing property', () => {
-      const result = computeAllPropertyValuesFor(allProperties, 'nonexisting');
+    test("Handles the case of no values for a non-existing property", () => {
+      const result = computeAllPropertyValuesFor(allProperties, "nonexisting");
       expect(result.isEmpty()).toBe(true);
     });
   });
 });
 
-describe('Find the headline at the end of the headline-path', () => {
-  it('where the headline-path contains template variables as headlines', () => {
+describe("Find the headline at the end of the headline-path", () => {
+  it("where the headline-path contains template variables as headlines", () => {
     // path to be traced: [today] > <today> > test
     const today = new Date();
     const inactiveTimestampAsHeadline = {
@@ -70,22 +77,22 @@ describe('Find the headline at the end of the headline-path', () => {
         title: [
           {
             id: 7,
-            type: 'timestamp',
+            type: "timestamp",
             firstTimestamp: {
-              month: format(today, 'MM'),
-              dayName: format(today, 'eee'),
+              month: format(today, "MM"),
+              dayName: format(today, "eee"),
               isActive: false,
-              day: format(today, 'dd'),
-              year: format(today, 'yyyy'),
+              day: format(today, "dd"),
+              year: format(today, "yyyy"),
             },
             secondTimestamp: null,
           },
         ],
-        rawTitle: `[${format(today, 'yyyy-MM-dd eee')}]`,
+        rawTitle: `[${format(today, "yyyy-MM-dd eee")}]`,
         tags: [],
       },
       propertyListItems: [],
-      rawDescription: '',
+      rawDescription: "",
       nestingLevel: 1,
       id: 8,
       description: [],
@@ -93,13 +100,13 @@ describe('Find the headline at the end of the headline-path', () => {
     const activeTimestampAsHeadline = {
       planningItems: [
         {
-          type: 'TIMESTAMP_TITLE',
+          type: "TIMESTAMP_TITLE",
           timestamp: {
-            month: format(today, 'MM'),
-            dayName: format(today, 'eee'),
+            month: format(today, "MM"),
+            dayName: format(today, "eee"),
             isActive: true,
-            day: format(today, 'dd'),
-            year: format(today, 'yyyy'),
+            day: format(today, "dd"),
+            year: format(today, "yyyy"),
           },
           id: 147,
         },
@@ -110,22 +117,22 @@ describe('Find the headline at the end of the headline-path', () => {
         title: [
           {
             id: 9,
-            type: 'timestamp',
+            type: "timestamp",
             firstTimestamp: {
-              month: format(today, 'MM'),
-              dayName: format(today, 'eee'),
+              month: format(today, "MM"),
+              dayName: format(today, "eee"),
               isActive: true,
-              day: format(today, 'dd'),
-              year: format(today, 'yyyy'),
+              day: format(today, "dd"),
+              year: format(today, "yyyy"),
             },
             secondTimestamp: null,
           },
         ],
-        rawTitle: `<${format(today, 'yyyy-MM-dd eee')}>`,
+        rawTitle: `<${format(today, "yyyy-MM-dd eee")}>`,
         tags: [],
       },
       propertyListItems: [],
-      rawDescription: '',
+      rawDescription: "",
       nestingLevel: 2,
       id: 10,
       description: [],
@@ -137,15 +144,15 @@ describe('Find the headline at the end of the headline-path', () => {
       titleLine: {
         title: [
           {
-            type: 'text',
-            contents: 'test',
+            type: "text",
+            contents: "test",
           },
         ],
-        rawTitle: 'test',
+        rawTitle: "test",
         tags: [],
       },
       propertyListItems: [],
-      rawDescription: '',
+      rawDescription: "",
       nestingLevel: 3,
       id: 11,
       description: [],
@@ -157,15 +164,15 @@ describe('Find the headline at the end of the headline-path', () => {
       titleLine: {
         title: [
           {
-            type: 'text',
-            contents: 'testnot',
+            type: "text",
+            contents: "testnot",
           },
         ],
-        rawTitle: 'testnot',
+        rawTitle: "testnot",
         tags: [],
       },
       propertyListItems: [],
-      rawDescription: '',
+      rawDescription: "",
       nestingLevel: 3,
       id: 200,
       description: [],
@@ -177,15 +184,17 @@ describe('Find the headline at the end of the headline-path', () => {
       expectedHeadline,
       extraSiblingHeadline,
     ]);
-    const headerPath = fromJS(['%u', '%t', 'test']);
+    const headerPath = fromJS(["%u", "%t", "test"]);
 
-    expect(headerWithPath(headers, headerPath).toJS()).toStrictEqual(expectedHeadline);
+    expect(headerWithPath(headers, headerPath).toJS()).toStrictEqual(
+      expectedHeadline,
+    );
   });
 });
 
-describe('Table Functions', () => {
-  const testOrgFile = readFixture('multiple_tables');
-  const testFilePath = STATIC_FILE_PREFIX + 'fixtureTestFile.org';
+describe("Table Functions", () => {
+  const testOrgFile = readFixture("multiple_tables");
+  const testFilePath = STATIC_FILE_PREFIX + "fixtureTestFile.org";
   const capture = Map({ captureTemplates: [] });
   const testBaseState = {
     org: {
@@ -194,12 +203,12 @@ describe('Table Functions', () => {
         files: Map(),
         fileSettings: [],
         search: Map({
-          searchFilter: '',
+          searchFilter: "",
           searchFilterExpr: [],
         }),
         bookmarks: Map({
           search: List(),
-          'task-list': List(),
+          "task-list": List(),
           refile: List(),
         }),
       }),
@@ -213,13 +222,17 @@ describe('Table Functions', () => {
       customKeybindings: {},
       shouldTapTodoToAdvance: true,
       isLoading: Set(),
-      finderTab: 'Search',
-      agendaTimeframe: 'Week',
+      finderTab: "Search",
+      agendaTimeframe: "Week",
       preferEditRawValues: false,
     }),
   };
 
-  const testStore = createStore(rootReducer, testBaseState, applyMiddleware(thunk));
+  const testStore = createStore(
+    rootReducer,
+    testBaseState,
+    applyMiddleware(thunk),
+  );
 
   testStore.dispatch(parseFile(testFilePath, testOrgFile));
   testStore.dispatch(setPath(testFilePath));
@@ -229,66 +242,69 @@ describe('Table Functions', () => {
   const randomArrayValue = pipe([shuffle, first]);
   const randomArrayIndex = pipe([range(0), randomArrayValue]);
 
-  const getTableTotalColumnsCount = (table) => table.getIn(['contents', 0, 'contents']).size;
-  const getTableTotalRowsCount = (table) => table.getIn(['contents']).size;
+  const getTableTotalColumnsCount = (table) =>
+    table.getIn(["contents", 0, "contents"]).size;
+  const getTableTotalRowsCount = (table) => table.getIn(["contents"]).size;
 
   const testHeaderIndex = 5;
   const testHeaderId = testState.org.present.getIn([
-    'files',
+    "files",
     testFilePath,
-    'headers',
+    "headers",
     testHeaderIndex,
-    'id',
+    "id",
   ]);
   const testRandomDescriptionItemIndex = randomArrayValue([0, 2, 6]);
   const testTableId = testState.org.present.getIn([
-    'files',
+    "files",
     testFilePath,
-    'headers',
+    "headers",
     testHeaderIndex,
-    'description',
+    "description",
     testRandomDescriptionItemIndex,
-    'id',
+    "id",
   ]);
 
   const testTable = testState.org.present.getIn([
-    'files',
+    "files",
     testFilePath,
-    'headers',
+    "headers",
     testHeaderIndex,
-    'description',
+    "description",
     testRandomDescriptionItemIndex,
   ]);
 
-  const testTableContents = testTable.get('contents');
+  const testTableContents = testTable.get("contents");
   const testTableTotalRows = testTableContents.size;
-  const testTableTotalColumns = testTableContents.get('0').size;
+  const testTableTotalColumns = testTableContents.get("0").size;
 
   const testRandomRowIndex = randomArrayIndex(testTableTotalRows);
   const testRandomColumnIndex = randomArrayIndex(testTableTotalColumns);
   const testTableCell = testTableContents.getIn([
     testRandomRowIndex,
-    'contents',
+    "contents",
     testRandomColumnIndex,
   ]);
-  const testTableCellId = testTableCell.get('id');
+  const testTableCellId = testTableCell.get("id");
 
   testStore.dispatch(selectHeader(testHeaderId));
   testStore.dispatch(selectHeaderIndex(testHeaderIndex));
 
-  testStore.dispatch(setSelectedDescriptionItemIndex(testRandomDescriptionItemIndex));
+  testStore.dispatch(
+    setSelectedDescriptionItemIndex(testRandomDescriptionItemIndex),
+  );
   testStore.dispatch(setSelectedTableId(testTableId));
 
   testStore.dispatch(setSelectedTableCellId(testTableCellId));
 
-  test('getTable', () => {
+  test("getTable", () => {
     const actualTable = getTable(
       {
         filePath: testFilePath,
         headerIndex: testHeaderIndex,
         descriptionItemIndex: testRandomDescriptionItemIndex,
       },
-      testStore.getState()
+      testStore.getState(),
     );
 
     expect(Map.isMap(actualTable)).toBeTruthy();
@@ -296,12 +312,12 @@ describe('Table Functions', () => {
     expect(getTableTotalColumnsCount(actualTable)).toBeGreaterThan(0);
   });
 
-  test('getSelectedTable', () => {
+  test("getSelectedTable", () => {
     const actualTable = getSelectedTable(testStore.getState());
     expect(actualTable.equals(testTable)).toBeTruthy();
   });
 
-  test('getTableCell', () => {
+  test("getTableCell", () => {
     const testCellArguments = {
       filePath: testFilePath,
       headerIndex: testHeaderIndex,
@@ -309,7 +325,10 @@ describe('Table Functions', () => {
       row: testRandomRowIndex,
       column: testRandomColumnIndex,
     };
-    const actualTableCell = getTableCell(testCellArguments, testStore.getState());
+    const actualTableCell = getTableCell(
+      testCellArguments,
+      testStore.getState(),
+    );
     expect(actualTableCell.equals(testTableCell)).toBeTruthy();
   });
 });

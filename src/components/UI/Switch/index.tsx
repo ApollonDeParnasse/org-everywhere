@@ -1,9 +1,12 @@
-import React from 'react';
-import { Motion, spring } from 'react-motion';
+import React from "react";
+import { Motion, spring } from "react-motion";
 
-import { interpolateColorsAndReturnCSS, createColorObject } from '../../../lib/color';
+import {
+  interpolateColorsAndReturnCSS,
+  createColorObject,
+} from "../../../lib/color";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
 export default ({ isEnabled, onToggle }) => {
   const disabledColor = createColorObject(255, 255, 255, 1);
@@ -20,11 +23,18 @@ export default ({ isEnabled, onToggle }) => {
   return (
     <Motion style={switchStyle}>
       {(style) => {
-        const backgroundColor = 
-          interpolateColorsAndReturnCSS(disabledColor, enabledColor, style.colorFactor)
+        const backgroundColor = interpolateColorsAndReturnCSS(
+          disabledColor,
+          enabledColor,
+          style.colorFactor,
+        );
 
         return (
-          <div className="switch" style={{ backgroundColor }} onClick={onToggle}>
+          <div
+            className="switch"
+            style={{ backgroundColor }}
+            onClick={onToggle}
+          >
             <Motion style={grabberStyle}>
               {(style) => <div className="switch__grabber" style={style} />}
             </Motion>

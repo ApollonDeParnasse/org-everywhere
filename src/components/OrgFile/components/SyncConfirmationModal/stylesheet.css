@@ -1,4 +1,4 @@
-@import '../../../../colors.css';
+@import "../../../../colors.css";
 
 .sync-confirmation-modal__header {
   color: var(--base2);

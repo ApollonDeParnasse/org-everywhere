@@ -1,15 +1,18 @@
-import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
+import React, { PureComponent } from "react";
+import { connect } from "react-redux";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import Header from '../Header';
+import Header from "../Header";
 
-import { numSubheadersOfHeaderWithId, hasHeaderContent } from '../../../../lib/org_utils';
+import {
+  numSubheadersOfHeaderWithId,
+  hasHeaderContent,
+} from "../../../../lib/org_utils";
 
-import _ from 'lodash';
-import classNames from 'classnames';
-import { List, Map } from 'immutable';
+import _ from "lodash";
+import classNames from "classnames";
+import { List, Map } from "immutable";
 
 class HeaderList extends PureComponent {
   constructor(props) {
@@ -17,7 +20,7 @@ class HeaderList extends PureComponent {
 
     this.headerRefs = {};
 
-    _.bindAll(this, ['handleHeaderRef']);
+    _.bindAll(this, ["handleHeaderRef"]);
   }
 
   componentDidUpdate(prevProps) {
@@ -27,7 +30,10 @@ class HeaderList extends PureComponent {
         const boundingRectangle = selectedHeaderDiv.getBoundingClientRect();
         const viewportHeight = document.documentElement.clientHeight;
 
-        if (boundingRectangle.top > viewportHeight * 0.9 || boundingRectangle.bottom < 0) {
+        if (
+          boundingRectangle.top > viewportHeight * 0.9 ||
+          boundingRectangle.bottom < 0
+        ) {
           selectedHeaderDiv.scrollIntoView();
         }
       }
@@ -39,7 +45,12 @@ class HeaderList extends PureComponent {
   }
 
   render() {
-    const { headers, selectedHeaderId, narrowedHeaderId, shouldDisableActions } = this.props;
+    const {
+      headers,
+      selectedHeaderId,
+      narrowedHeaderId,
+      shouldDisableActions,
+    } = this.props;
     const headerRenderData = headers
       .map((header, index) => {
         return {
@@ -52,12 +63,13 @@ class HeaderList extends PureComponent {
       .toArray();
 
     headerRenderData.forEach((headerRenderDatum, index) => {
-      const nestingLevel = headerRenderDatum.header.get('nestingLevel');
+      const nestingLevel = headerRenderDatum.header.get("nestingLevel");
 
       const hasNoParents = headerRenderData
         .slice(0, index)
         .every(
-          (previousRenderDatum) => previousRenderDatum.header.get('nestingLevel') >= nestingLevel
+          (previousRenderDatum) =>
+            previousRenderDatum.header.get("nestingLevel") >= nestingLevel,
         );
       if (hasNoParents) {
         headerRenderDatum.displayed = true;
@@ -70,81 +82,94 @@ class HeaderList extends PureComponent {
         ++followingHeaderIndex
       ) {
         const followingHeader = followingHeaders[followingHeaderIndex];
-        if (followingHeader.header.get('nestingLevel') <= nestingLevel) {
+        if (followingHeader.header.get("nestingLevel") <= nestingLevel) {
           break;
         }
 
         headerRenderDatum.hasContent = true;
 
         followingHeader.displayed =
-          headerRenderDatum.header.get('opened') && headerRenderDatum.displayed;
+          headerRenderDatum.header.get("opened") && headerRenderDatum.displayed;
       }
     });
 
     if (!!narrowedHeaderId) {
       const narrowedHeaderIndex = headerRenderData.findIndex(
-        (headerRenderDatum) => headerRenderDatum.header.get('id') === narrowedHeaderId
+        (headerRenderDatum) =>
+          headerRenderDatum.header.get("id") === narrowedHeaderId,
       );
 
       const previousHeaders = headerRenderData.slice(0, narrowedHeaderIndex);
-      previousHeaders.forEach((headerRenderDatum) => (headerRenderDatum.displayed = false));
+      previousHeaders.forEach(
+        (headerRenderDatum) => (headerRenderDatum.displayed = false),
+      );
 
-      const numSubheaders = numSubheadersOfHeaderWithId(headers, narrowedHeaderId);
-      const followingHeaders = headerRenderData.slice(narrowedHeaderIndex + numSubheaders + 1);
-      followingHeaders.forEach((headerRenderDatum) => (headerRenderDatum.displayed = false));
+      const numSubheaders = numSubheadersOfHeaderWithId(
+        headers,
+        narrowedHeaderId,
+      );
+      const followingHeaders = headerRenderData.slice(
+        narrowedHeaderIndex + numSubheaders + 1,
+      );
+      followingHeaders.forEach(
+        (headerRenderDatum) => (headerRenderDatum.displayed = false),
+      );
     }
 
     const headerColors = [
-      'var(--blue)',
-      'var(--green)',
-      'var(--cyan)',
-      'var(--yellow)',
-      'var(--blue)',
-      'var(--green)',
-      'var(--cyan)',
-      'var(--yellow)',
+      "var(--blue)",
+      "var(--green)",
+      "var(--cyan)",
+      "var(--yellow)",
+      "var(--blue)",
+      "var(--green)",
+      "var(--cyan)",
+      "var(--yellow)",
     ];
 
     const displayedHeaderRenderData = headerRenderData.filter(
-      (headerRenderDatum) => headerRenderDatum.displayed
+      (headerRenderDatum) => headerRenderDatum.displayed,
     );
 
-    const className = classNames('header-list-container', {
-      'header-list-container--narrowed': !!narrowedHeaderId,
+    const className = classNames("header-list-container", {
+      "header-list-container--narrowed": !!narrowedHeaderId,
     });
     return (
       <div className={className}>
         {displayedHeaderRenderData.map((headerRenderDatum) => {
           const header = headerRenderDatum.header;
           const headerIndex = headerRenderDatum.absoluteIndex;
-          const color = headerColors[(header.get('nestingLevel') - 1) % headerColors.length];
+          const color =
+            headerColors[
+              (header.get("nestingLevel") - 1) % headerColors.length
+            ];
 
           return (
             <Header
-              key={header.get('id')}
+              key={header.get("id")}
               header={header}
               headerIndex={headerIndex}
               color={color}
               hasContent={headerRenderDatum.hasContent}
-              isSelected={header.get('id') === selectedHeaderId}
-              onRef={this.handleHeaderRef(header.get('id'))}
+              isSelected={header.get("id") === selectedHeaderId}
+              onRef={this.handleHeaderRef(header.get("id"))}
               shouldDisableActions={shouldDisableActions}
             />
           );
         })}
-        <div style={{ height: '90px' }} />
+        <div style={{ height: "90px" }} />
       </div>
     );
   }
 }
 
 const mapStateToProps = (state) => {
-  const path = state.org.present.get('path');
-  const file = state.org.present.getIn(['files', path], Map());
+  const path = state.org.present.get("path");
+  const file = state.org.present.getIn(["files", path], Map());
   return {
-    headers: file.get('headers', List()),
-    selectedHeaderId: file.get('selectedHeaderId'),
-    narrowedHeaderId: file.get('narrowedHeaderId'),
+    headers: file.get("headers", List()),
+    selectedHeaderId: file.get("selectedHeaderId"),
+    narrowedHeaderId: file.get("narrowedHeaderId"),
   };
 };
 

@@ -1,19 +1,25 @@
-import generateId from './id_generator';
-import { hasActiveClock, updateHeadersTotalTimeLoggedRecursive } from './clocking';
+import generateId from "./id_generator";
+import {
+  hasActiveClock,
+  updateHeadersTotalTimeLoggedRecursive,
+} from "./clocking";
 
-import { fromJS, List } from 'immutable';
-import _ from 'lodash';
+import { fromJS, List } from "immutable";
+import _ from "lodash";
 
 // TODO: Extract all match groups of `beginningRegexp` (for example
 // like `emailRegexp`), so that they can be documented and are less
 // unwieldly.
-const beginningRegexp = /(\[\[([^\]]*)\]\]|\[\[([^\]]*)\]\[([^\]]*)\]\])|(\[((\d*%)|(\d*\/\d*))\])|((^|\s|[({'"])([*/~=_+])([^\s,'](.*?))\11([\s\-.,:;!?'")}]?))/;
+const beginningRegexp =
+  /(\[\[([^\]]*)\]\]|\[\[([^\]]*)\]\[([^\]]*)\]\])|(\[((\d*%)|(\d*\/\d*))\])|((^|\s|[({'"])([*/~=_+])([^\s,'](.*?))\11([\s\-.,:;!?'")}]?))/;
 
 // Regexp taken from https://stackoverflow.com/a/3809435/999007
-const httpUrlRegexp = /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*))/;
+const httpUrlRegexp =
+  /(https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*))/;
 
 // Regexp taken from https://stackoverflow.com/a/1373724/999007
-const urlRegexp = /([a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)/;
+const urlRegexp =
+  /([a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)/;
 
 const internationalPhoneRegexp = /((\+|00)\d{8,30})/;
 
@@ -29,7 +35,8 @@ const swissPhoneRegexp2 = /(0[0-9]{9,11})/;
 
 const wwwUrlRegexp = /(www(\.[-_a-zA-Z0-9]+){2,}(\/[-_a-zA-Z0-9]+)*)/;
 
-const timestampOptionalRepeaterOrDelayRegexp = /(?: (\+|\+\+|\.\+|-|--)(\d+)([hdwmy])(?:\/(\d+)([hdwmy]))?)?/;
+const timestampOptionalRepeaterOrDelayRegexp =
+  /(?: (\+|\+\+|\.\+|-|--)(\d+)([hdwmy])(?:\/(\d+)([hdwmy]))?)?/;
 const timestampRegex = new RegExp(
   [
     /([<[])/,
@@ -41,7 +48,7 @@ const timestampRegex = new RegExp(
     /[>\]]/,
   ]
     .map((re) => re.source)
-    .join('')
+    .join(""),
 );
 
 const markupAndCookieRegex = new RegExp(
@@ -55,8 +62,8 @@ const markupAndCookieRegex = new RegExp(
     swissPhoneRegexp1.source,
     swissPhoneRegexp2.source,
     wwwUrlRegexp.source,
-  ].join('|'),
-  'g'
+  ].join("|"),
+  "g",
 );
 
 // INFO: https://www.debuggex.com/ is a good tool to inspect how the
@@ -88,37 +95,41 @@ const timestampFromRegexMatch = (match, partIndices) => {
     return null;
   }
 
-  const [startHour, startMinute] = !!timeStart ? timeStart.split(':') : [];
-  const [endHour, endMinute] = !!timeEnd ? timeEnd.split(':') : [];
+  const [startHour, startMinute] = !!timeStart ? timeStart.split(":") : [];
+  const [endHour, endMinute] = !!timeEnd ? timeEnd.split(":") : [];
 
-  let repeaterType, repeaterValue, repeaterUnit, repeaterDeadlineValue, repeaterDeadlineUnit;
+  let repeaterType,
+    repeaterValue,
+    repeaterUnit,
+    repeaterDeadlineValue,
+    repeaterDeadlineUnit;
   let delayType, delayValue, delayUnit;
 
-  if (['+', '++', '.+'].includes(firstDelayRepeatType)) {
+  if (["+", "++", ".+"].includes(firstDelayRepeatType)) {
     repeaterType = firstDelayRepeatType;
     repeaterValue = firstDelayRepeatValue;
     repeaterUnit = firstDelayRepeatUnit;
     repeaterDeadlineValue = firstRepeaterDeadlineValue;
     repeaterDeadlineUnit = firstRepeaterDeadlineUnit;
-  } else if (['-', '--'].includes(firstDelayRepeatType)) {
+  } else if (["-", "--"].includes(firstDelayRepeatType)) {
     delayType = firstDelayRepeatType;
     delayValue = firstDelayRepeatValue;
     delayUnit = firstDelayRepeatUnit;
   }
-  if (['+', '++', '.+'].includes(secondDelayRepeatType)) {
+  if (["+", "++", ".+"].includes(secondDelayRepeatType)) {
     repeaterType = secondDelayRepeatType;
     repeaterValue = secondDelayRepeatValue;
     repeaterUnit = secondDelayRepeatUnit;
     repeaterDeadlineValue = secondRepeaterDeadlineValue;
     repeaterDeadlineUnit = secondRepeaterDeadlineUnit;
-  } else if (['-', '--'].includes(secondDelayRepeatType)) {
+  } else if (["-", "--"].includes(secondDelayRepeatType)) {
     delayType = secondDelayRepeatType;
     delayValue = secondDelayRepeatValue;
     delayUnit = secondDelayRepeatUnit;
   }
 
   return {
-    isActive: typeBracket === '<',
+    isActive: typeBracket === "<",
     year,
     month,
     day,
@@ -138,20 +149,23 @@ const timestampFromRegexMatch = (match, partIndices) => {
   };
 };
 
-export const parseMarkupAndCookies = (rawText, { shouldAppendNewline = false } = {}) => {
+export const parseMarkupAndCookies = (
+  rawText,
+  { shouldAppendNewline = false } = {},
+) => {
   const matches = [];
   let match = markupAndCookieRegex.exec(rawText);
   while (match) {
     if (!!match[2]) {
       matches.push({
-        type: 'link',
+        type: "link",
         rawText: match[0],
         uri: match[2],
         index: match.index,
       });
     } else if (!!match[3] && !!match[4]) {
       matches.push({
-        type: 'link',
+        type: "link",
         rawText: match[0],
         uri: match[3],
         title: match[4],
@@ -160,7 +174,7 @@ export const parseMarkupAndCookies = (rawText, { shouldAppendNewline = false } =
     } else if (!!match[7]) {
       const percentCookieMatch = match[7].match(/(\d*)%/);
       matches.push({
-        type: 'percentage-cookie',
+        type: "percentage-cookie",
         rawText: match[0],
         percentage: percentCookieMatch[1],
         index: match.index,
@@ -168,26 +182,29 @@ export const parseMarkupAndCookies = (rawText, { shouldAppendNewline = false } =
     } else if (!!match[8]) {
       const fractionCookieMatch = match[8].match(/(\d*)\/(\d*)/);
       matches.push({
-        type: 'fraction-cookie',
+        type: "fraction-cookie",
         rawText: match[0],
         fraction: [fractionCookieMatch[1], fractionCookieMatch[2]],
         index: match.index,
       });
     } else if (!!match[11]) {
       const markupType = {
-        '~': 'inline-code',
-        '*': 'bold',
-        '/': 'italic',
-        '+': 'strikethrough',
-        _: 'underline',
-        '=': 'verbatim',
+        "~": "inline-code",
+        "*": "bold",
+        "/": "italic",
+        "+": "strikethrough",
+        _: "underline",
+        "=": "verbatim",
       }[match[11]];
 
       const markupPrefixLength = match[10].length;
 
       matches.push({
-        type: 'inline-markup',
-        rawText: match[0].substring(markupPrefixLength, match[12].length + 2 + markupPrefixLength),
+        type: "inline-markup",
+        rawText: match[0].substring(
+          markupPrefixLength,
+          match[12].length + 2 + markupPrefixLength,
+        ),
         index: match.index + markupPrefixLength,
         content: match[12],
         markupType,
@@ -197,7 +214,7 @@ export const parseMarkupAndCookies = (rawText, { shouldAppendNewline = false } =
       const secondTimestamp = timestampFromRegexMatch(match, _.range(33, 50));
 
       matches.push({
-        type: 'timestamp',
+        type: "timestamp",
         rawText: match[0],
         index: match.index,
         firstTimestamp,
@@ -205,25 +222,25 @@ export const parseMarkupAndCookies = (rawText, { shouldAppendNewline = false } =
       });
     } else if (!!match[50]) {
       matches.push({
-        type: 'url',
+        type: "url",
         rawText: match[0],
         index: match.index,
       });
     } else if (!!match[53]) {
       matches.push({
-        type: 'e-mail',
+        type: "e-mail",
         rawText: match[0],
         index: match.index,
       });
     } else if (!!match[54] || !!match[56] || !!match[58] || !!match[59]) {
       matches.push({
-        type: 'phone-number',
+        type: "phone-number",
         rawText: match[0],
         index: match.index,
       });
     } else if (!!match[60]) {
       matches.push({
-        type: 'www-url',
+        type: "www-url",
         rawText: match[0],
         index: match.index,
       });
@@ -240,7 +257,7 @@ export const parseMarkupAndCookies = (rawText, { shouldAppendNewline = false } =
     if (index !== startIndex) {
       const text = rawText.substring(startIndex, index);
       lineParts.push({
-        type: 'text',
+        type: "text",
         contents: text,
       });
     }
@@ -254,9 +271,10 @@ export const parseMarkupAndCookies = (rawText, { shouldAppendNewline = false } =
 
   if (startIndex !== rawText.length || shouldAppendNewline) {
     const trailingText =
-      rawText.substring(startIndex, rawText.length) + (shouldAppendNewline ? '\n' : '');
+      rawText.substring(startIndex, rawText.length) +
+      (shouldAppendNewline ? "\n" : "");
     lineParts.push({
-      type: 'text',
+      type: "text",
       contents: trailingText,
     });
   }
@@ -266,10 +284,10 @@ export const parseMarkupAndCookies = (rawText, { shouldAppendNewline = false } =
 
 const computeParseResults = (rawText, match) => {
   switch (match.type) {
-    case 'link':
+    case "link":
       const linkPart = {
         id: generateId(),
-        type: 'link',
+        type: "link",
         contents: {
           uri: match.uri,
         },
@@ -278,36 +296,36 @@ const computeParseResults = (rawText, match) => {
         linkPart.contents.title = match.title;
       }
       return linkPart;
-    case 'percentage-cookie':
+    case "percentage-cookie":
       return {
         id: generateId(),
-        type: 'percentage-cookie',
+        type: "percentage-cookie",
         percentage: match.percentage,
       };
-    case 'fraction-cookie':
+    case "fraction-cookie":
       return {
         id: generateId(),
-        type: 'fraction-cookie',
+        type: "fraction-cookie",
         fraction: match.fraction,
       };
-    case 'inline-markup':
+    case "inline-markup":
       return {
         id: generateId(),
-        type: 'inline-markup',
+        type: "inline-markup",
         content: match.content,
         markupType: match.markupType,
       };
-    case 'timestamp':
+    case "timestamp":
       return {
         id: generateId(),
-        type: 'timestamp',
+        type: "timestamp",
         firstTimestamp: match.firstTimestamp,
         secondTimestamp: match.secondTimestamp,
       };
-    case 'url':
-    case 'www-url':
-    case 'e-mail':
-    case 'phone-number':
+    case "url":
+    case "www-url":
+    case "e-mail":
+    case "phone-number":
       return {
         id: generateId(),
         type: match.type,
@@ -315,7 +333,7 @@ const computeParseResults = (rawText, match) => {
       };
     default:
       throw Error(
-        'The regex parser parsed something but it is not converted to proper data structure.'
+        "The regex parser parsed something but it is not converted to proper data structure.",
       );
   }
 };
@@ -323,7 +341,7 @@ const computeParseResults = (rawText, match) => {
 const parseTable = (tableLines) => {
   const table = {
     id: generateId(),
-    type: 'table',
+    type: "table",
     contents: [[]],
     columnProperties: [],
   };
@@ -331,11 +349,11 @@ const parseTable = (tableLines) => {
   tableLines
     .map((line) => line.trim())
     .forEach((line) => {
-      if (line.startsWith('|-')) {
+      if (line.startsWith("|-")) {
         table.contents.push([]);
       } else {
         const lastRow = _.last(table.contents);
-        const lineCells = line.substr(1, line.length - 2).split('|');
+        const lineCells = line.substr(1, line.length - 2).split("|");
 
         if (lastRow.length === 0) {
           lineCells.forEach((cell) => lastRow.push(cell));
@@ -363,14 +381,16 @@ const parseTable = (tableLines) => {
   }
 
   // Make sure each row has the same number of columns.
-  const maxNumColumns = Math.max(...table.contents.map((row) => row.contents.length));
+  const maxNumColumns = Math.max(
+    ...table.contents.map((row) => row.contents.length),
+  );
   table.contents.forEach((row) => {
     if (row.contents.length < maxNumColumns) {
       _.times(maxNumColumns - row.contents.length, () => {
         row.contents.push({
           id: generateId(),
           contents: [],
-          rawContents: '',
+          rawContents: "",
         });
       });
     }
@@ -379,8 +399,11 @@ const parseTable = (tableLines) => {
   return table;
 };
 
-export const parseRawText = (rawText, { excludeContentElements = false } = {}) => {
-  const lines = rawText.split('\n');
+export const parseRawText = (
+  rawText,
+  { excludeContentElements = false } = {},
+) => {
+  const lines = rawText.split("\n");
 
   const LIST_HEADER_REGEX = /^\s*([-+*]|(\d+(\.|\)))) (.*)/;
 
@@ -395,7 +418,7 @@ export const parseRawText = (rawText, { excludeContentElements = false } = {}) =
       ) {
         return [
           {
-            type: 'raw-list-content',
+            type: "raw-list-content",
             line,
           },
         ];
@@ -407,14 +430,14 @@ export const parseRawText = (rawText, { excludeContentElements = false } = {}) =
 
           return [
             {
-              type: 'raw-list-header',
+              type: "raw-list-header",
               line,
             },
           ];
-        } else if (line.trim().startsWith('|') && !excludeContentElements) {
+        } else if (line.trim().startsWith("|") && !excludeContentElements) {
           return [
             {
-              type: 'raw-table',
+              type: "raw-table",
               line,
             },
           ];
@@ -425,37 +448,37 @@ export const parseRawText = (rawText, { excludeContentElements = false } = {}) =
           });
         }
       }
-    })
+    }),
   );
 
   const processedLineParts = [];
   for (let partIndex = 0; partIndex < rawLineParts.length; ++partIndex) {
     const linePart = rawLineParts[partIndex];
-    if (linePart.type === 'raw-table') {
+    if (linePart.type === "raw-table") {
       const tableLines = _.takeWhile(
         rawLineParts.slice(partIndex),
-        (part) => part.type === 'raw-table'
+        (part) => part.type === "raw-table",
       ).map((part) => part.line);
 
       processedLineParts.push(parseTable(tableLines));
 
       partIndex += tableLines.length - 1;
-    } else if (linePart.type === 'raw-list-header') {
+    } else if (linePart.type === "raw-list-header") {
       const numLeadingSpaces = linePart.line.match(/^( *)/)[0].length;
       const contentLines = _.takeWhile(
         rawLineParts.slice(partIndex + 1),
-        (part) => part.type === 'raw-list-content'
+        (part) => part.type === "raw-list-content",
       )
         .map((part) => part.line)
         .map((line) =>
-          line.startsWith(' '.repeat(numLeadingSpaces + 2))
+          line.startsWith(" ".repeat(numLeadingSpaces + 2))
             ? line.substr(numLeadingSpaces + 2)
-            : line.substr(numLeadingSpaces + 1)
+            : line.substr(numLeadingSpaces + 1),
         );
-      if (contentLines[contentLines.length - 1] === '') {
-        contentLines[contentLines.length - 1] = ' ';
+      if (contentLines[contentLines.length - 1] === "") {
+        contentLines[contentLines.length - 1] = " ";
       }
-      const contents = parseRawText(contentLines.join('\n')).toJS();
+      const contents = parseRawText(contentLines.join("\n")).toJS();
 
       partIndex += contentLines.length;
 
@@ -467,7 +490,7 @@ export const parseRawText = (rawText, { excludeContentElements = false } = {}) =
       let forceNumber = null;
       if (line.match(/^\s*\[@\d+\]/)) {
         forceNumber = line.match(/^\s*\[@(\d+)\]/)[1];
-        line = line.replace(/^\s*\[@\d+\]\s*/, '');
+        line = line.replace(/^\s*\[@\d+\]\s*/, "");
       }
 
       let checkboxState = null;
@@ -475,12 +498,12 @@ export const parseRawText = (rawText, { excludeContentElements = false } = {}) =
       if (isCheckbox) {
         const stateCharacter = line.match(/^\s*\[([ X-])\]/)[1];
         checkboxState = {
-          ' ': 'unchecked',
-          X: 'checked',
-          '-': 'partial',
+          " ": "unchecked",
+          X: "checked",
+          "-": "partial",
         }[stateCharacter];
 
-        line = line.replace(/^\s*\[[ X-]\]\s*/, '');
+        line = line.replace(/^\s*\[[ X-]\]\s*/, "");
       }
 
       const newListItem = {
@@ -493,15 +516,17 @@ export const parseRawText = (rawText, { excludeContentElements = false } = {}) =
       };
 
       const lastIndex = processedLineParts.length - 1;
-      if (lastIndex >= 0 && processedLineParts[lastIndex].type === 'list') {
+      if (lastIndex >= 0 && processedLineParts[lastIndex].type === "list") {
         processedLineParts[lastIndex].items.push(newListItem);
       } else {
         processedLineParts.push({
-          type: 'list',
+          type: "list",
           id: generateId(),
           items: [newListItem],
           bulletCharacter: linePart.line.trim()[0],
-          numberTerminatorCharacter: isOrdered ? linePart.line.match(/\s*\d+([.)])/)[1] : null,
+          numberTerminatorCharacter: isOrdered
+            ? linePart.line.match(/\s*\d+([.)])/)[1]
+            : null,
           isOrdered,
         });
       }
@@ -515,7 +540,7 @@ export const parseRawText = (rawText, { excludeContentElements = false } = {}) =
 
 export const _parsePlanningItems = (rawText) => {
   const optionalSinglePlanningItemRegex = RegExp(
-    `((DEADLINE|SCHEDULED|CLOSED):\\s*${asStrNoSlashs(timestampRegex)})?`
+    `((DEADLINE|SCHEDULED|CLOSED):\\s*${asStrNoSlashs(timestampRegex)})?`,
   );
 
   // If there are any planning items, consume not more
@@ -527,7 +552,7 @@ export const _parsePlanningItems = (rawText) => {
     optionalSinglePlanningItemRegex,
     /[ \t]*/,
     optionalSinglePlanningItemRegex,
-    /[ \t]*\n?/
+    /[ \t]*\n?/,
   );
   const planningRegexCaptureGroupsOfType = [2, 21, 40]; // depends on timestampRegex
   const planningMatch = rawText.match(planningRegex);
@@ -542,20 +567,26 @@ export const _parsePlanningItems = (rawText) => {
 
         const timestamp = timestampFromRegexMatch(
           planningMatch,
-          _.range(planningTypeIndex + 1, planningTypeIndex + 1 + 17)
+          _.range(planningTypeIndex + 1, planningTypeIndex + 1 + 17),
         );
 
         return createOrUpdateTimestamp({ type, timestamp });
       })
-      .filter((item) => !!item)
+      .filter((item) => !!item),
   );
 
   if (planningItems.size === 0) {
     // If there are no matches for planning items, return the original rawText.
     return { planningItems: fromJS([]), strippedDescription: rawText };
   } else {
-    const remainingDescriptionWithoutPlanningItem = rawText.replace(planningRegex, '');
-    return { planningItems, strippedDescription: remainingDescriptionWithoutPlanningItem };
+    const remainingDescriptionWithoutPlanningItem = rawText.replace(
+      planningRegex,
+      "",
+    );
+    return {
+      planningItems,
+      strippedDescription: remainingDescriptionWithoutPlanningItem,
+    };
   }
 };
 
@@ -563,14 +594,16 @@ const createOrUpdateTimestamp = ({ type, timestamp, id }) =>
   fromJS({ type, timestamp, id: id || generateId() });
 
 const parsePropertyList = (rawText) => {
-  const lines = rawText.split('\n');
-  const propertiesLineIndex = lines.findIndex((line) => line.trim() === ':PROPERTIES:');
-  const endLineIndex = lines.findIndex((line) => line.trim() === ':END:');
+  const lines = rawText.split("\n");
+  const propertiesLineIndex = lines.findIndex(
+    (line) => line.trim() === ":PROPERTIES:",
+  );
+  const endLineIndex = lines.findIndex((line) => line.trim() === ":END:");
 
   if (
     propertiesLineIndex === -1 ||
     endLineIndex === -1 ||
-    !rawText.trim().startsWith(':PROPERTIES:')
+    !rawText.trim().startsWith(":PROPERTIES:")
   ) {
     return {
       propertyListItems: List(),
@@ -592,8 +625,8 @@ const parsePropertyList = (rawText) => {
         // will be saved as plain text.
         let value = !!match[2] ? parseMarkupAndCookies(match[2]) : null;
 
-        if (value && value[0].type !== 'timestamp') {
-          value = [{ contents: match[2], type: 'text' }];
+        if (value && value[0].type !== "timestamp") {
+          value = [{ contents: match[2], type: "text" }];
         }
 
         return {
@@ -602,21 +635,27 @@ const parsePropertyList = (rawText) => {
           id: generateId(),
         };
       })
-      .filter((result) => !!result)
+      .filter((result) => !!result),
   );
 
   return {
     propertyListItems,
-    strippedDescription: lines.slice(endLineIndex + 1).join('\n'),
+    strippedDescription: lines.slice(endLineIndex + 1).join("\n"),
   };
 };
 
 const parseLogbook = (rawText) => {
-  const lines = rawText.split('\n');
-  const logbookLineIndex = lines.findIndex((line) => line.trim() === ':LOGBOOK:');
-  const endLineIndex = lines.findIndex((line) => line.trim() === ':END:');
+  const lines = rawText.split("\n");
+  const logbookLineIndex = lines.findIndex(
+    (line) => line.trim() === ":LOGBOOK:",
+  );
+  const endLineIndex = lines.findIndex((line) => line.trim() === ":END:");
 
-  if (logbookLineIndex === -1 || endLineIndex === -1 || !rawText.trim().startsWith(':LOGBOOK:')) {
+  if (
+    logbookLineIndex === -1 ||
+    endLineIndex === -1 ||
+    !rawText.trim().startsWith(":LOGBOOK:")
+  ) {
     return {
       logBookEntries: List(),
       strippedDescription: rawText,
@@ -627,9 +666,9 @@ const parseLogbook = (rawText) => {
   const logBookEntryFullRegex = concatRegexes(
     /^CLOCK: /,
     timestampRegex,
-    '/--/',
+    "/--/",
     timestampRegex,
-    /\s*=>\s*\S+$/
+    /\s*=>\s*\S+$/,
   );
   const logBookEntries = fromJS(
     lines.slice(logbookLineIndex + 1, endLineIndex).map((line) => {
@@ -650,22 +689,27 @@ const parseLogbook = (rawText) => {
         };
       }
       return { raw: line.trimLeft(), id: generateId() };
-    })
+    }),
   );
 
   return {
     logBookEntries,
-    strippedDescription: lines.slice(endLineIndex + 1).join('\n'),
+    strippedDescription: lines.slice(endLineIndex + 1).join("\n"),
   };
 };
 
 export const _parseLogNotes = (rawText) => {
   // Only parse log notes if a logbook exists. Otherwise, a list - log notes
   // or just a normal list - will go into the description.
-  const lines = rawText.split('\n');
-  const logbookLineIndex = lines.findIndex((line) => line.trim() === ':LOGBOOK:');
+  const lines = rawText.split("\n");
+  const logbookLineIndex = lines.findIndex(
+    (line) => line.trim() === ":LOGBOOK:",
+  );
   if (logbookLineIndex !== -1)
-    return makeLogNotesResult(lines.slice(0, logbookLineIndex), lines.slice(logbookLineIndex));
+    return makeLogNotesResult(
+      lines.slice(0, logbookLineIndex),
+      lines.slice(logbookLineIndex),
+    );
   return makeLogNotesResult([], [rawText]);
 };
 
@@ -673,7 +717,9 @@ export const parseDescriptionPrefixElements = (rawText) => {
   const planningItemsParse = _parsePlanningItems(rawText);
 
   const planningItems = planningItemsParse.planningItems;
-  const propertyListParse = parsePropertyList(planningItemsParse.strippedDescription);
+  const propertyListParse = parsePropertyList(
+    planningItemsParse.strippedDescription,
+  );
   // In Orgmode, notes are added below properties and before
   // logbook. However, logbook is added directly below properties if
   // it does not exist.
@@ -689,7 +735,10 @@ export const parseDescriptionPrefixElements = (rawText) => {
   };
 };
 
-export const _updateHeaderFromDescription = (header, rawUnstrippedDescription) => {
+export const _updateHeaderFromDescription = (
+  header,
+  rawUnstrippedDescription,
+) => {
   const {
     planningItems,
     propertyListItems,
@@ -699,36 +748,47 @@ export const _updateHeaderFromDescription = (header, rawUnstrippedDescription) =
   } = parseDescriptionPrefixElements(rawUnstrippedDescription);
   const parsedDescription = parseRawText(strippedDescription);
 
-  const parsedTitle = header.getIn(['titleLine', 'title']);
+  const parsedTitle = header.getIn(["titleLine", "title"]);
   const mergedPlanningItems = mergePlanningItems(
     planningItems,
-    extractActiveTimestampsForPlanningItemsFromParse('TIMESTAMP_TITLE', parsedTitle),
-    extractActiveTimestampsForPlanningItemsFromParse('TIMESTAMP_DESCRIPTION', parsedDescription),
-    extractActiveTimestampsForPlanningItemsFromParse('TIMESTAMP_LOG_NOTES', logNotes)
+    extractActiveTimestampsForPlanningItemsFromParse(
+      "TIMESTAMP_TITLE",
+      parsedTitle,
+    ),
+    extractActiveTimestampsForPlanningItemsFromParse(
+      "TIMESTAMP_DESCRIPTION",
+      parsedDescription,
+    ),
+    extractActiveTimestampsForPlanningItemsFromParse(
+      "TIMESTAMP_LOG_NOTES",
+      logNotes,
+    ),
   );
 
   return header
-    .set('rawDescription', strippedDescription)
-    .set('description', parsedDescription)
-    .set('planningItems', mergedPlanningItems)
-    .set('propertyListItems', propertyListItems)
-    .set('logNotes', logNotes)
-    .set('logBookEntries', logBookEntries);
+    .set("rawDescription", strippedDescription)
+    .set("description", parsedDescription)
+    .set("planningItems", mergedPlanningItems)
+    .set("propertyListItems", propertyListItems)
+    .set("logNotes", logNotes)
+    .set("logBookEntries", logBookEntries);
 };
 
 const defaultKeywordSets = fromJS([
   {
-    keywords: ['TODO', 'DONE'],
-    completedKeywords: ['DONE'],
+    keywords: ["TODO", "DONE"],
+    completedKeywords: ["DONE"],
     default: true,
   },
 ]);
 
 export const parseTitleLine = (titleLine, todoKeywordSets) => {
   const allKeywords = todoKeywordSets.flatMap((todoKeywordSet) => {
-    return todoKeywordSet.get('keywords');
+    return todoKeywordSet.get("keywords");
   });
-  const todoKeyword = allKeywords.filter((keyword) => titleLine.startsWith(keyword + ' ')).first();
+  const todoKeyword = allKeywords
+    .filter((keyword) => titleLine.startsWith(keyword + " "))
+    .first();
   let rawTitle = titleLine;
   if (todoKeyword) {
     rawTitle = rawTitle.substr(todoKeyword.length + 1);
@@ -736,12 +796,12 @@ export const parseTitleLine = (titleLine, todoKeywordSets) => {
 
   // Check for tags.
   let tags = [];
-  if (rawTitle.trimRight().endsWith(':')) {
-    const titleParts = rawTitle.trimRight().split(' ');
+  if (rawTitle.trimRight().endsWith(":")) {
+    const titleParts = rawTitle.trimRight().split(" ");
     const possibleTags = titleParts[titleParts.length - 1];
     if (/^:[^\s]+:$/.test(possibleTags)) {
       rawTitle = rawTitle.substr(0, rawTitle.length - possibleTags.length);
-      tags = possibleTags.split(':').filter((tag) => tag !== '');
+      tags = possibleTags.split(":").filter((tag) => tag !== "");
     }
   }
 
@@ -758,7 +818,7 @@ export const newHeaderWithTitle = (line, nestingLevel, todoKeywordSets) => {
   const titleLine = parseTitleLine(line, todoKeywordSets);
   return fromJS({
     titleLine,
-    rawDescription: '',
+    rawDescription: "",
     description: [],
     opened: false,
     id: generateId(),
@@ -771,7 +831,9 @@ export const newHeaderWithTitle = (line, nestingLevel, todoKeywordSets) => {
 };
 
 const concatRegexes = (...regexes) =>
-  regexes.reduce((prev, curr) => RegExp(asStrNoSlashs(prev) + asStrNoSlashs(curr)));
+  regexes.reduce((prev, curr) =>
+    RegExp(asStrNoSlashs(prev) + asStrNoSlashs(curr)),
+  );
 
 // Converts RegExp or strings like '/regex/' to a string without these slashes.
 const asStrNoSlashs = (regex) => {
@@ -783,8 +845,8 @@ export const newHeaderFromText = (rawText, todoKeywordSets) => {
   // This function is currently only used for capture templates.
   // Hence, it's acceptable that it is opinionated on treating
   // whitespace.
-  const titleLine = rawText.split('\n')[0].replace(/^\**\s*|\s*$/g, '');
-  const descriptionText = rawText.split('\n').slice(1).join('\n');
+  const titleLine = rawText.split("\n")[0].replace(/^\**\s*|\s*$/g, "");
+  const descriptionText = rawText.split("\n").slice(1).join("\n");
 
   // TODO: possible addition: allow subheaders in description!
 
@@ -795,9 +857,9 @@ export const newHeaderFromText = (rawText, todoKeywordSets) => {
 export const lineIsTodoKeywordConfig = (line) => {
   const lowerLine = line.toLowerCase();
   return (
-    lowerLine.startsWith('#+todo: ') ||
-    lowerLine.startsWith('#+typ_todo: ') ||
-    lowerLine.startsWith('#+seq_todo: ')
+    lowerLine.startsWith("#+todo: ") ||
+    lowerLine.startsWith("#+typ_todo: ") ||
+    lowerLine.startsWith("#+seq_todo: ")
   );
 };
 
@@ -806,16 +868,16 @@ export const parseTodoKeywordConfig = (line) => {
     return null;
   }
 
-  const keywordsString = line.substr(line.indexOf(':') + 2);
+  const keywordsString = line.substr(line.indexOf(":") + 2);
   const keywordTokens = keywordsString.split(/\s/);
   const keywords = keywordTokens
-    .filter((keyword) => keyword !== '|')
+    .filter((keyword) => keyword !== "|")
     // Remove fast access TODO states suffix from keyword, because
     // there's no UI to handle those in organice
     // https://orgmode.org/manual/Fast-access-to-TODO-states.html#Fast-access-to-TODO-states
-    .map((keyword) => keyword.replace(/\(.[!@]?(\/[!@])?\)$/, ''));
+    .map((keyword) => keyword.replace(/\(.[!@]?(\/[!@])?\)$/, ""));
 
-  const pipeIndex = keywordTokens.indexOf('|');
+  const pipeIndex = keywordTokens.indexOf("|");
   const completedKeywords = pipeIndex >= 0 ? keywords.slice(pipeIndex) : [];
 
   return fromJS({
@@ -834,7 +896,7 @@ export const parseFileConfig = (lines) => {
     const newKeywordSet = parseTodoKeywordConfig(line);
     if (newKeywordSet) {
       todoKeywordSets = todoKeywordSets.push(newKeywordSet);
-    } else if (line.startsWith('#+')) {
+    } else if (line.startsWith("#+")) {
       fileConfigLines = fileConfigLines.push(line);
     }
   });
@@ -865,18 +927,23 @@ export const parseOrg = (fileContents) => {
     if (line.match(/^\*+ /)) {
       const nestingLevel = computeNestingLevel(line);
       const title = line.substr(nestingLevel + 1);
-      headers = headers.push(newHeaderWithTitle(title, nestingLevel, todoKeywordSets));
+      headers = headers.push(
+        newHeaderWithTitle(title, nestingLevel, todoKeywordSets),
+      );
     } else if (headers.size === 0) {
       linesBeforeHeadings = linesBeforeHeadings.push(line);
     } else {
-      headers = headers.updateIn([headers.size - 1, 'rawDescription'], (rawDescription) => {
-        // In the beginning of the parseOrg function, the original
-        // fileContent lines are split by '\n'. Therefore, the newline
-        // has to be added again to the line:
-        const lineToAdd = line + '\n';
-        rawDescription = rawDescription ? rawDescription : '';
-        return rawDescription + lineToAdd;
-      });
+      headers = headers.updateIn(
+        [headers.size - 1, "rawDescription"],
+        (rawDescription) => {
+          // In the beginning of the parseOrg function, the original
+          // fileContent lines are split by '\n'. Therefore, the newline
+          // has to be added again to the line:
+          const lineToAdd = line + "\n";
+          rawDescription = rawDescription ? rawDescription : "";
+          return rawDescription + lineToAdd;
+        },
+      );
     }
   });
 
@@ -886,7 +953,7 @@ export const parseOrg = (fileContents) => {
     // In this case (parsing the complete org file), rawDescription contains
     // the full raw description text. Only after _updateHeaderFromDescription(),
     // the contents of rawDescription are correct.
-    const description = header.get('rawDescription');
+    const description = header.get("rawDescription");
     return _updateHeaderFromDescription(header, description);
   });
 
@@ -905,9 +972,17 @@ export const parseOrg = (fileContents) => {
 const extractActiveTimestampsForPlanningItemsFromParse = (type, parsedData) => {
   // planningItems only accept a single timestamp -> ignore second timestamp
   return parsedData
-    .filter((x) => x.get('type') === 'timestamp' && x.getIn(['firstTimestamp', 'isActive']))
+    .filter(
+      (x) =>
+        x.get("type") === "timestamp" &&
+        x.getIn(["firstTimestamp", "isActive"]),
+    )
     .map((x) =>
-      createOrUpdateTimestamp({ type: type, timestamp: x.get('firstTimestamp'), id: x.get('id') })
+      createOrUpdateTimestamp({
+        type: type,
+        timestamp: x.get("firstTimestamp"),
+        id: x.get("id"),
+      }),
     );
 };
 
@@ -918,19 +993,31 @@ const mergePlanningItems = (...planningItems) => {
 
 export const updatePlanningItems = (planningItems, type, parsed) =>
   planningItems
-    .filter((x) => x.get('type') !== type)
+    .filter((x) => x.get("type") !== type)
     .merge(extractActiveTimestampsForPlanningItemsFromParse(type, parsed));
 
 export const updatePlanningItemsFromHeader = (header) => {
-  let items = header.get('planningItems');
-  items = updatePlanningItems(items, 'TIMESTAMP_TITLE', header.getIn(['titleLine', 'title']));
-  items = updatePlanningItems(items, 'TIMESTAMP_DESCRIPTION', header.get('description'));
-  items = updatePlanningItems(items, 'TIMESTAMP_LOG_NOTES', header.get('logNotes'));
+  let items = header.get("planningItems");
+  items = updatePlanningItems(
+    items,
+    "TIMESTAMP_TITLE",
+    header.getIn(["titleLine", "title"]),
+  );
+  items = updatePlanningItems(
+    items,
+    "TIMESTAMP_DESCRIPTION",
+    header.get("description"),
+  );
+  items = updatePlanningItems(
+    items,
+    "TIMESTAMP_LOG_NOTES",
+    header.get("logNotes"),
+  );
   return items;
 };
 
 const computeNestingLevel = (titleLineWithAsterisk) => {
-  const nestingLevel = titleLineWithAsterisk.indexOf(' ');
+  const nestingLevel = titleLineWithAsterisk.indexOf(" ");
   if (nestingLevel === -1) return titleLineWithAsterisk.trimRight().length;
   return nestingLevel;
 };
@@ -939,19 +1026,19 @@ const getLinesFromFileContents = (fileContents) => {
   // We expect a newline at EOF (from the last line of fileContents).
   // After split(), this results in an empty string at the last position of the
   // array => Remove that last array item.
-  const lines = fileContents.split('\n');
+  const lines = fileContents.split("\n");
 
   // Special case when last line did not end with a newline character:
-  if (lines.length > 0 && lines[lines.length - 1] !== '') return lines;
+  if (lines.length > 0 && lines[lines.length - 1] !== "") return lines;
 
   return lines.slice(0, lines.length - 1);
 };
 
 const makeLogNotesResult = (logNotesLines, strippedDescriptionLines) => {
-  const rawLogNotes = logNotesLines.join('\n');
+  const rawLogNotes = logNotesLines.join("\n");
   return {
     rawLogNotes: rawLogNotes,
     logNotes: parseRawText(rawLogNotes),
-    strippedDescription: strippedDescriptionLines.join('\n'),
+    strippedDescription: strippedDescriptionLines.join("\n"),
   };
 };

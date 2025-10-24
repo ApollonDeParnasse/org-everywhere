@@ -1,9 +1,12 @@
-import React from 'react';
-import { Motion, spring } from 'react-motion';
+import React from "react";
+import { Motion, spring } from "react-motion";
 
-import { interpolateColorsAndReturnCSS, createColorObject } from '../../../lib/color';
+import {
+  interpolateColorsAndReturnCSS,
+  createColorObject,
+} from "../../../lib/color";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
 export default ({ state, onClick }) => {
   const uncheckedColor = createColorObject(255, 255, 255, 1);
@@ -16,22 +19,29 @@ export default ({ state, onClick }) => {
         partial: 1,
         unchecked: 0,
       }[state],
-      { stiffness: 300 }
+      { stiffness: 300 },
     ),
   };
 
   return (
     <Motion style={checkboxStyle}>
       {(style) => {
-        const backgroundColor = 
-          interpolateColorsAndReturnCSS(uncheckedColor, checkedColor, style.colorFactor)
+        const backgroundColor = interpolateColorsAndReturnCSS(
+          uncheckedColor,
+          checkedColor,
+          style.colorFactor,
+        );
 
         return (
-          <div className="checkbox" onClick={onClick} style={{ backgroundColor }}>
+          <div
+            className="checkbox"
+            onClick={onClick}
+            style={{ backgroundColor }}
+          >
             <div className="checkbox__inner-container">
-              {state === 'checked' && <i className="fas fa-check" />}
-              {state === 'partial' && <i className="fas fa-minus" />}
-              {state === 'unchecked' && <i className="fas fa-square" />}
+              {state === "checked" && <i className="fas fa-check" />}
+              {state === "partial" && <i className="fas fa-minus" />}
+              {state === "unchecked" && <i className="fas fa-square" />}
             </div>
           </div>
         );

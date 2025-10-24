@@ -1,34 +1,34 @@
-import React, { PureComponent, Fragment } from 'react';
-import { UnmountClosed as Collapse } from 'react-collapse';
+import React, { PureComponent, Fragment } from "react";
+import { UnmountClosed as Collapse } from "react-collapse";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import AttributedString from '../../../AttributedString/';
-import Checkbox from '../../../../../UI/Checkbox/';
-import ListActionDrawer from './ListActionDrawer';
-import { listPartContainsItemId } from '../../../../../../lib/org_utils';
+import AttributedString from "../../../AttributedString/";
+import Checkbox from "../../../../../UI/Checkbox/";
+import ListActionDrawer from "./ListActionDrawer";
+import { listPartContainsItemId } from "../../../../../../lib/org_utils";
 
-import { attributedStringToRawText } from '../../../../../../lib/export_org';
+import { attributedStringToRawText } from "../../../../../../lib/export_org";
 
-import { getCurrentTimestampAsText } from '../../../../../../lib/timestamps';
+import { getCurrentTimestampAsText } from "../../../../../../lib/timestamps";
 
-import _ from 'lodash';
-import classNames from 'classnames';
-import { Map } from 'immutable';
+import _ from "lodash";
+import classNames from "classnames";
+import { Map } from "immutable";
 
 export default class ListPart extends PureComponent {
   constructor(props) {
     super(props);
 
     _.bindAll(this, [
-      'handleListItemSelect',
-      'handleCheckboxClick',
-      'handleTextareaBlur',
-      'handleListTitleChange',
-      'handleListContentsChange',
-      'handleInsertTimestampListTitle',
-      'handleInsertTimestampListContents',
-      'handleTextareaRef',
+      "handleListItemSelect",
+      "handleCheckboxClick",
+      "handleTextareaBlur",
+      "handleListTitleChange",
+      "handleListContentsChange",
+      "handleInsertTimestampListTitle",
+      "handleInsertTimestampListContents",
+      "handleTextareaRef",
     ]);
 
     this.state = {
@@ -50,13 +50,20 @@ export default class ListPart extends PureComponent {
     } = this.props;
     const { listTitleValues, listContentsValues } = this.state;
 
-    if (prevProps.subPartDataAndHandlers.inListTitleEditMode && !inListTitleEditMode) {
+    if (
+      prevProps.subPartDataAndHandlers.inListTitleEditMode &&
+      !inListTitleEditMode
+    ) {
       if (listTitleValues.has(selectedListItemId)) {
-        onListTitleValueUpdate(selectedListItemId, listTitleValues.get(selectedListItemId));
+        onListTitleValueUpdate(
+          selectedListItemId,
+          listTitleValues.get(selectedListItemId),
+        );
       }
     }
 
-    const prevSelectedListItemId = prevProps.subPartDataAndHandlers.selectedListItemId;
+    const prevSelectedListItemId =
+      prevProps.subPartDataAndHandlers.selectedListItemId;
     if (
       prevSelectedListItemId !== selectedListItemId &&
       inListTitleEditMode &&
@@ -66,13 +73,22 @@ export default class ListPart extends PureComponent {
         listTitleValues.has(prevSelectedListItemId) &&
         listPartContainsItemId(this.props.part, prevSelectedListItemId)
       ) {
-        onListTitleValueUpdate(prevSelectedListItemId, listTitleValues.get(prevSelectedListItemId));
+        onListTitleValueUpdate(
+          prevSelectedListItemId,
+          listTitleValues.get(prevSelectedListItemId),
+        );
       }
     }
 
-    if (prevProps.subPartDataAndHandlers.inListContentsEditMode && !inListContentsEditMode) {
+    if (
+      prevProps.subPartDataAndHandlers.inListContentsEditMode &&
+      !inListContentsEditMode
+    ) {
       if (listContentsValues.has(selectedListItemId)) {
-        onListContentsValueUpdate(selectedListItemId, listContentsValues.get(selectedListItemId));
+        onListContentsValueUpdate(
+          selectedListItemId,
+          listContentsValues.get(selectedListItemId),
+        );
       }
     }
 
@@ -87,30 +103,40 @@ export default class ListPart extends PureComponent {
       ) {
         onListContentsValueUpdate(
           prevSelectedListItemId,
-          listContentsValues.get(prevSelectedListItemId)
+          listContentsValues.get(prevSelectedListItemId),
         );
       }
     }
 
     if (this.props.part !== prevProps.part) {
-      this.setState({ listTitleValues: this.generateListTitleValueMap(this.props.part) });
-      this.setState({ listContentsValues: this.generateListContentsValueMap(this.props.part) });
+      this.setState({
+        listTitleValues: this.generateListTitleValueMap(this.props.part),
+      });
+      this.setState({
+        listContentsValues: this.generateListContentsValueMap(this.props.part),
+      });
     }
   }
 
   generateListTitleValueMap(part) {
     return Map(
       part
-        .get('items')
-        .map((item) => [item.get('id'), attributedStringToRawText(item.get('titleLine'))])
+        .get("items")
+        .map((item) => [
+          item.get("id"),
+          attributedStringToRawText(item.get("titleLine")),
+        ]),
     );
   }
 
   generateListContentsValueMap(part) {
     return Map(
       part
-        .get('items')
-        .map((item) => [item.get('id'), attributedStringToRawText(item.get('contents'))])
+        .get("items")
+        .map((item) => [
+          item.get("id"),
+          attributedStringToRawText(item.get("contents")),
+        ]),
     );
   }
 
@@ -145,7 +171,10 @@ export default class ListPart extends PureComponent {
     } = this.props;
 
     this.setState({
-      listTitleValues: listTitleValues.set(selectedListItemId, event.target.value),
+      listTitleValues: listTitleValues.set(
+        selectedListItemId,
+        event.target.value,
+      ),
     });
   }
 
@@ -156,7 +185,10 @@ export default class ListPart extends PureComponent {
     } = this.props;
 
     this.setState({
-      listContentsValues: listContentsValues.set(selectedListItemId, event.target.value),
+      listContentsValues: listContentsValues.set(
+        selectedListItemId,
+        event.target.value,
+      ),
     });
   }
 
@@ -177,7 +209,9 @@ export default class ListPart extends PureComponent {
         selectedListItemId,
         listTitleValue.substring(0, insertionIndex) +
           getCurrentTimestampAsText() +
-          listTitleValue.substring(this.textarea.selectionEnd || insertionIndex)
+          listTitleValue.substring(
+            this.textarea.selectionEnd || insertionIndex,
+          ),
       ),
     });
 
@@ -199,7 +233,9 @@ export default class ListPart extends PureComponent {
         selectedListItemId,
         listContentsValue.substring(0, insertionIndex) +
           getCurrentTimestampAsText() +
-          listContentsValue.substring(this.textarea.selectionEnd || insertionIndex)
+          listContentsValue.substring(
+            this.textarea.selectionEnd || insertionIndex,
+          ),
       ),
     });
 
@@ -221,21 +257,24 @@ export default class ListPart extends PureComponent {
     } = this.props;
     const { listTitleValues, listContentsValues } = this.state;
 
-    return part.get('items').map((item) => {
-      const isItemSelected = item.get('id') === selectedListItemId;
+    return part.get("items").map((item) => {
+      const isItemSelected = item.get("id") === selectedListItemId;
       const lineContainerClass = classNames({
-        'list-part__not_checkbox-container': !item.get('isCheckbox'),
-        'list-part__checkbox-container': item.get('isCheckbox'),
-        'list-part__item--selected': isItemSelected,
+        "list-part__not_checkbox-container": !item.get("isCheckbox"),
+        "list-part__checkbox-container": item.get("isCheckbox"),
+        "list-part__item--selected": isItemSelected,
       });
 
       return (
-        <li key={item.get('id')} value={item.get('forceNumber')}>
-          <div className={lineContainerClass} onClick={this.handleListItemSelect(item.get('id'))}>
-            {item.get('isCheckbox') && (
+        <li key={item.get("id")} value={item.get("forceNumber")}>
+          <div
+            className={lineContainerClass}
+            onClick={this.handleListItemSelect(item.get("id"))}
+          >
+            {item.get("isCheckbox") && (
               <Checkbox
-                onClick={(e) => this.handleCheckboxClick(e, item.get('id'))}
-                state={item.get('checkboxState')}
+                onClick={(e) => this.handleCheckboxClick(e, item.get("id"))}
+                state={item.get("checkboxState")}
               />
             )}
             {isItemSelected && inListTitleEditMode ? (
@@ -246,7 +285,7 @@ export default class ListPart extends PureComponent {
                   data-testid="list-item-edit"
                   rows="3"
                   ref={this.handleTextareaRef}
-                  value={listTitleValues.get(item.get('id'))}
+                  value={listTitleValues.get(item.get("id"))}
                   onBlur={this.handleTextareaBlur}
                   onChange={this.handleListTitleChange}
                 />
@@ -258,9 +297,9 @@ export default class ListPart extends PureComponent {
                   Insert timestamp
                 </div>
               </div>
-            ) : listTitleValues.get(item.get('id')) ? (
+            ) : listTitleValues.get(item.get("id")) ? (
               <AttributedString
-                parts={item.get('titleLine')}
+                parts={item.get("titleLine")}
                 subPartDataAndHandlers={this.props.subPartDataAndHandlers}
               />
             ) : (
@@ -268,7 +307,9 @@ export default class ListPart extends PureComponent {
             )}
           </div>
           <Collapse isOpened={isItemSelected && !shouldDisableActions}>
-            <ListActionDrawer subPartDataAndHandlers={this.props.subPartDataAndHandlers} />
+            <ListActionDrawer
+              subPartDataAndHandlers={this.props.subPartDataAndHandlers}
+            />
           </Collapse>
           {isItemSelected && inListContentsEditMode ? (
             <div className="list-contents__edit-container">
@@ -277,7 +318,7 @@ export default class ListPart extends PureComponent {
                 className="textarea"
                 rows="8"
                 ref={this.handleTextareaRef}
-                value={listContentsValues.get(item.get('id'))}
+                value={listContentsValues.get(item.get("id"))}
                 onBlur={this.handleTextareaBlur}
                 onChange={this.handleListContentsChange}
               />
@@ -291,7 +332,7 @@ export default class ListPart extends PureComponent {
             </div>
           ) : (
             <AttributedString
-              parts={item.get('contents')}
+              parts={item.get("contents")}
               subPartDataAndHandlers={this.props.subPartDataAndHandlers}
             />
           )}
@@ -303,12 +344,14 @@ export default class ListPart extends PureComponent {
   render() {
     return (
       <Fragment>
-        {this.props.part.get('isOrdered') ? (
+        {this.props.part.get("isOrdered") ? (
           <ol className="attributed-string__list-part attributed-string__list-part--ordered">
             {this.renderContent()}
           </ol>
         ) : (
-          <ul className="attributed-string__list-part">{this.renderContent()}</ul>
+          <ul className="attributed-string__list-part">
+            {this.renderContent()}
+          </ul>
         )}
       </Fragment>
     );

@@ -1,4 +1,4 @@
-import 'vitest'
+import "vitest";
 
 interface CustomMatchers<R = unknown> {
   betweenZeroAnd255: (received: number, _: number) => R;
@@ -6,8 +6,7 @@ interface CustomMatchers<R = unknown> {
   toBeWithinRange: (actual: number, floor: number, ceiling: number) => R;
 }
 
-
-declare module 'vitest' {
+declare module "vitest" {
   interface Matchers<T = any> extends CustomMatchers<T> {}
 }
-export {}
+export {};

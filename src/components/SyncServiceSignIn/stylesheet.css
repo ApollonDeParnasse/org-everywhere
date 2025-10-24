@@ -1,4 +1,4 @@
-@import '../../colors.css';
+@import "../../colors.css";
 
 #webdavLogin h2 {
   font-size: 3.5em;
@@ -15,7 +15,7 @@
 .sync-service-container form label {
   display: table-cell;
 }
-.sync-service-container form input:not([type='submit']) {
+.sync-service-container form input:not([type="submit"]) {
   display: table-cell;
   width: calc(100% - 10px);
 }

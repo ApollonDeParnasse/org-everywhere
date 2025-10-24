@@ -1,23 +1,23 @@
-import { parseOrg } from '../../../../../../lib/parse_org';
+import { parseOrg } from "../../../../../../lib/parse_org";
 
-import AgendaDay from './index';
+import AgendaDay from "./index";
 
-import { Map } from 'immutable';
-import { parseISO } from 'date-fns';
+import { Map } from "immutable";
+import { parseISO } from "date-fns";
 
-import readFixture from '../../../../../../../test_helpers/index';
+import readFixture from "../../../../../../../test_helpers/index";
 
-describe('Unit Tests for AgendaDay', () => {
+describe("Unit Tests for AgendaDay", () => {
   const component = new AgendaDay();
   test('Given some headlines, it constructs a datastructure for the relevant ones for the "today" view', () => {
     let input = {
       headers: [],
       todoKeywordSets: [],
-      date: parseISO('2019-08-27T15:50:32.624Z'),
+      date: parseISO("2019-08-27T15:50:32.624Z"),
       agendaDefaultDeadlineDelayValue: 5,
-      agendaDefaultDeadlineDelayUnit: 'd',
-      dateStart: parseISO('2019-08-26T22:00:00.000Z'),
-      dateEnd: parseISO('2019-08-27T21:59:59.999Z'),
+      agendaDefaultDeadlineDelayUnit: "d",
+      dateStart: parseISO("2019-08-26T22:00:00.000Z"),
+      dateEnd: parseISO("2019-08-27T21:59:59.999Z"),
     };
     // INFO: The output here is stringified output from the algorithm,
     // taken from a manually verified run of `AgendaDay` in the
@@ -27,29 +27,41 @@ describe('Unit Tests for AgendaDay', () => {
     const output = [
       [
         {
-          type: 'DEADLINE',
-          timestamp: { month: '08', dayName: 'Tue', isActive: true, day: '27', year: '2019' },
+          type: "DEADLINE",
+          timestamp: {
+            month: "08",
+            dayName: "Tue",
+            isActive: true,
+            day: "27",
+            year: "2019",
+          },
           id: 7,
         },
         {
           titleLine: {
-            title: [{ type: 'text', contents: 'This is a deadline header' }],
-            rawTitle: 'This is a deadline header',
-            todoKeyword: 'START',
+            title: [{ type: "text", contents: "This is a deadline header" }],
+            rawTitle: "This is a deadline header",
+            todoKeyword: "START",
             tags: [],
           },
-          rawDescription: '\n',
-          description: [{ type: 'text', contents: '\n' }],
+          rawDescription: "\n",
+          description: [{ type: "text", contents: "\n" }],
           opened: false,
-          path: '/testfile.org',
+          path: "/testfile.org",
           id: 4,
           logNotes: [],
           nestingLevel: 1,
           logBookEntries: [],
           planningItems: [
             {
-              type: 'DEADLINE',
-              timestamp: { month: '08', dayName: 'Tue', isActive: true, day: '27', year: '2019' },
+              type: "DEADLINE",
+              timestamp: {
+                month: "08",
+                dayName: "Tue",
+                isActive: true,
+                day: "27",
+                year: "2019",
+              },
               id: 7,
             },
           ],
@@ -59,10 +71,14 @@ describe('Unit Tests for AgendaDay', () => {
         },
       ],
     ];
-    const testOrgFile = readFixture('multiple_headlines_with_timestamps_simple');
+    const testOrgFile = readFixture(
+      "multiple_headlines_with_timestamps_simple",
+    );
     const parsedOrgFile = parseOrg(testOrgFile);
-    input.files = Map({ '/testfile.org': parsedOrgFile });
+    input.files = Map({ "/testfile.org": parsedOrgFile });
 
-    expect(JSON.parse(JSON.stringify(component.getPlanningItemsAndHeaders(input)))).toEqual(output);
+    expect(
+      JSON.parse(JSON.stringify(component.getPlanningItemsAndHeaders(input))),
+    ).toEqual(output);
   });
 });

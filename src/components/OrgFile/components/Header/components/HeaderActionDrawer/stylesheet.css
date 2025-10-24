@@ -1,4 +1,4 @@
-@import '../../../../../../colors.css';
+@import "../../../../../../colors.css";
 
 .header-action-drawer-container {
   color: var(--base01);
@@ -16,7 +16,11 @@
   position: relative;
   cursor: pointer;
   /* Base transition for transform, color, and box-shadow */
-  transition: transform 0.1s ease-in-out, color 0.1s ease-in-out, box-shadow 0.15s ease-in-out, background-color 0.1s ease-in-out;
+  transition:
+    transform 0.1s ease-in-out,
+    color 0.1s ease-in-out,
+    box-shadow 0.15s ease-in-out,
+    background-color 0.1s ease-in-out;
 }
 
 .header-action-drawer__ff-click-catcher-container:hover {
@@ -35,7 +39,12 @@
 .header-action-drawer__ff-click-catcher-container.header-action-drawer__long-press-success {
   transform: scale(1.15);
   color: var(--base0B); /* Success color for the icon */
-  background-color: rgba(0, 0, 0, 0.05); /* Can use a success-themed background if available, e.g., var(--base0B-alpha-low) */
+  background-color: rgba(
+    0,
+    0,
+    0,
+    0.05
+  ); /* Can use a success-themed background if available, e.g., var(--base0B-alpha-low) */
   border-radius: 4px;
   /* Assuming var(--base0B) is a success/greenish color like rgb(133, 153, 0) for the shadow */
   box-shadow: 0 0 0 28px rgba(133, 153, 0, 0.3); /* Increased larger, more prominent shadow on success */

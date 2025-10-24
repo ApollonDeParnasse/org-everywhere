@@ -1,18 +1,18 @@
-import { debounce } from 'lodash';
-import { sync } from '../actions/org';
-import { STATIC_FILE_PREFIX } from '../lib/org_utils';
+import { debounce } from "lodash";
+import { sync } from "../actions/org";
+import { STATIC_FILE_PREFIX } from "../lib/org_utils";
 
 const dispatchSync = (store) => {
   if (
-    store.getState().syncBackend.get('client') &&
-    store.getState().base.get('shouldSyncOnBecomingVisibile')
+    store.getState().syncBackend.get("client") &&
+    store.getState().base.get("shouldSyncOnBecomingVisibile")
   ) {
-    const path = store.getState().org.present.get('path');
+    const path = store.getState().org.present.get("path");
     const filesToLoadOnStartup = store
       .getState()
-      .org.present.get('fileSettings')
-      .filter((setting) => setting.get('loadOnStartup'))
-      .map((setting) => setting.get('path'));
+      .org.present.get("fileSettings")
+      .filter((setting) => setting.get("loadOnStartup"))
+      .map((setting) => setting.get("path"));
     if (
       path &&
       !path.startsWith(STATIC_FILE_PREFIX) &&
@@ -21,7 +21,10 @@ const dispatchSync = (store) => {
       filesToLoadOnStartup.push(path);
     }
     filesToLoadOnStartup.forEach((path) =>
-      sync({ path, shouldSuppressMessages: true })(store.dispatch, store.getState)
+      sync({ path, shouldSuppressMessages: true })(
+        store.dispatch,
+        store.getState,
+      ),
     );
   }
 };
@@ -33,14 +36,14 @@ const debouncedDispatchSync = debounce(dispatchSync, 1000);
 
 // Dealing with vendor prefixes
 function getHiddenProp() {
-  const prefixes = ['webkit', 'moz', 'ms', 'o'];
+  const prefixes = ["webkit", "moz", "ms", "o"];
 
   // if 'hidden' is natively supported just return it
-  if ('hidden' in document) return 'hidden';
+  if ("hidden" in document) return "hidden";
 
   // otherwise loop over all the known prefixes until we find one
   for (let i = 0; i < prefixes.length; i++) {
-    if (prefixes[i] + 'Hidden' in document) return prefixes[i] + 'Hidden';
+    if (prefixes[i] + "Hidden" in document) return prefixes[i] + "Hidden";
   }
 
   // otherwise it's not supported
@@ -50,7 +53,7 @@ function getHiddenProp() {
 export default (store) => (next) => (action) => {
   let visProp = getHiddenProp();
   if (visProp) {
-    const evtname = visProp.replace(/[H|h]idden/, '') + 'visibilitychange';
+    const evtname = visProp.replace(/[H|h]idden/, "") + "visibilitychange";
     document.addEventListener(evtname, () => debouncedDispatchSync(store));
   }
 

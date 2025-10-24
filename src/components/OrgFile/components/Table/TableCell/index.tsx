@@ -1,27 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import classNames from 'classnames';
-import { is } from 'immutable';
-import { curry } from "lodash/fp"
-import AttributedString from '../../AttributedString';
-import TableCellEditContainer from '../TableCellEditContainer/index';
-import { getTableCell } from '../../../../../lib/org_utils';
-import { activatePopup } from '../../../../../actions/base';
-import { setSelectedTableCellId, advanceCheckboxState } from '../../../../../actions/org';
-import './stylesheet.css';
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import classNames from "classnames";
+import { is } from "immutable";
+import { curry } from "lodash/fp";
+import AttributedString from "../../AttributedString";
+import TableCellEditContainer from "../TableCellEditContainer/index";
+import { getTableCell } from "../../../../../lib/org_utils";
+import { activatePopup } from "../../../../../actions/base";
+import {
+  setSelectedTableCellId,
+  advanceCheckboxState,
+} from "../../../../../actions/org";
+import "./stylesheet.css";
 
-const getInTableEditMode = curry((filePath, state) => state.org.present.getIn(['files', filePath, 'editMode']) === 'table')
+const getInTableEditMode = curry(
+  (filePath, state) =>
+    state.org.present.getIn(["files", filePath, "editMode"]) === "table",
+);
 const getSelectedCellId = curry((filePath, state) => {
-  return state.org.present.getIn(['files', filePath, 'selectedTableCellId'])
-})
+  return state.org.present.getIn(["files", filePath, "selectedTableCellId"]);
+});
 const TableCell = ({
   props: { filePath, headerIndex, descriptionItemIndex, cellId, row, column },
 }) => {
   const dispatch = useDispatch();
-  const inTableEditMode = useSelector(getInTableEditMode(filePath))    
-  const selectedCellId = useSelector(getSelectedCellId(filePath))
-  
-  const [isCellSelected, setIsCellSelected] = useState(cellId === selectedCellId);
+  const inTableEditMode = useSelector(getInTableEditMode(filePath));
+  const selectedCellId = useSelector(getSelectedCellId(filePath));
+
+  const [isCellSelected, setIsCellSelected] = useState(
+    cellId === selectedCellId,
+  );
 
   const tableCellGetter = getTableCell({
     filePath,
@@ -31,8 +39,8 @@ const TableCell = ({
     column,
   });
   const cell = useSelector(tableCellGetter, is);
-  const cellContents = cell.get('contents');
-  const cellRawContents = cell.get('rawContents');
+  const cellContents = cell.get("contents");
+  const cellRawContents = cell.get("rawContents");
 
   useEffect(() => {
     if (cellId == selectedCellId) {
@@ -42,8 +50,8 @@ const TableCell = ({
     }
   }, [selectedCellId, isCellSelected, cellId]);
 
-  const className = classNames('table-part__cell', {
-    'table-part__cell--selected': isCellSelected,
+  const className = classNames("table-part__cell", {
+    "table-part__cell--selected": isCellSelected,
   });
 
   const handleCellSelect = () => {
@@ -56,7 +64,7 @@ const TableCell = ({
   };
 
   const handleTimestampClick = (timestampId: string) => {
-    dispatch(activatePopup('timestamp-editor', { timestampId }));
+    dispatch(activatePopup("timestamp-editor", { timestampId }));
   };
 
   const subPartDataAndHandlers = {
@@ -68,9 +76,16 @@ const TableCell = ({
   return (
     <td className={className} key={cellId} onClick={handleCellSelect}>
       {isCellSelected && inTableEditMode ? (
-        <TableCellEditContainer filePath={filePath} cellValue={cellRawContents} cellId={cellId} />
+        <TableCellEditContainer
+          filePath={filePath}
+          cellValue={cellRawContents}
+          cellId={cellId}
+        />
       ) : (
-        <AttributedString parts={cellContents} subPartDataAndHandlers={subPartDataAndHandlers} />
+        <AttributedString
+          parts={cellContents}
+          subPartDataAndHandlers={subPartDataAndHandlers}
+        />
       )}
     </td>
   );

@@ -1,36 +1,38 @@
-import React, { Fragment, useState, useEffect, useRef, useMemo } from 'react';
+import React, { Fragment, useState, useEffect, useRef, useMemo } from "react";
 import {
   isMobileSafari13,
   isRunningAsPWA,
   isInLandscapeMode,
   isIphoneX,
   isIphone678,
-} from '../../../../lib/browser_utils';
+} from "../../../../lib/browser_utils";
 
-import './stylesheet.css';
+import "./stylesheet.css";
 
-import ActionButton from '../ActionDrawer/components/ActionButton/';
-import Switch from '../../../UI/Switch/';
+import ActionButton from "../ActionDrawer/components/ActionButton/";
+import Switch from "../../../UI/Switch/";
 
-import { headerWithPath } from '../../../../lib/org_utils';
-import substituteTemplateVariables from '../../../../lib/capture_template_substitution';
+import { headerWithPath } from "../../../../lib/org_utils";
+import substituteTemplateVariables from "../../../../lib/capture_template_substitution";
 
 export default ({ template, onCapture, headers }) => {
   const [substitutedTemplate, initialCursorIndex] = useMemo(
-    () => substituteTemplateVariables(template.get('template')),
-    [template]
+    () => substituteTemplateVariables(template.get("template")),
+    [template],
   );
 
   const targetHeader = useMemo(
     () =>
-      template.get('headerPaths').size === 0
-        ? 'FILE'
-        : headerWithPath(headers, template.get('headerPaths')),
-    [headers, template]
+      template.get("headerPaths").size === 0
+        ? "FILE"
+        : headerWithPath(headers, template.get("headerPaths")),
+    [headers, template],
   );
 
   const [textareaValue, setTextareaValue] = useState(substitutedTemplate);
-  const [shouldPrepend, setShouldPrepend] = useState(template.get('shouldPrepend'));
+  const [shouldPrepend, setShouldPrepend] = useState(
+    template.get("shouldPrepend"),
+  );
 
   /** INFO: Some versions of Mobile Safari do _not_ like it when the
   focus is set without an explicit user interaction. This is the case
@@ -47,37 +49,37 @@ export default ({ template, onCapture, headers }) => {
     if (isMobileSafari13) {
       if (isRunningAsPWA) {
         if (isInLandscapeMode()) {
-          return '9em';
+          return "9em";
         } else {
           if (isIphoneX) {
-            return '23em';
+            return "23em";
           } else if (isIphone678) {
-            return '19em';
+            return "19em";
           }
           // For unmeasured models, it's safest to stick with the
           // default iOS behavior - even if the keyboard hides the
           // input field it's better than if it's moved too far up.
           else {
-            return 'auto';
+            return "auto";
           }
         }
       }
       // Portrait mode
       else {
         if (isInLandscapeMode()) {
-          return '9em';
+          return "9em";
         } else {
           if (isIphoneX) {
-            return '18em';
+            return "18em";
           } else if (isIphone678) {
-            return '18em';
+            return "18em";
           } else {
-            return 'auto';
+            return "auto";
           }
         }
       }
     } else {
-      return 'auto';
+      return "auto";
     }
   };
 
@@ -87,11 +89,15 @@ export default ({ template, onCapture, headers }) => {
     if (textarea.current) {
       textarea.current.focus();
       // Set Cursor position to the %? part of the template.
-      textarea.current.setSelectionRange(initialCursorIndex, initialCursorIndex);
+      textarea.current.setSelectionRange(
+        initialCursorIndex,
+        initialCursorIndex,
+      );
     }
   }, [textarea, initialCursorIndex]);
 
-  const handleCaptureClick = () => onCapture(template.get('id'), textareaValue, shouldPrepend);
+  const handleCaptureClick = () =>
+    onCapture(template.get("id"), textareaValue, shouldPrepend);
 
   const handleTextareaChange = (event) => setTextareaValue(event.target.value);
 
@@ -101,21 +107,21 @@ export default ({ template, onCapture, headers }) => {
     <>
       <div className="capture-modal-header">
         <ActionButton
-          letter={template.get('letter')}
-          iconName={template.get('iconName')}
+          letter={template.get("letter")}
+          iconName={template.get("iconName")}
           isDisabled={false}
           onClick={() => {}}
           style={{ marginRight: 20 }}
         />
 
-        <span>{template.get('description')}</span>
+        <span>{template.get("description")}</span>
       </div>
 
       <div className="capture-modal-header-path">
         {template
-          .get('headerPaths')
+          .get("headerPaths")
           .map((hP) => substituteTemplateVariables(hP)[0])
-          .join(' > ')}
+          .join(" > ")}
       </div>
 
       {targetHeader ? (
@@ -131,10 +137,16 @@ export default ({ template, onCapture, headers }) => {
           <div className="capture-modal-button-container">
             <div className="capture-modal-prepend-container">
               <span className="capture-modal-prepend-label">Prepend:</span>
-              <Switch isEnabled={shouldPrepend} onToggle={handlePrependSwitchToggle} />
+              <Switch
+                isEnabled={shouldPrepend}
+                onToggle={handlePrependSwitchToggle}
+              />
             </div>
 
-            <button className="btn capture-modal-button" onClick={handleCaptureClick}>
+            <button
+              className="btn capture-modal-button"
+              onClick={handleCaptureClick}
+            >
               Capture
             </button>
           </div>
