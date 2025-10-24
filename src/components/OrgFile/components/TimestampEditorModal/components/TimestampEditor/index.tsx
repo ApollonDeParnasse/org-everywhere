@@ -5,6 +5,7 @@ import { Map } from 'immutable';
 
 import './stylesheet.css';
 
+import {getIcon} from '../../../../../UI/icons';
 import Switch from '../../../../../UI/Switch/';
 import TabButtons from '../../../../../UI/TabButtons/';
 
@@ -14,15 +15,15 @@ import * as baseActions from '../../../../../../actions/base';
 import { renderAsText } from '../../../../../../lib/timestamps';
 import { getSelectedHeader } from '../../../../../../lib/org_utils';
 
-import _ from 'lodash';
-import { parseISO } from 'date-fns';
-import format from 'date-fns/format';
+import {bindAll} from 'lodash';
+import { parseISO, format } from 'date-fns';
+
 
 class TimestampEditor extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, [
+    bindAll(this, [
       'handleActiveToggle',
       'handleDateChange',
       'handleAddRepeater',
@@ -103,8 +104,7 @@ class TimestampEditor extends PureComponent {
 
       const [hourKey, minuteKey] =
         startOrEnd === 'start' ? ['startHour', 'startMinute'] : ['endHour', 'endMinute'];
-      let [hour, minute] = event.target.value.split(':');
-      hour = hour.startsWith('0') ? hour.substring(1) : hour;
+      const [hour, minute] = event.target.value.split(':');
       onChange(timestamp.set(hourKey, hour).set(minuteKey, minute));
     };
   }
@@ -175,17 +175,19 @@ class TimestampEditor extends PureComponent {
                 onChange={this.handleTimeChange(timeKey)}
               />
               {showRemoveButton && (
-                <i
-                  className="fas fa-times fa-lg timestamp-editor__icon timestamp-editor__icon--remove"
-                  onClick={this.handleRemoveTime(timeKey)}
-                />
+                <div
+                  className="timestamp-editor__icon timestamp-editor__icon--remove"
+                  onClick={this.handleRemoveTime(timeKey)}>
+		  {getIcon("times")}
+                </div>
               )}
             </Fragment>
           ) : (
-            <i
-              className="fas fa-plus timestamp-editor__icon timestamp-editor__icon--add"
-              onClick={this.handleAddTime(timeKey)}
-            />
+            <div
+              className="timestamp-editor__icon timestamp-editor__icon--add"
+              onClick={this.handleAddTime(timeKey)}>
+	      {getIcon("plus")}
+            </div>
           )}
         </div>
       </div>
@@ -228,16 +230,18 @@ class TimestampEditor extends PureComponent {
                   onSelect={this.handleRepeaterUnitChange}
                 />
               </div>
-              <i
-                className="fas fa-times fa-lg timestamp-editor__icon timestamp-editor__icon--remove"
-                onClick={this.handleRemoveRepeater}
-              />
+              <div
+                className="timestamp-editor__icon timestamp-editor__icon--remove"
+                onClick={this.handleRemoveRepeater}>
+		{getIcon("times")}
+              </div>
             </Fragment>
           ) : (
-            <i
-              className="fas fa-plus timestamp-editor__icon timestamp-editor__icon--add"
-              onClick={this.handleAddRepeater}
-            />
+            <div
+              className="timestamp-editor__icon timestamp-editor__icon--add"
+              onClick={this.handleAddRepeater}>
+	      {getIcon("plus")}
+            </div>
           )}
         </div>
       </div>
@@ -279,16 +283,18 @@ class TimestampEditor extends PureComponent {
                   onSelect={this.handleDelayUnitChange}
                 />
               </div>
-              <i
-                className="fas fa-times fa-lg timestamp-editor__icon timestamp-editor__icon--remove"
-                onClick={this.handleRemoveDelay}
-              />
+              <div
+                className="timestamp-editor__icon timestamp-editor__icon--remove"
+                onClick={this.handleRemoveDelay}>
+		{getIcon("times")}
+              </div>
             </Fragment>
           ) : (
-            <i
-              className="fas fa-plus timestamp-editor__icon timestamp-editor__icon--add"
-              onClick={this.handleAddDelay}
-            />
+            <div
+              className="timestamp-editor__icon timestamp-editor__icon--add"
+              onClick={this.handleAddDelay}>
+	      {getIcon("plus")}
+            </div>
           )}
         </div>
       </div>
@@ -315,10 +321,11 @@ class TimestampEditor extends PureComponent {
         <>
           <div className="timestamp-editor__field-title">Add Timestamp</div>
           <div className="timestamp-editor__field">
-            <i
+            <div
               className="fas fa-plus timestamp-editor__icon timestamp-editor__icon--add"
-              onClick={this.createPlanningItem}
-            />
+              onClick={this.createPlanningItem}>
+            </div>
+	    {getIcon("plus")}
           </div>
         </>
       );

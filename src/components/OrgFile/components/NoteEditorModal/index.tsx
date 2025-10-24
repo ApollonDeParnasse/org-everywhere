@@ -7,13 +7,13 @@ import './stylesheet.css';
 import * as baseActions from '../../../../actions/base';
 import * as orgActions from '../../../../actions/org';
 
-import _ from 'lodash';
+import {bindAll} from 'lodash';
 
 class NoteEditorModal extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, ['handleTextareaRef', 'addNote', 'handleDescriptionChange']);
+    bindAll(this, ['handleTextareaRef', 'addNote', 'handleDescriptionChange']);
 
     this.state = {
       allTags: props.allTags,

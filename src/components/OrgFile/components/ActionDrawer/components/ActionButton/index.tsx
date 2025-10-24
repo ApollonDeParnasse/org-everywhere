@@ -1,42 +1,44 @@
-import React, { PureComponent } from 'react';
-
+import React, {type Ref} from 'react';
 import './stylesheet.css';
-
+import { getIcon } from "../../../../../UI/icons.tsx"
 import classNames from 'classnames';
-import _ from 'lodash';
 
-export default class ActionButton extends PureComponent {
-  constructor(props) {
-    super(props);
+interface ActionButtonArguments {
+  iconName: string,
+  subIconName: string,
+  onClick: Function,
+  onRef: Ref<HTMLButtonElement>,
+  isDisabled: boolean,
+  shouldRotateSubIcon: boolean,
+  shouldSpinSubIcon: boolean,
+  letter: string,
+  additionalClassName: string,
+  style: string,
+  tooltip,
+  
+}
+const ActionButton = ({
+  iconName,
+  subIconName,
+  onClick,
+  isDisabled,
+  onRef,
+  shouldRotateSubIcon,
+  shouldSpinSubIcon,
+  additionalClassName,
+  letter,
+  style,
+  tooltip,  
+}: ActionButtonArguments) => {
 
-    _.bindAll(this, ['handleClick']);
+  const handleClick = () => {   
+      if (isDisabled) {
+	return;
+      }
+      onClick();
   }
 
-  handleClick() {
-    const { onClick, isDisabled } = this.props;
-
-    if (isDisabled) {
-      return;
-    }
-
-    onClick();
-  }
-
-  render() {
-    const {
-      iconName,
-      subIconName,
-      isDisabled,
-      shouldRotateSubIcon,
-      letter,
-      additionalClassName,
-      style,
-      tooltip,
-      shouldSpinSubIcon,
-      onRef,
-    } = this.props;
-
-    const className = classNames(
+      const className = classNames(
       'btn',
       'btn--circle',
       'action-drawer__btn',
@@ -51,28 +53,30 @@ export default class ActionButton extends PureComponent {
       }
     );
 
-    const subIconClassName = classNames(
-      'fas',
-      'fa-xs',
-      `fa-${subIconName}`,
-      'action-drawer__btn__sub-icon',
-      {
-        'action-drawer__btn__sub-icon--rotated': shouldRotateSubIcon,
-        'fa-spin': shouldSpinSubIcon,
-      }
-    );
+    // const subIconClassName = classNames(
+    //   'fas',
+    //   'fa-xs',
+    //   `fa-${subIconName}`,
+    //   'action-drawer__btn__sub-icon',
+    //   {
+    //     'action-drawer__btn__sub-icon--rotated': shouldRotateSubIcon,
+    //     'fa-spin': shouldSpinSubIcon,
+    //   }
+    // )
 
     return (
       <button
-        className={className}
-        onClick={this.handleClick}
+        onClick={handleClick}
+	className={className}
         style={style}
         title={tooltip}
         ref={onRef}
       >
-        {!!letter && letter}
-        {!!subIconName && <i className={subIconClassName} />}
+        {letter && letter}
+	{getIcon(iconName)}
+	{subIconName && getIcon(iconName)}
       </button>
     );
-  }
 }
+
+export default ActionButton;

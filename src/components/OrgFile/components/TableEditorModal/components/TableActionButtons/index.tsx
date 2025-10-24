@@ -1,6 +1,8 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { curry } from "lodash/fp"
+import './stylesheet.css';
+import { getIcon } from "../../../../../UI/icons.tsx"
 import {
   addNewTableRow,
   removeTableRow,
@@ -13,13 +15,14 @@ import {
   moveTableColumnRight,
 } from '../../../../../../actions/org';
 
-import './stylesheet.css';
 
-const getSelectedCellId = curry((filePath, state) => {
+
+
+const getSelectedCellId = curry((filePath: string, state) => {
   return state.org.present.getIn(['files', filePath, 'selectedTableCellId'])
 })
 
-const TableActionButtons = ({ filePath }) => {
+const TableActionButtons = ({ filePath }: {filePath: string}) => {
   const dispatch = useDispatch();
   const selectedTableCellId = useSelector(getSelectedCellId(filePath))
 
@@ -64,96 +67,82 @@ const TableActionButtons = ({ filePath }) => {
       {
         <>
           <div className="table-action-drawer-container">
-            <div
+            <button
               className=" table-action-drawer__edit-icon-container"
+	      data-testid="edit-cell-button"
               onClick={() => (selectedTableCellId ? handleEnterTableEditMode() : undefined)}
             >
-              <i data-testid="edit-cell-button" className="fas fa-pencil-alt fa-lg" />
-            </div>
+	      {getIcon("pencil")}
+            </button>
 
-            <div
+            <button
               className="table-action-drawer__sub-icon-container"
+	      data-testid="add-column-button"
               onClick={() => (selectedTableCellId ? handleAddNewTableColumn() : undefined)}
             >
-              <i className="fas fa-plus fa-lg table-action-drawer__main-icon" />
-              <i
-                data-testid="add-column-button"
-                className="fas fa-columns fa-sm table-action-drawer__sub-icon table-action-drawer__sub-icon--rotated"
-              />
-            </div>
+	      {getIcon("columns")}
+	      {getIcon("small-plus")}
+            </button>
 
-            <div
+            <button
               className="table-action-drawer__sub-icon-container"
+	      data-testid="delete-column-button"
               onClick={() => (selectedTableCellId ? handleRemoveTableColumn() : undefined)}
             >
-              <i className="fas fa-times fa-lg table-action-drawer__main-icon" />
-              <i
-                data-testid="delete-column-button"
-                className="fas fa-columns fa-sm table-action-drawer__sub-icon table-action-drawer__sub-icon--rotated"
-              />
-            </div>
 
-            <div
+              {getIcon("columns")}
+	      {getIcon("small-times")}
+            </button>
+
+            <button
               className="table-action-drawer__sub-icon-container"
+	      data-testid="add-row-button"
               onClick={() => (selectedTableCellId ? handleAddNewTableRow() : undefined)}
             >
-              <i className="fas fa-plus fa-lg table-action-drawer__main-icon" />
-              <i
-                data-testid="add-row-button"
-                className="fas fa-columns fa-sm table-action-drawer__sub-icon"
-              />
-            </div>
 
-            <div
+              {getIcon("rows")}
+	      {getIcon("small-plus")}	      
+            </button>
+
+            <button
               className="table-action-drawer__sub-icon-container"
               onClick={() => (selectedTableCellId ? handleRemoveTableRow() : undefined)}
             >
-              <i className="fas fa-times fa-lg table-action-drawer__main-icon" />
-              <i
-                data-testid="delete-row-button"
-                className="fas fa-columns fa-sm table-action-drawer__sub-icon"
-              />
-            </div>
+	      {getIcon("rows")}
+	      {getIcon("small-times")}	      
+            </button>
           </div>
 
           <div className="table-action-movement-container">
-            <div
+            <button
               className="table-action-movement__up"
+	      data-testid="up-button"
               onClick={() => (selectedTableCellId ? handleUpClick() : undefined)}
             >
-              <i
-                data-testid="up-button"
-                className="fas fa-arrow-up fa-lg table-action-drawer__main-icon"
-              />
-            </div>
-            <div
+	      {getIcon("arrow-up")}
+            </button>
+            <button
               className="table-action-movement__left"
+	      data-testid="left-button"
               onClick={() => (selectedTableCellId ? handleLeftClick() : undefined)}
             >
-              <i
-                data-testid="left-button"
-                className="fas fa-arrow-left fa-lg table-action-drawer__main-icon"
-              />
-            </div>
+              {getIcon("arrow-left")}
+            </button>
 
-            <div
+            <button
               className="table-action-movement__right"
+	      data-testid="right-button"
               onClick={() => (selectedTableCellId ? handleRightClick() : undefined)}
             >
-              <i
-                data-testid="right-button"
-                className="fas fa-arrow-right fa-lg table-action-drawer__main-icon"
-              />
-            </div>
-            <div
+	      {getIcon("arrow-right")}
+            </button>
+            <button
               className="table-action-movement__down"
+	      data-testid="down-button"
               onClick={() => (selectedTableCellId ? handleDownClick() : undefined)}
             >
-              <i
-                data-testid="down-button"
-                className="fas fa-arrow-down fa-lg table-action-drawer__main-icon"
-              />
-            </div>
+              {getIcon("arrow-down")}
+            </button>
           </div>
         </>
       }

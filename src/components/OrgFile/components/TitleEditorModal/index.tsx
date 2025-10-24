@@ -2,7 +2,8 @@ import React, { PureComponent } from 'react';
 
 import './stylesheet.css';
 
-import _ from 'lodash';
+import {bindAll} from 'lodash';
+import {FaPlus} from 'react-icons/fa';
 
 import TabButtons from '../../../UI/TabButtons';
 
@@ -14,7 +15,7 @@ export default class TitleEditorModal extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, [
+    bindAll(this, [
       'handleTextareaRef',
       'handleTextareaFocus',
       'handleTitleChange',
@@ -189,7 +190,7 @@ export default class TitleEditorModal extends PureComponent {
             onClick={this.handleTitleFieldClick}
           />
           <div className="title-line__insert-timestamp-button" onClick={this.handleInsertTimestamp}>
-            <i className="fas fa-plus insert-timestamp-icon" />
+            <FaPlus />
             Insert timestamp
           </div>
         </div>

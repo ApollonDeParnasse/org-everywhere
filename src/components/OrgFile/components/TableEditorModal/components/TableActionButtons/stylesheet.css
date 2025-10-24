@@ -18,7 +18,6 @@
 
 .table-action-drawer__edit-icon-container {
   grid-row-start: span 2;
-
   display: flex;
   justify-content: center;
   align-items: center;

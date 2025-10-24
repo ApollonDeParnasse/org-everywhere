@@ -1,22 +1,27 @@
 import React, { PureComponent, Fragment } from 'react';
+import { IconContext } from "react-icons"
+import {
+  FaBars,
+  FaTimes,
+  FaPlus
+} from "react-icons/fa";
+import classNames from 'classnames';
+import { fromJS } from 'immutable';
+import {bindAll} from 'lodash';
+import { Droppable, Draggable } from 'react-beautiful-dnd';
 
 import './stylesheet.css';
 
 import { attributedStringToRawText } from '../../../../lib/export_org';
 import generateId from '../../../../lib/id_generator';
 import { parseMarkupAndCookies } from '../../../../lib/parse_org';
-
-import { Droppable, Draggable } from 'react-beautiful-dnd';
-import classNames from 'classnames';
-import { fromJS } from 'immutable';
-import _ from 'lodash';
 import { computeAllPropertyNames, computeAllPropertyValuesFor } from '../../../../lib/org_utils';
 
 export default class PropertyListEditorModal extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, ['handleAddNewItem']);
+    bindAll(this, ['handleAddNewItem']);
   }
 
   componentDidUpdate(prevProps) {
@@ -102,7 +107,7 @@ export default class PropertyListEditorModal extends PureComponent {
             There are no items in this property list.
             <br />
             <br />
-            Click the <i className="fas fa-plus" /> button to add a new one.
+            Click the <FaPlus /> button to add a new one.
           </div>
         ) : (
           <Droppable droppableId="property-list-editor-droppable" type="PROPERTY-LIST">
@@ -151,14 +156,12 @@ export default class PropertyListEditorModal extends PureComponent {
                               </datalist>
                             </div>
                             <div className="item-container__actions-container">
-                              <i
-                                className="fas fa-times fa-lg"
-                                onClick={this.handleRemoveItem(propertyListItem.get('id'))}
-                              />
-                              <i
-                                className="fas fa-bars fa-lg item-container__drag-handle drag-handle"
-                                {...provided.dragHandleProps}
-                              />
+			      <FaTimes />
+			      <IconContext.Provider value={{ className: "tag-container__drag-handle drag-handle" }}>
+			      <div onClick={this.handleRemoveItem(propertyListItem.get('id'))}>
+				<FaBars />
+			      </div>
+			    </IconContext.Provider>			                                                           
                             </div>
                           </div>
                         )}
@@ -174,7 +177,9 @@ export default class PropertyListEditorModal extends PureComponent {
         )}
 
         <div className="property-list-editor__add-new-container">
-          <button className="fas fa-plus fa-lg btn btn--circle" onClick={this.handleAddNewItem} />
+	  <button className="btn btn--circle" onClick={this.handleAddNewItem}>
+	    <FaPlus />
+	  </button>
         </div>
       </>
     );

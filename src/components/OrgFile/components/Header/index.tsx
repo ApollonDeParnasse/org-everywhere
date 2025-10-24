@@ -4,6 +4,8 @@ import { bindActionCreators } from 'redux';
 
 import { Motion, spring } from 'react-motion';
 import { UnmountClosed as Collapse } from 'react-collapse';
+import { IconContext } from "react-icons";
+import { FaCheck, FaTimes } from "react-icons/fa";
 
 import * as orgActions from '../../../../actions/org';
 import * as baseActions from '../../../../actions/base';
@@ -11,7 +13,7 @@ import * as baseActions from '../../../../actions/base';
 import './stylesheet.css';
 
 import classNames from 'classnames';
-import _ from 'lodash';
+import { bindAll } from 'lodash';
 
 import TitleLine from '../TitleLine';
 import HeaderContent from '../HeaderContent';
@@ -24,6 +26,8 @@ import { Map } from 'immutable';
 import { shareContent } from '../../../../lib/share_utils';
 import { exportHeaderWithSubheaders } from '../../../../lib/export_org';
 
+
+
 class Header extends PureComponent {
   SWIPE_ACTION_ACTIVATION_DISTANCE = 80;
   FREE_DRAG_ACTIVATION_DISTANCE = 10;
@@ -31,7 +35,7 @@ class Header extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, [
+    bindAll(this, [
       'handleRef',
       'handleMouseDown',
       'handleTouchStart',
@@ -508,10 +512,11 @@ class Header extends PureComponent {
 
                   return (
                     <div className="left-swipe-action-container" style={leftStyle}>
-                      <i
-                        className="fas fa-check swipe-action-container__icon swipe-action-container__icon--left"
-                        style={leftIconStyle}
-                      />
+		      <IconContext.Provider value={{ color: "green", className: "swipe-action-container__icon swipe-action-container__icon--left" }}>
+			<div>
+			  <FaCheck />
+			</div>
+		      </IconContext.Provider>
                     </div>
                   );
                 }}
@@ -540,10 +545,11 @@ class Header extends PureComponent {
 
                   return (
                     <div className="right-swipe-action-container" style={rightStyle}>
-                      <i
-                        className="fas fa-times swipe-action-container__icon swipe-action-container__icon--right"
-                        style={rightIconStyle}
-                      />
+		      <IconContext.Provider value={{ color: "red", className: "swipe-action-container__icon swipe-action-container__icon--right" }}>
+			<div>
+			  <FaTimes />
+			</div>
+		      </IconContext.Provider>
                     </div>
                   );
                 }}

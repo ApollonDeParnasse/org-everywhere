@@ -10,7 +10,7 @@ import { closePopup } from '../../../../actions/base';
 import { getTable } from '../../../../lib/org_utils';
 
 const getFilePath = (state) => state.org.present.get('path')
-const getFile = curry((filePath, state) => {
+const getFile = curry((filePath: string, state) => {
   return state.org.present.getIn(['files', filePath], Map())
 })
 
@@ -40,8 +40,8 @@ const TableEditorModal = () => {
 
   return (
     <>
-      <h2 className="drawer-modal__title">Edit table</h2>
-      <div style={{ overflowX: 'auto', overflowY: 'auto' }}>
+      <h2>Edit table</h2>
+      <div className="drawer-modal__title">
         <Table props={tableProps} />
       </div>
       <TableActionButtons filePath={filePath} />

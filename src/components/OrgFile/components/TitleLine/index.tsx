@@ -4,7 +4,7 @@ import { bindActionCreators } from 'redux';
 
 import './stylesheet.css';
 
-import _ from 'lodash';
+import {bindAll} from 'lodash';
 import classNames from 'classnames';
 
 import * as orgActions from '../../../../actions/org';
@@ -19,7 +19,7 @@ class TitleLine extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, ['handleTitleClick', 'handleTodoClick', 'handleTimestampClick']);
+    bindAll(this, ['handleTitleClick', 'handleTodoClick', 'handleTimestampClick']);
 
     this.state = {
       titleValue: this.calculateRawTitle(props.header),

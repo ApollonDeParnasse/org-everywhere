@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-
-import './stylesheet.css';
-
 import classNames from 'classnames';
+import './stylesheet.css';
+import { getIcon } from "../../../UI/icons.tsx"
+
 import TaskListView from './components/TaskListView';
 
 import { isMobileBrowser, isIos } from '../../../../lib/browser_utils';
@@ -78,14 +78,14 @@ function TaskListModal(props) {
             />
           </div>
 
-          <i
+          <div
             className={classNames('fas fa-lg bookmark__icon ', {
-              'fa-star': !bookmarkChosen,
-              'fa-trash': bookmarkChosen,
               bookmark__icon__enabled: canSaveBookmark,
             })}
-            onClick={onBookmarkButtonClick}
-          />
+	    onClick={onBookmarkButtonClick}>
+	    {!bookmarkChosen && getIcon("star")}
+	    {bookmarkChosen && getIcon("trash")}
+          </div>
         </div>
       </div>
 

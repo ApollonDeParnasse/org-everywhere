@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-
 import './stylesheet.css';
-
+import { getIcon } from "../../../UI/icons.tsx"
 import AgendaDay from './components/AgendaDay';
 import TabButtons from '../../../UI/TabButtons';
 
@@ -12,7 +11,7 @@ import * as baseActions from '../../../../actions/base';
 import * as orgActions from '../../../../actions/org';
 import { determineIncludedFiles } from '../../../../reducers/org';
 
-import _ from 'lodash';
+import { range } from 'lodash';
 import {
   addDays,
   addWeeks,
@@ -24,8 +23,9 @@ import {
   startOfWeek,
   startOfMonth,
   getDaysInMonth,
+  format
 } from 'date-fns';
-import format from 'date-fns/format';
+
 
 // INFO: SearchModal, AgendaModal and TaskListModal are very similar
 // in structure and partially in logic. When changing one, consider
@@ -115,11 +115,11 @@ function AgendaModal(props) {
       break;
     case 'Week':
       const weekStart = startOfWeek(selectedDate, { weekStartsOn });
-      dates = _.range(7).map((daysAfter) => addDays(weekStart, daysAfter));
+      dates = range(7).map((daysAfter) => addDays(weekStart, daysAfter));
       break;
     case 'Month':
       const monthStart = startOfMonth(selectedDate);
-      dates = _.range(getDaysInMonth(selectedDate)).map((daysAfter) =>
+      dates = range(getDaysInMonth(selectedDate)).map((daysAfter) =>
         addDays(monthStart, daysAfter)
       );
       break;
@@ -139,10 +139,10 @@ function AgendaModal(props) {
         />
       </div>
 
-      <div className="agenda__timeframe-header-container">
-        <i className="fas fa-chevron-left fa-lg" onClick={handlePreviousDateClick} />
-        <div className="agenda__timeframe-header">{calculateTimeframeHeader()}</div>
-        <i className="fas fa-chevron-right fa-lg" onClick={handleNextDateClick} />
+      <div className="agenda__timeframe-header-container" onClick={handlePreviousDateClick}>
+	{getIcon("chevron-left")}
+        <div className="agenda__timeframe-header" onClick={handleNextDateClick}>{calculateTimeframeHeader()}</div>
+	{getIcon("chevron-right")}
       </div>
 
       <div

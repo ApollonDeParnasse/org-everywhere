@@ -1,10 +1,9 @@
 import React, { PureComponent } from 'react';
-
 import { connect } from 'react-redux';
-
-import './stylesheet.css';
-
 import _ from 'lodash';
+import './stylesheet.css';
+import { getIcon } from "../../../UI/icons.tsx"
+
 
 import { isMobileBrowser } from '../../../../lib/browser_utils';
 import { createRawDescriptionText } from '../../../../lib/export_org';
@@ -102,7 +101,7 @@ class DescriptionEditorModal extends PureComponent {
             className="header-content__insert-timestamp-button"
             onClick={this.handleInsertTimestamp}
           >
-            <i className="fas fa-plus insert-timestamp-icon" />
+            {getIcon("plus")}
             Insert timestamp
           </div>
         </div>

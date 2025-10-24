@@ -1,17 +1,20 @@
 import React, { PureComponent, Fragment } from 'react';
-
+import { IconContext } from "react-icons"
+import {
+  FaBars,
+  FaTimes,
+  FaPlus
+} from "react-icons/fa";
 import { Droppable, Draggable } from 'react-beautiful-dnd';
-
-import './stylesheet.css';
-
-import _ from 'lodash';
+import {bindAll} from 'lodash';
 import classNames from 'classnames';
+import './stylesheet.css';
 
 export default class TagsEditorModal extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, ['handleRemoveTag', 'handleAddNewTag', 'handleTagChange']);
+    bindAll(this, ['handleRemoveTag', 'handleAddNewTag', 'handleTagChange']);
 
     this.state = {
       allTags: props.allTags,
@@ -79,7 +82,7 @@ export default class TagsEditorModal extends PureComponent {
             This header doesn't have any tags.
             <br />
             <br />
-            Click the <i className="fas fa-plus" /> button to add a new one, or choose from the list
+            Click the <FaPlus /> button to add a new one, or choose from the list
             of all of your tags below.
           </div>
         ) : (
@@ -106,14 +109,13 @@ export default class TagsEditorModal extends PureComponent {
                             list="drawer-modal__datalist-tag-names"
                           />
                           <div className="tag-container__actions-container">
-                            <i
-                              className="fas fa-times fa-lg"
-                              onClick={this.handleRemoveTag(index)}
-                            />
-                            <i
-                              className="fas fa-bars fa-lg tag-container__drag-handle drag-handle"
-                              {...provided.dragHandleProps}
-                            />
+			    <FaTimes />
+			    <IconContext.Provider value={{ className: "tag-container__drag-handle drag-handle" }}>
+			      <div>
+				<FaBars />
+				  {...provided.dragHandleProps}
+			      </div>
+			    </IconContext.Provider>			                                                           
                           </div>
                         </div>
                       )}
@@ -128,7 +130,9 @@ export default class TagsEditorModal extends PureComponent {
         )}
 
         <div className="tags-editor__add-new-container">
-          <button className="fas fa-plus fa-lg btn btn--circle" onClick={this.handleAddNewTag} />
+          <button className="btn btn--circle" onClick={this.handleAddNewTag}>
+	    <FaPlus />
+	  </button>
         </div>
 
         <hr className="tags-editor__separator" />

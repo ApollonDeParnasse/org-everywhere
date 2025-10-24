@@ -4,6 +4,7 @@ import { nodePolyfills } from "vite-plugin-node-polyfills"
 
 
 export default defineConfig({
+  base: "/org-everywhere/",
   plugins: [
     react({jsxRuntime: 'classic'}),
     nodePolyfills()

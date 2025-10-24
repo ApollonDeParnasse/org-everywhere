@@ -1,20 +1,23 @@
 import React, { PureComponent } from 'react';
-
+import classNames from "classnames"
 import './stylesheet.css';
+import { getIcon } from "../../../../../UI/icons.tsx"
+
 
 export default class DrawerActionButtons extends PureComponent {
   // A nasty hack required to get click handling to work properly in Firefox. No idea why its
   // broken in the first place or why this fixes it.
-  iconWithFFClickCatcher({ className, onClick, title, disabled, testId = '' }) {
+  iconWithFFClickCatcher({ iconName, className, onClick, title, disabled, testId = '' }) {
+    const buttonClass = classNames("header-action-drawer__ff-click-catcher-container", className)
     return (
-      <div
+      <button
         title={title}
         onClick={!disabled ? onClick : undefined}
-        className="header-action-drawer__ff-click-catcher-container"
+	data-testid={testId}
+        className={buttonClass}
       >
-        <div className="header-action-drawer__ff-click-catcher" />
-        <i className={className} data-testid={testId} />
-      </div>
+	{getIcon(iconName)}
+      </button>
     );
   }
 
@@ -39,8 +42,8 @@ export default class DrawerActionButtons extends PureComponent {
       <div className="header-action-drawer-container">
         <div className="header-action-drawer__row">
           {this.iconWithFFClickCatcher({
+	    iconName: "pencil",
             className:
-              'fas fa-pencil-alt fa-lg' +
               ('title-editor' === activePopupType ? ' drawer-action-button--selected' : ''),
             onClick: () => {
               if ('title-editor' === activePopupType) {
@@ -55,8 +58,8 @@ export default class DrawerActionButtons extends PureComponent {
           })}
 
           {this.iconWithFFClickCatcher({
+	    iconName: "edit",
             className:
-              'fas fa-edit fa-lg' +
               ('description-editor' === activePopupType ? ' drawer-action-button--selected' : ''),
             onClick: () => {
               if ('description-editor' === activePopupType) {
@@ -72,8 +75,8 @@ export default class DrawerActionButtons extends PureComponent {
           })}
 
           {this.iconWithFFClickCatcher({
+	    iconName: "tags",
             className:
-              'fas fa-tags fa-lg' +
               ('tags-editor' === activePopupType ? ' drawer-action-button--selected' : ''),
             onClick: onTagsClick,
             title: 'Modify tags',
@@ -81,8 +84,8 @@ export default class DrawerActionButtons extends PureComponent {
           })}
 
           {this.iconWithFFClickCatcher({
+	    iconName: "list",
             className:
-              'fas fa-list fa-lg' +
               ('property-list-editor' === activePopupType ? ' drawer-action-button--selected' : ''),
             onClick: onPropertiesClick,
             title: 'Modify properties',
@@ -90,16 +93,16 @@ export default class DrawerActionButtons extends PureComponent {
           })}
 
           {this.iconWithFFClickCatcher({
+	    iconName: "calendar-check",
             className:
-              'fas fa-calendar-check fa-lg' +
               ('deadline-editor' === activePopupType ? ' drawer-action-button--selected' : ''),
             onClick: onDeadlineClick,
             title: 'Set deadline datetime',
             disabled: 'deadline-editor' === activePopupType,
           })}
           {this.iconWithFFClickCatcher({
+	    iconName: "calendar-times",
             className:
-              'far fa-calendar-times fa-lg' +
               ('scheduled-editor' === activePopupType ? ' drawer-action-button--selected' : ''),
             onClick: onScheduledClick,
             title: 'Set scheduled datetime',
@@ -107,8 +110,8 @@ export default class DrawerActionButtons extends PureComponent {
           })}
 
           {this.iconWithFFClickCatcher({
+	    iconName: "sticky-note",
             className:
-              'far fa-sticky-note fa-lg' +
               ('note-editor' === activePopupType ? ' drawer-action-button--selected' : ''),
             onClick: onAddNote,
             title: 'Add a note',
@@ -116,8 +119,8 @@ export default class DrawerActionButtons extends PureComponent {
           })}
 
           {this.iconWithFFClickCatcher({
+	    iconName: "trash",
             className:
-              'fas fa-trash fa-lg' +
               ('note-editor' === activePopupType ? ' drawer-action-button--selected' : ''),
             onClick: onRemoveHeader,
             title: 'Delete this header',

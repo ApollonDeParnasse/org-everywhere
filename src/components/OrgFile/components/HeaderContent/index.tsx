@@ -8,7 +8,7 @@ import PlanningItems from './components/PlanningItems';
 import PropertyListItems from './components/PropertyListItems';
 import LogBookEntries from './components/LogBookEntries';
 
-import _ from 'lodash';
+import {bindAll} from 'lodash';
 
 import * as orgActions from '../../../../actions/org';
 import * as baseActions from '../../../../actions/base';
@@ -22,7 +22,7 @@ class HeaderContent extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, [
+    bindAll(this, [
       'handleTableSelect',
       'handleCheckboxClick',
       'handleListItemSelect',

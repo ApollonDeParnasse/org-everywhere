@@ -55,7 +55,7 @@ const TableCell = ({
     dispatch(advanceCheckboxState(listItemId));
   };
 
-  const handleTimestampClick = (timestampId) => {
+  const handleTimestampClick = (timestampId: string) => {
     dispatch(activatePopup('timestamp-editor', { timestampId }));
   };
 
@@ -68,7 +68,7 @@ const TableCell = ({
   return (
     <td className={className} key={cellId} onClick={handleCellSelect}>
       {isCellSelected && inTableEditMode ? (
-        <TableCellEditContainer cellValue={cellRawContents} cellId={cellId} />
+        <TableCellEditContainer filePath={filePath} cellValue={cellRawContents} cellId={cellId} />
       ) : (
         <AttributedString parts={cellContents} subPartDataAndHandlers={subPartDataAndHandlers} />
       )}

@@ -1,26 +1,21 @@
 import React, { PureComponent } from 'react';
-
+import { getIcon } from "../../../../../UI/icons.tsx"
 import './stylesheet.css';
 
-export default class HeaderActionDrawer extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.longPressTimer = null;
-    this.isLongPressing = false;
-  }
-
-  // A nasty hack required to get click handling to work properly in Firefox. No idea why its
-  // broken in the first place or why this fixes it.
-  iconWithFFClickCatcher({ className, onClick, onLongPress, title, testId = '' }) {
-    const handleMouseDown = onLongPress
-      ? (e) => {
-          this.isLongPressing = false;
+// broken in the first place or why this fixes it.
+const iconWithFFClickCatcher = ({ iconName, onClick, onLongPress, title, testId = '' }) =>  {
+  let isLongPressing = false;
+  let longPressTimer = null;
+  
+	const handleMouseDown = onLongPress
+	  ? (e) => {
+          isLongPressing = false;
           // Store reference to the target element to avoid React event pooling issues
           const targetElement = e.currentTarget;
           // Add visual feedback class immediately for better UX
           targetElement.classList.add('header-action-drawer__long-press-feedback');
-          this.longPressTimer = setTimeout(() => {
-            this.isLongPressing = true;
+          longPressTimer = setTimeout(() => {
+            isLongPressing = true;
             onLongPress(e);
             // Add success feedback class
             targetElement.classList.add('header-action-drawer__long-press-success');
@@ -28,11 +23,11 @@ export default class HeaderActionDrawer extends PureComponent {
         }
       : undefined;
 
-    const handleMouseUp = onLongPress
+	const handleMouseUp = onLongPress
       ? (e) => {
-          if (this.longPressTimer) {
-            clearTimeout(this.longPressTimer);
-            this.longPressTimer = null;
+          if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
           }
           // Remove visual feedback classes
           e.currentTarget.classList.remove('header-action-drawer__long-press-feedback');
@@ -40,11 +35,11 @@ export default class HeaderActionDrawer extends PureComponent {
         }
       : undefined;
 
-    const handleMouseLeave = onLongPress
+	const handleMouseLeave = onLongPress
       ? (e) => {
-          if (this.longPressTimer) {
-            clearTimeout(this.longPressTimer);
-            this.longPressTimer = null;
+          if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
           }
           // Remove visual feedback classes
           e.currentTarget.classList.remove('header-action-drawer__long-press-feedback');
@@ -52,18 +47,19 @@ export default class HeaderActionDrawer extends PureComponent {
         }
       : undefined;
 
-    const handleClick = onClick
-      ? (e) => {
+	const handleClick = onClick
+	  ? (e) => {
           // Only trigger regular click if it wasn't a long press
-          if (!this.isLongPressing) {
+          if (!isLongPressing) {
             onClick(e);
           }
-          this.isLongPressing = false;
+          isLongPressing = false;
         }
       : undefined;
 
+
     return (
-      <div
+      <button
         title={title}
         onClick={handleClick}
         onMouseDown={handleMouseDown}
@@ -73,15 +69,14 @@ export default class HeaderActionDrawer extends PureComponent {
         onTouchEnd={handleMouseUp}
         onTouchCancel={handleMouseLeave}
         className="header-action-drawer__ff-click-catcher-container"
-      >
-        <div className="header-action-drawer__ff-click-catcher" />
-        <i className={className} data-testid={testId} />
-      </div>
+      >        
+	{getIcon(iconName)}
+      </button>
     );
   }
+   
 
-  render() {
-    const {
+const HeaderActionDrawer = ({
       onTitleClick,
       onDescriptionClick,
       onTagsClick,
@@ -98,8 +93,9 @@ export default class HeaderActionDrawer extends PureComponent {
       onRefileHeader,
       onAddNote,
       onDuplicateHeader,
-    } = this.props;
+    }) => {
 
+      // A nasty hack required to get click handling to work properly in Firefox. No idea why it    
     // Create a fallback function for onDuplicateHeader if not provided
     const handleDuplicateHeader =
       onDuplicateHeader ||
@@ -113,47 +109,47 @@ export default class HeaderActionDrawer extends PureComponent {
     return (
       <div className="header-action-drawer-container">
         <div className="header-action-drawer__row">
-          {this.iconWithFFClickCatcher({
-            className: 'fas fa-pencil-alt fa-lg',
+          {iconWithFFClickCatcher({
+            iconName: 'pencil',
             onClick: onTitleClick,
             title: 'Edit header title',
           })}
 
-          {this.iconWithFFClickCatcher({
-            className: 'fas fa-edit fa-lg',
+          {iconWithFFClickCatcher({
+            iconName: 'edit',
             onClick: onDescriptionClick,
             title: 'Edit header description',
             testId: 'edit-header-title',
           })}
 
-          {this.iconWithFFClickCatcher({
-            className: 'fas fa-tags fa-lg',
+          {iconWithFFClickCatcher({
+            iconName: 'tags',
             onClick: onTagsClick,
             title: 'Modify tags',
           })}
 
-          {this.iconWithFFClickCatcher({
-            className: 'fas fa-list fa-lg',
+          {iconWithFFClickCatcher({
+            iconName: 'list',
             onClick: onPropertiesClick,
             title: 'Modify properties',
           })}
 
           {isNarrowed
-            ? this.iconWithFFClickCatcher({
-                className: 'fas fa-expand fa-lg',
+            ? iconWithFFClickCatcher({
+                iconName: 'expand',
                 onClick: onWiden,
                 title: 'Widen (Cancelling the narrowing.)',
               })
-            : this.iconWithFFClickCatcher({
-                className: 'fas fa-compress fa-lg',
+            : iconWithFFClickCatcher({
+                iconName: 'compress',
                 onClick: onNarrow,
                 testId: 'header-action-narrow',
                 title:
                   'Narrow to subtree (focusing in on some portion of the buffer, making the rest temporarily inaccessible.)',
               })}
 
-          {this.iconWithFFClickCatcher({
-            className: 'fas fa-plus fa-lg',
+          {iconWithFFClickCatcher({
+            iconName: 'plus',
             onClick: onAddNewHeader,
             onLongPress: handleDuplicateHeader,
             testId: 'header-action-plus',
@@ -162,49 +158,51 @@ export default class HeaderActionDrawer extends PureComponent {
         </div>
 
         <div className="header-action-drawer__row">
-          {this.iconWithFFClickCatcher({
-            className: 'fas fa-share fa-lg',
+          {iconWithFFClickCatcher({
+            iconName: 'share',
             onClick: onShareHeader,
             testId: 'share',
             title: 'Share this header via email',
           })}
-          {this.iconWithFFClickCatcher({
-            className: 'fas fa-calendar-check fa-lg',
+          {iconWithFFClickCatcher({
+            iconName: 'calendar-check',
             onClick: onDeadlineClick,
             title: 'Set deadline datetime',
           })}
-          {this.iconWithFFClickCatcher({
-            className: 'far fa-calendar-check fa-lg',
+          {iconWithFFClickCatcher({
+            iconName: 'calendar-check',
             onClick: onScheduledClick,
             title: 'Set scheduled datetime',
           })}
           {hasActiveClock
-            ? this.iconWithFFClickCatcher({
-                className: 'fas fa-hourglass-end fa-lg',
+            ? iconWithFFClickCatcher({
+                iconName: 'hourglass-end',
                 onClick: onClockInOutClick,
                 testId: 'org-clock-out',
                 title: 'Clock out (Stop the clock)',
               })
-            : this.iconWithFFClickCatcher({
-                className: 'fas fa-hourglass-start fa-lg',
+            : iconWithFFClickCatcher({
+                iconName: 'hourglass-start',
                 onClick: onClockInOutClick,
                 testId: 'org-clock-in',
                 title: 'Clock in (Start the clock)',
               })}
 
-          {this.iconWithFFClickCatcher({
-            className: 'fas fa-file-export fa-lg',
+          {iconWithFFClickCatcher({
+            iconName: 'file-export',
             onClick: onRefileHeader,
             testId: 'org-refile',
             title: 'Refile this header to another header',
           })}
-          {this.iconWithFFClickCatcher({
-            className: 'far fa-sticky-note fa-lg',
+          {iconWithFFClickCatcher({
+            iconName: 'sticky-note',
             onClick: onAddNote,
             title: 'Add a note',
           })}
         </div>
       </div>
     );
-  }
-}
+    }
+
+
+export default HeaderActionDrawer;
