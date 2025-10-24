@@ -163,7 +163,7 @@ export default class SyncServiceSignIn extends PureComponent {
 
   handleDropboxClick() {
     persistField("authenticatedSyncService", "Dropbox");
-    const REDIRECT_URI = window.location.origin + "/";
+    const REDIRECT_URI = window.location.origin + "/org-everywhere/";
     const clientId = import.meta.env.VITE_REACT_APP_DROPBOX_CLIENT_ID;
     const dbxAuth = new DropboxAuth({
       clientId,

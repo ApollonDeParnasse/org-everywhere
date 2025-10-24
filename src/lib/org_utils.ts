@@ -1,7 +1,6 @@
 import { List, Map, fromJS } from "immutable";
 import _ from "lodash";
 import { curry } from "lodash/fp";
-import changelogContent from "../../changelog.org?raw";
 import { formatDistanceToNow } from "date-fns";
 
 import generateId from "./id_generator";
@@ -32,15 +31,6 @@ function generateHash(list) {
   });
 }
 
-export const changelogHash = () => {
-  return new Promise((resolve, reject) => {
-    generateHash(changelogContent.split("").map((c) => c.charCodeAt(0))).then(
-      (hash) => {
-        resolve(hash);
-      },
-    );
-  });
-};
 
 export const indexAndHeaderWithId = (headers, headerId) => {
   const headerIndex = indexOfHeaderWithId(headers, headerId);

@@ -23,7 +23,6 @@ class HeaderBar extends PureComponent {
     super(props);
 
     _.bindAll(this, [
-      "handleChangelogClick",
       "handleModalPageDoneClick",
       "handleHeaderBarTitleClick",
       "handleBackClick",
@@ -144,8 +143,6 @@ class HeaderBar extends PureComponent {
     const { activeModalPage } = this.props;
 
     switch (activeModalPage) {
-      case "changelog":
-        return this.renderSettingsSubPageBackButton();
       case "keyboard_shortcuts_editor":
         return this.renderSettingsSubPageBackButton();
       case "capture_templates_editor":
@@ -168,8 +165,6 @@ class HeaderBar extends PureComponent {
         return this.renderSignInBackButton();
       case "settings":
         return this.renderFileBrowserBackButton();
-      case "changelog":
-        return this.renderFileBrowserBackButton();
       default:
         return <div />;
     }
@@ -185,9 +180,7 @@ class HeaderBar extends PureComponent {
       </div>
     );
 
-    switch (this.props.activeModalPage) {
-      case "changelog":
-        return titleContainerWithText("Changelog");
+    switch (this.props.activeModalPage) {      
       case "settings":
         return titleContainerWithText("Settings");
       case "keyboard_shortcuts_editor":
@@ -216,10 +209,6 @@ class HeaderBar extends PureComponent {
     );
   }
 
-  handleChangelogClick() {
-    this.props.base.restoreStaticFile("changelog");
-    this.props.base.pushModalPage("changelog");
-  }
 
   handleModalPageDoneClick() {
     this.props.base.clearModalStack();
@@ -253,7 +242,6 @@ class HeaderBar extends PureComponent {
   renderActions() {
     const {
       isAuthenticated,
-      hasUnseenChangelog,
       activeModalPage,
       path,
       isUndoEnabled,
@@ -318,15 +306,7 @@ class HeaderBar extends PureComponent {
           )}
 
           {isAuthenticated && (
-            <div>
-              {hasUnseenChangelog && (
-                <Link to="/changelog">
-                  <i
-                    className="changelog-icon--has-unseen-changelog header-bar__actions__item fas fa-gift"
-                    title="Changelog"
-                  />
-                </Link>
-              )}
+            <div>              
               <Link to="/settings" onClick={this.handleSettingsClick}>
                 <i className={settingsIconClassName} title="Settings" />
               </Link>
@@ -359,7 +339,6 @@ class HeaderBar extends PureComponent {
 const mapStateToProps = (state) => {
   return {
     isAuthenticated: state.syncBackend.get("isAuthenticated"),
-    hasUnseenChangelog: state.base.get("hasUnseenChangelog"),
     activeModalPage: state.base.get("modalPageStack", List()).last(),
     shouldShowTitleInOrgFile: state.base.get("shouldShowTitleInOrgFile"),
     path: state.org.present.get("path"),

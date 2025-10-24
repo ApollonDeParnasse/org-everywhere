@@ -178,7 +178,6 @@ export default class App extends PureComponent {
 
     // Load static files.
     this.store.dispatch(restoreStaticFile("sample"));
-    this.store.dispatch(restoreStaticFile("changelog"));
 
     listenToBrowserButtons(this.store);
     syncOnBecomingVisible(this.store);
@@ -214,7 +213,7 @@ export default class App extends PureComponent {
   render() {
     return (
       <DragDropContext onDragEnd={this.handleDragEnd}>
-        <BrowserRouter baseName={"/org-everywhere"}>
+        <BrowserRouter basename={"/org-everywhere"}>
           <Provider store={this.store}>
             <Turnout />
           </Provider>

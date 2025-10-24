@@ -38,7 +38,6 @@ import {
   headerWithId,
   extractAllOrgTags,
   extractAllOrgProperties,
-  changelogHash,
   STATIC_FILE_PREFIX,
 } from "../../lib/org_utils";
 
@@ -101,14 +100,7 @@ class OrgFile extends PureComponent {
     const { staticFile, path } = this.props;
 
     if (!!staticFile) {
-      this.props.org.setPath(STATIC_FILE_PREFIX + staticFile);
-      if (staticFile === "changelog") {
-        this.props.base.setHasUnseenChangelog(false);
-        changelogHash().then((hash) => {
-          this.props.base.setLastSeenChangelogHeader(hash);
-        });
-      }
-
+      this.props.org.setPath(STATIC_FILE_PREFIX + staticFile);      
       setTimeout(() => (document.querySelector(".App").scrollTop = 0), 0);
     } else if (!_.isEmpty(path)) {
       if (this.props.fileIsLoaded(path)) {

@@ -2,7 +2,6 @@
 
 import { isEmpty } from "lodash";
 import { orgFileExtensions } from "../lib/org_utils";
-
 import { persistField, getPersistedField } from "../util/settings_persister";
 
 import { Dropbox } from "dropbox";
@@ -189,7 +188,7 @@ export default () => {
   -  SDK Docs: https://dropbox.github.io/dropbox-sdk-js/index.html
   -  Migrating App Permissions and Access Tokens: https://dropbox.tech/developers/migrating-app-permissions-and-access-tokens */
 
-  const REDIRECT_URI = window.location.origin + "/";
+  const REDIRECT_URI = window.location.origin + "/org-everywhere/";
 
   dbxPromise = new Promise((resolve, reject) => {
     const clientId = import.meta.env.VITE_REACT_APP_DROPBOX_CLIENT_ID;
@@ -199,6 +198,7 @@ export default () => {
     });
     const dbxAuth = dbx.auth;
 
+    console.log(REDIRECT_URI)
     if (getCodeFromUrl()) {
       dbxAuth.setCodeVerifier(getPersistedField("codeVerifier"));
       dbxAuth

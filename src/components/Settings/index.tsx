@@ -30,7 +30,6 @@ const Settings = ({
   agendaDefaultDeadlineDelayValue,
   agendaDefaultDeadlineDelayUnit,
   agendaStartOnWeekday,
-  hasUnseenChangelog,
   syncBackend,
   preferEditRawValues,
   showClockDisplay,
@@ -411,17 +410,7 @@ const Settings = ({
           File settings
         </button>
 
-        <hr className="settings-button-separator" />
-
-        <Link to="/changelog" className="btn settings-btn">
-          Changelog
-          {hasUnseenChangelog && (
-            <div className="changelog-badge-container">
-              <i className="fas fa-gift" />
-              &nbsp; What's New?
-            </div>
-          )}
-        </Link>
+        <hr className="settings-button-separator" />        
 
         <Link to="/sample" className="btn settings-btn">
           Help
@@ -480,7 +469,6 @@ const mapStateToProps = (state) => {
     shouldLogIntoDrawer: state.base.get("shouldLogIntoDrawer"),
     closeSubheadersRecursively: state.base.get("closeSubheadersRecursively"),
     shouldNotIndentOnExport: state.base.get("shouldNotIndentOnExport"),
-    hasUnseenChangelog: state.base.get("hasUnseenChangelog"),
     showClockDisplay: state.org.present.get("showClockDisplay"),
     preferEditRawValues: state.base.get("preferEditRawValues"),
     colorScheme: state.base.get("colorScheme"),

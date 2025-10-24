@@ -1,7 +1,6 @@
 import { parseFile, resetFileDisplay, setPath } from "./org";
 import { STATIC_FILE_PREFIX } from "../lib/org_utils";
 
-import changelogContent from "../../changelog.org?raw";
 import sampleContent from "../../sample.org?raw";
 
 export const setLoadingMessage = (loadingMessage) => ({
@@ -40,7 +39,6 @@ export const restoreStaticFile = (staticFile, lastViewedFilePath) => {
     dispatch(setLastViewedFile(lastViewedFilePath));
 
     const fileContents = {
-      changelog: changelogContent,
       sample: sampleContent,
     }[staticFile];
 
@@ -180,15 +178,6 @@ export const setTheme = (theme) => ({
   theme,
 });
 
-export const setHasUnseenChangelog = (newHasUnseenChangelog) => ({
-  type: "SET_HAS_UNSEEN_CHANGELOG",
-  newHasUnseenChangelog,
-});
-
-export const setLastSeenChangelogHeader = (newLastSeenChangelogHash) => ({
-  type: "SET_LAST_SEEN_CHANGELOG_HEADER",
-  newLastSeenChangelogHash,
-});
 
 export const setCustomKeybinding = (keybindingName, keybinding) => ({
   type: "SET_CUSTOM_KEYBINDING",

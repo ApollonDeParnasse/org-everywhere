@@ -121,12 +121,7 @@ export const persistableFields = [
     name: "shouldStoreSettingsInSyncBackend",
     type: "boolean",
     default: true,
-  },
-  {
-    category: "base",
-    name: "lastSeenChangelogHash",
-    type: "nullable",
-  },
+  }, 
   {
     category: "base",
     name: "customKeybindings",
