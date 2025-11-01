@@ -107,11 +107,11 @@ export default ({
         </div>
 
         <div className="file-setting__help-text">
-          By default, when you start organice, it will display your root file
-          directory. If you prefer to display a specific Org file instead,
+          By default, when you start org-everywhere, it will display your root
+          file directory. If you prefer to display a specific Org file instead,
           enable this option. <br /> Note: There can only be one default file,
-          of course. If you enable this option for multiple files, organice will
-          pick the first one.
+          of course. If you enable this option for multiple files,
+          org-everywhere will pick the first one.
         </div>
       </div>
       <div className="file-setting__field-container">
@@ -126,7 +126,7 @@ export default ({
         <div className="file-setting__help-text">
           By default, files are loaded from localStorage when available and are
           only synced when visited or when a sync is manually triggered. Enable
-          this setting to always sync this file when opening organice.
+          this setting to always sync this file when opening org-everywhere.
         </div>
       </div>
 

@@ -3,7 +3,7 @@ import { createClient } from "webdav";
 import { isEmpty } from "lodash";
 
 /**
- * Gets a directory listing ready to be rendered by organice.
+ * Gets a directory listing ready to be rendered by org-everywhere.
  *  - Filters files from `listing` down to org files.
  *  - Sorts folders atop of files.
  *  - Sorts both folders and files alphabetically.

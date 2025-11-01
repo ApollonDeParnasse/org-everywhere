@@ -26,14 +26,11 @@ export const localStorageAvailable = (() => {
  * need to figure out which to do.
  */
 const updateConfigForGitLab = async (client, contents) => {
-  const filename = "/.organice-config.json";
+  const filename = "/.org-everywhere-config.json";
   let exists = false;
   try {
     const existingContents = await client.getFileContents(filename);
     exists = true;
-    // INFO: Not calling syncBackendClient.createFile is a
-    // workaround for
-    // https://github.com/200ok-ch/organice/issues/736
     if (existingContents === contents) {
       return;
     }
@@ -54,7 +51,7 @@ const debouncedPushConfigToSyncBackend = _.debounce(
       case "Dropbox":
       case "WebDAV":
         syncBackendClient
-          .createFile("/.organice-config.json", contents)
+          .createFile("/.org-everywhere-config.json", contents)
           .catch((error) =>
             alert(
               `There was an error trying to push settings to your sync backend: ${error}`,
@@ -121,7 +118,7 @@ export const persistableFields = [
     name: "shouldStoreSettingsInSyncBackend",
     type: "boolean",
     default: true,
-  }, 
+  },
   {
     category: "base",
     name: "customKeybindings",
@@ -417,7 +414,7 @@ export const loadSettingsFromConfigFile = (dispatch, getState) => {
     case "GitLab":
     case "WebDAV":
       fileContentsPromise = syncBackendClient.getFileContents(
-        "/.organice-config.json",
+        "/.org-everywhere-config.json",
       );
       break;
     default:
@@ -427,15 +424,6 @@ export const loadSettingsFromConfigFile = (dispatch, getState) => {
     .then((configFileContents) => {
       try {
         let config;
-
-        /* Rationale for the type check:
-          When loading the settings file, `configFileContents` is
-          sometimes already an object. Therefore, when JSON.parse is
-          run, it throws an error which is silently swallowed by the
-          catch below. This appears to be the cause of
-          https:github.com/200ok-ch/organice/issues/472. Settings will
-          never load from file and default config always loads.
-          */
         if (typeof configFileContents === "string") {
           config = JSON.parse(configFileContents);
         } else {

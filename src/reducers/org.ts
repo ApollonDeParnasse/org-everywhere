@@ -1089,16 +1089,14 @@ const updateTableCellValue = (state, action) => {
       action.cellId,
       (rowIndex, colIndex) => (rows) =>
         rows.updateIn([rowIndex, "contents", colIndex], (cell) =>
-          cell
-            .set("rawContents", action.newValue)
-            .set(
-              "contents",
-              fromJS(
-                parseMarkupAndCookies(action.newValue, {
-                  excludeCookies: true,
-                }),
-              ),
+          cell.set("rawContents", action.newValue).set(
+            "contents",
+            fromJS(
+              parseMarkupAndCookies(action.newValue, {
+                excludeCookies: true,
+              }),
             ),
+          ),
         ),
     ),
   );

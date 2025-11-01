@@ -14,7 +14,6 @@ import {
 import { readFixture } from "../../test_helpers/readFixture";
 import { fastCheckGenerateValidJSDateObject } from "../../test_helpers/TestDataGenerators";
 import {
-  generateHash,
   extractAllOrgProperties,
   computeAllPropertyNames,
   computeAllPropertyValuesFor,
@@ -22,12 +21,7 @@ import {
 } from "../org_utils";
 
 describe("hash functions", () => {
-  test.prop([fc.array(fc.integer())])("generateHash", (testList) => {
-    const actualHash: number = generateHash(testList);
-    // uint8.byteLength
-    // 256 * testList.length
-  });
-});
+
 
 describe("Extracting and computing property names and values", () => {
   const testOrgFile = readFixture("properties_extended");

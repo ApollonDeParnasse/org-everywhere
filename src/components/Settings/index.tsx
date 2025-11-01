@@ -40,17 +40,6 @@ const Settings = ({
 }) => {
   const history = useHistory();
 
-  // This looks like hardcoding where it would be possible to dispatch
-  // on the `location.origin`, but here we assure that every instance
-  // of organice has a valid link to documentation. Self-building does
-  // not insure that, because building and hosting docs is not part of
-  // the application itself.
-  const documentationHost = window.location.origin.match(
-    /staging.organice.200ok.ch/,
-  )
-    ? "https://staging.organice.200ok.ch"
-    : "https://organice.200ok.ch";
-
   const handleSignOutClick = () => {
     if (window.confirm("Are you sure you want to sign out?")) {
       syncBackend.signOut();
@@ -270,8 +259,9 @@ const Settings = ({
         <div className="setting-label">
           Store settings in sync backend
           <div className="setting-label__description">
-            Store settings and keyboard shortcuts in a .organice-config.json
-            file in your sync backend to sync between multiple devices.
+            Store settings and keyboard shortcuts in a
+            .org-everywhere-config.json file in your sync backend to sync
+            between multiple devices.
           </div>
         </div>
         <Switch
@@ -410,25 +400,11 @@ const Settings = ({
           File settings
         </button>
 
-        <hr className="settings-button-separator" />        
+        <hr className="settings-button-separator" />
 
         <Link to="/sample" className="btn settings-btn">
           Help
         </Link>
-
-        <button className="btn settings-btn">
-          <ExternalLink href={`${documentationHost}/documentation.html`}>
-            Documentation
-            <i className="fas fa-external-link-alt fa-sm" />
-          </ExternalLink>{" "}
-        </button>
-
-        <button className="btn settings-btn">
-          <ExternalLink href="https://github.com/200ok-ch/organice">
-            Github repo
-            <i className="fas fa-external-link-alt fa-sm" />
-          </ExternalLink>{" "}
-        </button>
 
         <hr className="settings-button-separator" />
 
@@ -442,7 +418,7 @@ const Settings = ({
 
 const mapStateToProps = (state) => {
   // The default values here only relate to the settings view. To set
-  // defaults which get loaded on an initial run of organice, look at
+  // defaults which get loaded on an initial run of org-everywhere, look at
   // `util/settings_persister.js::persistableFields`.
   const agendaStartOnWeekday = state.base.get("agendaStartOnWeekday");
   return {

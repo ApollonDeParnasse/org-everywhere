@@ -52,15 +52,15 @@ const UNDOABLE_ACTIONS = [
   "MOVE_LIST_SUBTREE_RIGHT",
 ];
 
-// INFO: An `undo` in organice is always related to changing the Org
+// INFO: An `undo` in org-everywhere is always related to changing the Org
 // file structure. Hence, it is necessary to trigger a `sync` action.
 // This needs a little extra work, because this `sync` would result in
 // a conflict: The state is now in the `past` the Org file has been
 // synchronized in the `future`. Hence the `lastModifiedAt` timestamp
-// will be in the future and organice won't see a reason to push. Even
-// if we wanted to push, organice would show the 'conflict' modal,
+// will be in the future and org-everywhere won't see a reason to push. Even
+// if we wanted to push, org-everywhere would show the 'conflict' modal,
 // because the remote file is newer. For this reason, when doing an
-// 'undo', organice will suppress this modal and 'force' a push. We
+// 'undo', org-everywhere will suppress this modal and 'force' a push. We
 // don't want the user to need to understand that an 'undo' means
 // moving to the past and the conflict has been created by herself in
 // the future (which in real life might have been seconds ago).

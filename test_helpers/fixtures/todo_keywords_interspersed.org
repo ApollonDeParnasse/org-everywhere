@@ -9,7 +9,7 @@ Some description content
    SCHEDULED: <2020-04-05 Sun +1d>
 
 * A header with tags                                              :tag1:tag2:
-* A header with [[https://organice.200ok.ch][a link]]
+* A header with [[https://org-everywhere.org][a link]]
 * orgmode settings in middle of file
 #+TYP_TODO: START(s!/!) | FINISHED(f@)
 * A header with a link to a local .org file as content

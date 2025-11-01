@@ -11,7 +11,7 @@ import parseQueryString from "../util/parse_query_string";
 import { fromJS, Map } from "immutable";
 
 /**
- * Gets a directory listing ready to be rendered by organice.
+ * Gets a directory listing ready to be rendered by org-everywhere.
  *  - Filters files from `listing` down to org files.
  *  - Sorts folders atop of files.
  *  - Sorts both folders and files alphabetically.
@@ -126,18 +126,6 @@ export default () => {
             reader.readAsText(response.result.fileBlob);
           })
           .catch((error) => {
-            // INFO: It's possible organice is using the Dropbox API
-            // wrongly. In any case, for some files and only sometimes,
-            // when a file is requested, there's either:
-            //   - a 400 with a plain text error or
-            //   - a 409 with an embedded JSON error
-            //   - a 409 with a plain text error under `.error`
-            // coming back. Sometimes, there's even two API calls to
-            // `/download` happening at the same time (of types `json`
-            // and `octet-stream`) where one might fail and the other
-            // might prevail.
-            // More debug information in this issue:
-            // https://github.com/200ok-ch/organice/issues/108
             const objectContainsTagErrorP = (function () {
               try {
                 return (
@@ -198,7 +186,6 @@ export default () => {
     });
     const dbxAuth = dbx.auth;
 
-    console.log(REDIRECT_URI)
     if (getCodeFromUrl()) {
       dbxAuth.setCodeVerifier(getPersistedField("codeVerifier"));
       dbxAuth

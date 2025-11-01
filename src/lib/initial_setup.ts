@@ -29,7 +29,7 @@ export function listenToNetworkConnectionEvents(store) {
 }
 
 // Generally, opening files and other routing is done with the
-// `react-router-dom` package (i.e. `<Link/ > tags). However, organice
+// `react-router-dom` package (i.e. `<Link/ > tags). However, org-everywhere
 // also should react to browser buttons.
 export function listenToBrowserButtons(store) {
   const path = store.getState().org.present.get("path");

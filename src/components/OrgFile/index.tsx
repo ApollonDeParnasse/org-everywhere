@@ -100,7 +100,7 @@ class OrgFile extends PureComponent {
     const { staticFile, path } = this.props;
 
     if (!!staticFile) {
-      this.props.org.setPath(STATIC_FILE_PREFIX + staticFile);      
+      this.props.org.setPath(STATIC_FILE_PREFIX + staticFile);
       setTimeout(() => (document.querySelector(".App").scrollTop = 0), 0);
     } else if (!_.isEmpty(path)) {
       if (this.props.fileIsLoaded(path)) {
@@ -646,11 +646,7 @@ class OrgFile extends PureComponent {
           <br />
           <br />
           This was probably the result of an error in attempting to parse your
-          org file. It'd be super helpful if you could{" "}
-          <ExternalLink href="https://github.com/200ok-ch/organice/issues/new">
-            create an issue
-          </ExternalLink>{" "}
-          (and include the org file if possible!)
+          org file.
         </div>
       );
     }
@@ -746,11 +742,11 @@ class OrgFile extends PureComponent {
                         there!{" "}
                       </p>
                       <p>
-                        However, interacting with Org files in organice happens
-                        on a per headline basis. To use organice with this file,
-                        please create a new headline with the button below. The
-                        existing content is then put into the description of
-                        this new header.
+                        However, interacting with Org files in org-everywhere
+                        happens on a per headline basis. To use org-everywhere
+                        with this file, please create a new headline with the
+                        button below. The existing content is then put into the
+                        description of this new header.
                       </p>
                     </>
                   ) : (

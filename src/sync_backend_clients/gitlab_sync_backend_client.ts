@@ -99,7 +99,7 @@ export const parseLinkHeader = (links) => {
 };
 
 /**
- * Converts response from GitLab's list repo tree API into organice format.
+ * Converts response from GitLab's list repo tree API into org-everywhere format.
  *
  * @see https://docs.gitlab.com/ee/api/repositories.html#list-repository-tree
  */
@@ -111,7 +111,7 @@ export const treeToDirectoryListing = (tree) => {
       .map((it) => ({
         id: it.id,
         name: it.name,
-        // Organice requires a leading "/", whereas GitLab API doesn't
+        // Org-Everywhere requires a leading "/", whereas GitLab API doesn't
         // use one.
         path: `/${it.path}`,
         isDirectory: isDirectory(it),
@@ -236,7 +236,7 @@ export default (oauthClient) => {
     const params = new URLSearchParams({
       pagination: "keyset",
       ref: await getDefaultBranch(),
-      // Organice requires a leading "/", whereas GitLab API requires
+      // Org-Everywhere requires a leading "/", whereas GitLab API requires
       // there *not* be one.
       path: path.replace(/^\//, ""),
       per_page: 100,
@@ -309,8 +309,8 @@ export default (oauthClient) => {
     // Two newlines because Git commits should have an empty line
     // between title and body.
     const message =
-      `[organice] ${capitalizedAction} ${action.file_path}\n\n` +
-      "Automatic commit from organice app.";
+      `[org-everywhere] ${capitalizedAction} ${action.file_path}\n\n` +
+      "Automatic commit from org-everywhere app.";
     // It's also possible to modify files using the files API instead
     // of commits API. For this use case they're about equal, but I
     // picked commits because it doesn't require non-standard encoding
@@ -329,7 +329,7 @@ export default (oauthClient) => {
       body: JSON.stringify({
         branch: await getDefaultBranch(),
         commit_message: message,
-        // Organice only modifies a single file at a time, so only one action.
+        // Org-Everywhere only modifies a single file at a time, so only one action.
         actions: [action],
         stats: false,
       }),

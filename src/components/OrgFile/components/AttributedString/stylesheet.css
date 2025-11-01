@@ -9,6 +9,10 @@
   color: var(--green);
 }
 
+.attributed-string__inline-markup--text {
+  color: light-dark(black, white)
+}
+
 .attributed-string__inline-markup--inline-code,
 .attributed-string__inline-markup--verbatim {
   color: var(--base03);

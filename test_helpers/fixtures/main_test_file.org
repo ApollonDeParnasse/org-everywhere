@@ -11,7 +11,7 @@ Some description content
    SCHEDULED: <2020-04-05 Sun +1d>
 
 * A header with tags                                              :tag1:tag2:
-* A header with [[https://organice.200ok.ch][a link]]
+* A header with [[https://org-everywhere.org][a link]]
 * A header with various links as content
   Relative link to [[file:schedule_and_timestamps.org][an existing .org file in the same directory]]
   Relative link to [[file:subdir][subdir]]

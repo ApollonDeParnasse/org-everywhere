@@ -1,5 +1,7 @@
-.drawer-modal__title {
-  overflowx: "auto";
-  overflowy: "auto";
-  touchaction: "manipulation";
+@import "../../../../colors.css";
+
+.table-editor-modal {
+  overflow-x: auto;
+  overflow-y: auto;
+  touch-action: manipulation;
 }

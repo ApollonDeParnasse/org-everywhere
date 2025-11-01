@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [
     react({ jsxRuntime: "classic" }),
     nodePolyfills(),
-    githubPagesSpa({verbose: true})
+    githubPagesSpa({ verbose: true }),
   ],
   build: {
     rollupOptions: {

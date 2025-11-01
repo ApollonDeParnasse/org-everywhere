@@ -145,11 +145,6 @@ export default class ListPart extends PureComponent {
   }
 
   handleCheckboxClick(e, itemId) {
-    // Ticking a checkbox should only tick the checkbox, not enable
-    // the list item manipulating functions from
-    // `handleListItemSelect`.
-    // Relevant discussion:
-    // https://github.com/200ok-ch/organice/discussions/950
     e.stopPropagation();
     return this.props.subPartDataAndHandlers.onCheckboxClick(itemId);
   }

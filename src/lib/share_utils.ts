@@ -48,7 +48,7 @@ export const shareContent = async (options) => {
  * @returns {Object} Result object
  */
 const fallbackToEmail = ({ title, text }) => {
-  const subject = title || "Shared from organice";
+  const subject = title || "Shared from org-everywhere";
   const body = text || "";
   const mailtoURI = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
     body,

@@ -7,29 +7,8 @@ import generateId from "./id_generator";
 import { attributedStringToRawText } from "./export_org";
 import substituteTemplateVariables from "./capture_template_substitution";
 
-export const STATIC_FILE_PREFIX = "organice_internal_";
+export const STATIC_FILE_PREFIX = "org-everywhere_internal_";
 
-function generateHash(list) {
-  return new Promise((resolve, reject) => {
-    if (crypto.subtle) {
-      crypto.subtle
-        .digest(
-          {
-            name: "SHA-256",
-          },
-          new Uint8Array(list),
-        )
-        .then((hashArray) => {
-          resolve(_.values(new Uint8Array(hashArray)).join(""));
-        });
-    } else {
-      console.warn(
-        "crypto.subtle module is not available, returning an empty bogus hash.",
-      );
-      resolve("");
-    }
-  });
-}
 
 
 export const indexAndHeaderWithId = (headers, headerId) => {

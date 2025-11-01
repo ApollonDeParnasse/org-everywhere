@@ -140,7 +140,7 @@ describe("Render all views", () => {
 
       // Org Mode has keywords as workflow states and can cycle through
       // them: https://orgmode.org/manual/Workflow-states.html
-      // In organice, we can cycle through them by swiping or by clicking
+      // In org-everywhere, we can cycle through them by swiping or by clicking
       // (if enabled). This test checks for the latter.
       test("Can advance todo state for selected header in an org file", () => {
         // In the very beginning, the TODO is hidden, because the file
@@ -1301,7 +1301,7 @@ describe("Render all views", () => {
             const elem = getAllByText("a too-high ancestor directory");
             expect(elem.length).toEqual(1);
             // INFO: This file cannot be opened, because it is not
-            // visible from within the share given to organice.
+            // visible from within the share given to org-everywhere.
             expect(elem[0]).toHaveAttribute(
               "data-target",
               "../../../../too-high-to-access-directory",
@@ -1316,9 +1316,9 @@ describe("Render all views", () => {
             expect(elem.length).toEqual(1);
             expect(elem[0]).toHaveAttribute("data-target", "~/foo/bar/baz.org");
             // INFO: This file cannot really be opened, because
-            // organice doesn't know the directory structure of the
+            // org-everywhere doesn't know the directory structure of the
             // user. I.e. the file link might be
-            // `file:~/Dropbox/org/things.org`. Then, organice would
+            // `file:~/Dropbox/org/things.org`. Then, org-everywhere would
             // have to remove the `Dropbox` folder and try and see if
             // it can find the file underneath.
             expect(elem[0]).toHaveTextContent(

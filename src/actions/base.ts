@@ -151,12 +151,12 @@ export const setShouldStoreSettingsInSyncBackend = (
         case "GitLab":
         case "WebDAV":
           client
-            .deleteFile("/.organice-config.json")
+            .deleteFile("/.org-everywhere-config.json")
             .catch((doesFileNotExist, error) =>
               doesFileNotExist
                 ? null
                 : alert(
-                    `There was an error trying to delete the .organice-config.json file: ${error}`,
+                    `There was an error trying to delete the .org-everywhere-config.json file: ${error}`,
                   ),
             );
           break;
@@ -177,7 +177,6 @@ export const setTheme = (theme) => ({
   type: "SET_THEME",
   theme,
 });
-
 
 export const setCustomKeybinding = (keybindingName, keybinding) => ({
   type: "SET_CUSTOM_KEYBINDING",

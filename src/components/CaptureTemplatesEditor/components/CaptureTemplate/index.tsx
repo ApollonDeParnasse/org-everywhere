@@ -338,11 +338,7 @@ export default ({
           </li>
           <li>
             <code>%{"<custom variable>"}</code> - A custom variable from a URL
-            param capture. See{" "}
-            <ExternalLink href="https://organice.200ok.ch/documentation.html#capture_templates">
-              the README file
-            </ExternalLink>{" "}
-            for more details.
+            param capture.
           </li>
         </ul>
         You can also use <code>%u</code> and <code>%t</code> as part of the

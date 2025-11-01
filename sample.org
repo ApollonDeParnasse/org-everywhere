@@ -1,11 +1,11 @@
-# organice will not reflow if there's hard-wrapped content
+# org-everywhere will not reflow if there's hard-wrapped content
 # -*- eval: (auto-fill-mode 0) -*-
 #+TODO: TODO | DONE
 #+TODO: START INPROGRESS STALLED | FINISHED
 
 * This is an actual org file - feel free to play around with it! (Don't worry about messing it up - your changes won't be saved, so just refresh the page to reset it)
 * Tap on any header to open it
-This header has some description text and a couple subheaders. Look through the next few top level headers to learn more about organice.
+This header has some description text and a couple subheaders. Look through the next few top level headers to learn more about org-everywhere.
 ** This is a subheader
 ** This is a subheader too!
 * Actions
@@ -33,25 +33,20 @@ If you want the "header action drawer" to disappear or to deselect the current h
 
 ** Todos [3/7] [42%]
 This header has a few TODO items as subheaders.
-*** DONE Check out organice
-*** DONE Follow the organice tutorial
-This interactive tutorial helps you get to know organice really quickly.
-*** TODO Learn how to use TODOs in organice
+*** DONE Check out org-everywhere
+*** DONE Follow the org-everywhere tutorial
+This interactive tutorial helps you get to know org-everywhere really quickly.
+*** TODO Learn how to use TODOs in org-everywhere
 To advance the todo state of a header, swipe right on it until the background turns green.
 
 Try advancing the todo state of this header a few times!
 **** There's also a setting once you're signed in to enable tapping on the TODO label itself to advance the todo state. Its off by default because I thought the behavior would be confusing unless explained, but I recommend turning it on!
 *** START Investigate custom TODO states
-organice also supports [[http://orgmode.org/manual/Workflow-states.html#Workflow-states][custom todo states]] (if declared at the top of the file). Swipe right on this header a few times.
+org-everywhere also supports [[http://orgmode.org/manual/Workflow-states.html#Workflow-states][custom todo states]] (if declared at the top of the file). Swipe right on this header a few times.
 
 Note that when the cycle restarts, it defaults to the first set of todo states. Manually edit the header to get back to a different todo state cycle (more on editing headers below!)
 *** FINISHED See that custom TODO states are colored correctly
 Custom =org-todo-keywords= keyword sequences can have finish states. They are colored appropriately. You can see that TODO and START headlines are colored red whereas DONE and FINISHED headlines are colored green.
-
-*** TODO If I have questions: Check out the documentation
-organice has solid documentation, including frequently asked questions: https://organice.200ok.ch/documentation.html
-*** TODO If I have further questions: Join the community chat
-#organice on IRC [[https://libera.chat/][Libera.Chat]], or [[https://matrix.to/#/!DfVpGxoYxpbfAhuimY:matrix.org?via=matrix.org&via=ungleich.ch][#organice:matrix.org]] on Matrix.
 
 ** Tags
 The next button in the header action drawer will bring up the tag editor.
@@ -125,7 +120,7 @@ If you'd like to automatically push changes as you make them, you can enable "Li
    When you're signed in, you'll have =undo= and =redo= buttons in the
    headerbar.
 * Tables
-organice has native support for viewing and editing tables.
+org-everywhere has native support for viewing and editing tables.
 
 Try playing around with this one by first clicking on the table:
 
@@ -158,7 +153,7 @@ On the right side, the four-way arrow buttons allow you to manipulate tables by 
 
 Press up and down to move rows, and left and right to move columns.
 * Lists and checkboxes
-organice has native support for displaying plain lists and checkboxes.
+org-everywhere has native support for displaying plain lists and checkboxes.
 
 Plain:
 
@@ -205,7 +200,7 @@ First, create the first list item by editing the description of a header. When y
 4. Cross: Delete list item
 
 * Timestamps
-organice has native support for displaying and editing [[https://orgmode.org/manual/Timestamps.html#Timestamps][timestamps]].
+org-everywhere has native support for displaying and editing [[https://orgmode.org/manual/Timestamps.html#Timestamps][timestamps]].
 
 Try tapping on the timestamps below to get a feel for the editor:
 
@@ -225,33 +220,16 @@ Org has the ability to track the consistency of a special category of TODO, call
 
 Example timestamp: <2009-10-17 Sat .+2d/4d>
 
-organice supports parsing and preserving the minimum/maximum range timestamps. Alas, only the minimum range is handled as a [[https://orgmode.org/manual/Repeated-tasks.html][repeated task]]. There's no UI for the maximum range, it can be edited as raw text. Also, there is no UI to show how well a habit has been exercised.
+org-everywhere supports parsing and preserving the minimum/maximum range timestamps. Alas, only the minimum range is handled as a [[https://orgmode.org/manual/Repeated-tasks.html][repeated task]]. There's no UI for the maximum range, it can be edited as raw text. Also, there is no UI to show how well a habit has been exercised.
 
 * Automatic/Implicit links
 
-organice recognizes various types of hyperlinks automatically which Emacs Org mode would not necessarily do. That makes sense, because mobile devices, or browsers, enable a different feature set.
+org-everywhere recognizes various types of hyperlinks automatically which Emacs Org mode would not necessarily do. That makes sense, because mobile devices, or browsers, enable a different feature set.
 
-For example, when you read this in organice, then the text https://organice.200ok.ch will implicitly be rendered as a clickable link (as it would be in Emacs Org mode). The same also works for other web links like www.200ok.ch, email addresses like info@200ok.ch, and different kinds of phone numbers. For these, Emacs Org mode doesn't create an explicit link, but organice can and does.
-
-International/US phone numbers:
-
-  - 123-456-7890
-  - (123) 456-7890
-  - 123 456 7890
-  - 123.456.7890
-  - +91 (123) 456-7890
-
-Swiss phone numbers:
-
- - 0783268674
- - 078 326 86 74
- - 041783268675
- - 0041783268674
- - +41783268676
- - +41783268677
+For example, when you read this in org-everywhere, then the text [[https://org-everywhere.org]] will implicitly be rendered as a clickable link (as it would be in Emacs Org mode). 
 
 * Property lists
-organice has native support for viewing and editing [[https://orgmode.org/guide/Properties.html][property lists]]. To bring up an editor, expand the ~PROPERTIES~ drawer below and tap on any of the properties.
+org-everywhere has native support for viewing and editing [[https://orgmode.org/guide/Properties.html][property lists]]. To bring up an editor, expand the ~PROPERTIES~ drawer below and tap on any of the properties.
 ** Example
 :PROPERTIES:
 :callsign: Maverick
@@ -259,7 +237,7 @@ organice has native support for viewing and editing [[https://orgmode.org/guide/
 :launch-date: [1986-05-16 Fri]
 :END:
 * Planning
-organice has native support for adding and editing DEADLINE and SCHEDULED items. It also supports [[https://orgmode.org/manual/Repeated-tasks.html][repeaters]] and [[https://orgmode.org/manual/Deadlines-and-scheduling.html#Deadlines-and-scheduling][delays]]. Check out these examples:
+org-everywhere has native support for adding and editing DEADLINE and SCHEDULED items. It also supports [[https://orgmode.org/manual/Repeated-tasks.html][repeaters]] and [[https://orgmode.org/manual/Deadlines-and-scheduling.html#Deadlines-and-scheduling][delays]]. Check out these examples:
 
 =DEADLINE= means that the task - most likely a TODO item, though not necessarily—is supposed to be finished on that date.
 
@@ -310,7 +288,7 @@ In case the task contains a repeater, the delay is considered to affect all occu
 
 In the settings, there is an option to display deadline values on each headline.
 * Capture
-organice supports something like [[https://orgmode.org/manual/Capture.html][Org capture]] in the form of customizable, quickly accessible buttons for creating new headers.
+org-everywhere supports something like [[https://orgmode.org/manual/Capture.html][Org capture]] in the form of customizable, quickly accessible buttons for creating new headers.
 
 Click the button in the bottom right corner of the screen to see some examples. The first button, the lemon, will create a new entry in the "Groceries" list below this. The second button adds an entry to a more deeply nested header.
 
@@ -354,7 +332,7 @@ Bookmarks are unaware of file context. Therefore, you always have the same bookm
 
 You can simply search for
 
-=TODO check out organice|orgmode=
+=TODO check out org-everywhere|orgmode=
 
 to filter for tasks containing these words. The pipe symbol (|) is a logical /OR/. The filter is a smart-case search:
 
@@ -442,7 +420,7 @@ If you want to search for multiple terms, you can combine them like so:
 
 ** Auto-completion for filters
 
-You probably noticed that organice provides suggestions for your filter. After space, =-=, =:=, and =|= you can tap on the completion – no need to type the tag, property, etc.
+You probably noticed that org-everywhere provides suggestions for your filter. After space, =-=, =:=, and =|= you can tap on the completion – no need to type the tag, property, etc.
 
 ** TODO Example with properties							:fun:
 :PROPERTIES:
@@ -451,7 +429,7 @@ You probably noticed that organice provides suggestions for your filter. After s
 :END:
 
 * Agenda
-organice has a basic agenda view that you can access by tapping the calendar button at the bottom of the page.
+org-everywhere has a basic agenda view that you can access by tapping the calendar button at the bottom of the page.
 
 Tap a header in this view to jump to it, and tap on the date to switch to a more readable relative date format.
 
@@ -461,23 +439,23 @@ More information on that in the [[https://orgmode.org/manual/Deadlines-and-Sched
 
 Examples:
 
-** TODO Check out the organice agenda view
+** TODO Check out the org-everywhere agenda view
 DEADLINE: <2018-09-10 Mon>
-** TODO Install organice to the homescreen on my mobile phone
+** TODO Install org-everywhere to the homescreen on my mobile phone
 SCHEDULED: <2018-09-17 Mon>
 ** This entry shows only exactly on <2020-02-17 Mon> in the agenda
 ** This entry also only shows on exactly one day
    <2020-02-17 Mon>
 * Syncing
-organice pulls down your org files from Dropbox, GitLab, or WebDAV. Click the "Sign in" button in the upper right hand corner to sign in with either of them and authenticate organice.
+org-everywhere pulls down your org files from Dropbox, GitLab, or WebDAV. Click the "Sign in" button in the upper right hand corner to sign in with either of them and authenticate org-everywhere.
 
 ** Backups
-The first time you push changes from organice back up to your chosen sync service, organice will make a backup of the original file first. It'll be named {your-file-name}.organice-bak. Dropbox keeps a full version history of your files for you, but this is an additional precaution in case something goes wrong pushing the file back up.
+The first time you push changes from org-everywhere back up to your chosen sync service, org-everywhere will make a backup of the original file first. It'll be named {your-file-name}.org-everywhere-bak. Dropbox keeps a full version history of your files for you, but this is an additional precaution in case something goes wrong pushing the file back up.
 
 Generally, when working with distributed Org files, we're recommending to put them under version control and to check for bugs and racing conditions between clients.
 
 * Multiple files
-organice supports using multiple files.
+org-everywhere supports using multiple files.
 
 Default behaviour:
 
@@ -486,15 +464,13 @@ Default behaviour:
 
 You can adjust these defaults on a file per file basis by creating file settings in the [[/settings][settings menu]].
 
-* organice operates completely client side
-You don't log in to organice directly because organice doesn't have a back end - it operates completely client side using Dropbox, GitLab, or WebDAV as back-ends for storage.
+* org-everywhere operates completely client side
+You don't log in to org-everywhere directly because org-everywhere doesn't have a back end - it operates completely client side using Dropbox, GitLab, or WebDAV as back-ends for storage.
 * Capture URL params and Siri support
-organice supports a flexible mechanism for capturing using URL parameters. This mechanism integrates very nicely with the new [[https://support.apple.com/guide/shortcuts/welcome/ios][Siri Shortcuts]] feature in iOS 12, allowing you to use Siri to execute capture templates.
+org-everywhere supports a flexible mechanism for capturing using URL parameters. 
 
-You can use [[https://www.icloud.com/shortcuts/14f91f8cf8f547a183a0734396240984][this sample Shortcut]] to get started with this right away in iOS 12. Open the link on your iOS device and click "Get Shortcut". Then open up the Shortcuts app and edit the template by following the directions in the comments. Then record a Siri trigger and you're good to go!
-
-Alternatively, you can take advantage of the URL parameters yourself to build your own custom capture mechanism. You can find more details about this in [[https://github.com/200ok-ch/organice/#capture-params-and-siri-support][the README file]].
+Alternatively, you can take advantage of the URL parameters yourself to build your own custom capture mechanism. 
 
 * Further questions?
 
-If you've finished this interactive tutorial, but have further questions, we have you covered! There is additional [[https://organice.200ok.ch/documentation.html][documentation]] which contains more comprehensive and formal documentation, including installation instructions, deployment guides, contribution guidelines, and technical details about the project's architecture and development process. This file is aimed at both users seeking in-depth information and developers interested in contributing to the project.
+

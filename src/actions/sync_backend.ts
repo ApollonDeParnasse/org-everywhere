@@ -139,7 +139,7 @@ export const pushBackup = (pathOrFileId, contents) => {
     switch (client.type) {
       case "Dropbox":
       case "WebDAV":
-        client.createFile(`${pathOrFileId}.organice-bak`, contents);
+        client.createFile(`${pathOrFileId}.org-everywhere-bak`, contents);
         break;
       case "GitLab":
         // No-op for GitLab, because the beauty of version control makes backup files redundant.

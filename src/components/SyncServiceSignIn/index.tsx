@@ -85,26 +85,6 @@ function WebDAVForm() {
             </p>
             <input type="submit" value="Sign-in" />
           </form>
-          <p>
-            Please make sure your WebDAV backend meets the requirements as
-            documented{" "}
-            <a
-              href="https://organice.200ok.ch/documentation.html#faq_webdav"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              here
-            </a>
-            , especially{" "}
-            <a
-              href="https://organice.200ok.ch/documentation.html#webdav_cors"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              CORS
-            </a>
-            .
-          </p>
         </>
       )}
     </div>
@@ -191,7 +171,7 @@ export default class SyncServiceSignIn extends PureComponent {
     return (
       <div className="sync-service-sign-in-container">
         <p className="sync-service-sign-in__help-text">
-          organice syncs your files with Dropbox, GitLab, and WebDAV.
+          org-everywhere syncs your files with Dropbox, GitLab, and WebDAV.
         </p>
         <p className="sync-service-sign-in__help-text">
           Click to sign in with:
@@ -214,18 +194,6 @@ export default class SyncServiceSignIn extends PureComponent {
         <div className="sync-service-container">
           <WebDAVForm />
         </div>
-
-        <footer>
-          For questions regarding synchronization back-ends, please consult the{" "}
-          <a
-            href="https://organice.200ok.ch/documentation.html#sync_backends"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            documentation
-          </a>
-          .
-        </footer>
       </div>
     );
   }

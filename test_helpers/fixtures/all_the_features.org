@@ -16,7 +16,7 @@
 ** [[linking_to_headers][Linking to headers]]
 *** Other links
 
-- Link to website: [[https://github.com/200ok-ch/organice/]]
+- Link to website: [[https://org-everywhere.org]]
 
 # Complex TODO with priority, active timestamp, link to an email and a tag
 **** TODO [#B] <2019-05-02 Thu> Some Person [[mu4e:msgid:CAN6MX5o-i9koRnBXGOFQ-wLUhp82mGCwFSxo0b2i0+TROYNZkg@mail.gmail.com][Re: HÖCHENSCHWAND 05.Februar 2019]] :200ok:

@@ -180,7 +180,7 @@ class HeaderBar extends PureComponent {
       </div>
     );
 
-    switch (this.props.activeModalPage) {      
+    switch (this.props.activeModalPage) {
       case "settings":
         return titleContainerWithText("Settings");
       case "keyboard_shortcuts_editor":
@@ -208,7 +208,6 @@ class HeaderBar extends PureComponent {
       this.props.shouldShowTitleInOrgFile ? this.getFilename() : "",
     );
   }
-
 
   handleModalPageDoneClick() {
     this.props.base.clearModalStack();
@@ -306,7 +305,7 @@ class HeaderBar extends PureComponent {
           )}
 
           {isAuthenticated && (
-            <div>              
+            <div>
               <Link to="/settings" onClick={this.handleSettingsClick}>
                 <i className={settingsIconClassName} title="Settings" />
               </Link>

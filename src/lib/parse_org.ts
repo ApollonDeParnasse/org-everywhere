@@ -873,7 +873,7 @@ export const parseTodoKeywordConfig = (line) => {
   const keywords = keywordTokens
     .filter((keyword) => keyword !== "|")
     // Remove fast access TODO states suffix from keyword, because
-    // there's no UI to handle those in organice
+    // there's no UI to handle those in org-everywhere
     // https://orgmode.org/manual/Fast-access-to-TODO-states.html#Fast-access-to-TODO-states
     .map((keyword) => keyword.replace(/\(.[!@]?(\/[!@])?\)$/, ""));
 

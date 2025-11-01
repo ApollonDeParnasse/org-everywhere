@@ -36,7 +36,7 @@ export default ({ template, onCapture, headers }) => {
 
   /** INFO: Some versions of Mobile Safari do _not_ like it when the
   focus is set without an explicit user interaction. This is the case
-  in organice, because the user interaction is on a button which in
+  in org-everywhere, because the user interaction is on a button which in
   turn opens a textarea which should have the focus. It will open the
   software keyboard, but the capture template will stay on the bottom
   of the view, so it will be hidden by the keyboard. The user would

@@ -1,4 +1,4 @@
-// organice renders different kinds of components:
+// org-everywhere renders different kinds of components:
 //  - Static pages like the landing page
 //  - The actual application
 // These components do not have many things in common, neither CSS,

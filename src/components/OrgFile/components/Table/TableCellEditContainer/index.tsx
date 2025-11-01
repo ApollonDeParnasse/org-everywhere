@@ -6,11 +6,11 @@ import { getCurrentTimestampAsText } from "../../../../../lib/timestamps";
 import { exitEditMode, updateTableCellValue } from "../../../../../actions/org";
 import "./stylesheet.css";
 
-const getSelectedCellId = curry((filePath, state) => {
+const getSelectedCellId = curry((filePath: string, state) => {
   return state.org.present.getIn(["files", filePath, "selectedTableCellId"]);
 });
 
-const CellEditContainer = ({ filePath, cellValue, cellId }) => {
+const CellEditContainer = ({ filePath, cellValue, cellId }: {filePath: string, cellValue: string, cellId: number}) => {
   const dispatch = useDispatch();
   const selectedCellId = useSelector(getSelectedCellId(filePath));
   const [isCellSelected, setIsCellSelected] = useState(
@@ -29,7 +29,7 @@ const CellEditContainer = ({ filePath, cellValue, cellId }) => {
     }
   }, [selectedCellId, isCellSelected, cellId, currentCellValue]);
 
-  const handleTableCellValueUpdate = (cellId, newValue) => {
+  const handleTableCellValueUpdate = (cellId: number, newValue: string) => {
     dispatch(updateTableCellValue(cellId, newValue));
   };
 
@@ -45,7 +45,7 @@ const CellEditContainer = ({ filePath, cellValue, cellId }) => {
     const insertionIndex = textareaRef.current.selectionStart;
     const newValue =
       currentCellValue.substring(0, insertionIndex) +
-      getCurrentTimestampAsText() +
+	getCurrentTimestampAsText() +
       currentCellValue.substring(
         textareaRef.current.selectionEnd || insertionIndex,
       );

@@ -7,7 +7,7 @@ import { Route, Switch, Redirect, withRouter } from "react-router-dom";
 import "./stylesheet.css";
 
 import { List, Set } from "immutable";
-import {bindAll} from "lodash";
+import { bindAll } from "lodash";
 import classNames from "classnames";
 
 import PrivacyPolicy from "../PrivacyPolicy";
@@ -30,11 +30,7 @@ class Entry extends PureComponent {
   constructor(props) {
     super(props);
 
-    bindAll(this, [
-      "renderSampleFile",
-      "renderFileBrowser",
-      "renderFile",
-    ]);
+    bindAll(this, ["renderSampleFile", "renderFileBrowser", "renderFile"]);
   }
 
   componentDidMount() {
@@ -53,7 +49,6 @@ class Entry extends PureComponent {
   componentWillUnmount() {
     window.onbeforeunload = undefined;
   }
-
 
   renderSampleFile() {
     return (
@@ -172,7 +167,7 @@ class Entry extends PureComponent {
                 path="/sample"
                 exact={true}
                 render={this.renderSampleFile}
-              />              
+              />
               <Route path="/settings" exact={true}>
                 <Settings />
               </Route>

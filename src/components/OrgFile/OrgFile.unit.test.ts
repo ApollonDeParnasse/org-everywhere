@@ -195,7 +195,7 @@ ${text}`;
       expect(exportedFile).toEqual(testOrgFile);
     });
 
-    test("Parses and exports a file which contains all features of organice", () => {
+    test("Parses and exports a file which contains all features of org-everywhere", () => {
       const testOrgFile = readFixture("all_the_features");
       const exportedFile = parseAndExportOrgFile(testOrgFile);
       expect(exportedFile).toEqual(testOrgFile);

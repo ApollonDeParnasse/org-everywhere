@@ -99,7 +99,7 @@ export const timestampForDate = (
 // To get around the heavy-weight renderAsText(fromJS(getCurrentTimestampAsText()))
 export const getCurrentTimestampAsText = ({
   isActive = true,
-  withStartTime = false,
+  withStartTime = true,
 } = {}) => getTimestampAsText(new Date(), { isActive, withStartTime });
 export const getTimestampAsText = (
   time,
