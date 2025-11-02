@@ -44,7 +44,7 @@ const TableEditorModal = () => {
   return (
     <>
       <h2>Edit table</h2>
-      <div className="table-editor-modal">
+      <div>
         <Table props={tableProps} />
       </div>
       <TableActionButtons filePath={filePath} />

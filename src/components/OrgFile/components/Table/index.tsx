@@ -10,7 +10,7 @@ const Table = ({
       <tbody>
         {table.get("contents").map((row, rowIndex) => {
           return (
-            <tr key={row.get("id")}>
+            <tr className={"table-part-row"} key={row.get("id")}>
               {row.get("contents").map((cell, columnIndex) => {
                 const cellId = cell.get("id");
                 const cellProps = {

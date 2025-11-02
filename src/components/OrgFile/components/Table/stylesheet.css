@@ -4,5 +4,8 @@
   border-collapse: collapse;
   margin-top: 2.5px;
   margin-bottom: 3px;
-  empty-cells: show;
+}
+
+.table-part-row {
+  height: 20px;
 }

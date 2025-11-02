@@ -1,7 +1,8 @@
 @import "../../../../colors.css";
 
-.table-editor-modal {
+.drawer-modal__title {
   overflow-x: auto;
   overflow-y: auto;
   touch-action: manipulation;
+  -webkit-overflow-scrolling: touch;  
 }
