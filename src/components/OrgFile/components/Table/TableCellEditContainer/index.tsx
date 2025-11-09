@@ -10,7 +10,15 @@ const getSelectedCellId = curry((filePath: string, state) => {
   return state.org.present.getIn(["files", filePath, "selectedTableCellId"]);
 });
 
-const CellEditContainer = ({ filePath, cellValue, cellId }: {filePath: string, cellValue: string, cellId: number}) => {
+const CellEditContainer = ({
+  filePath,
+  cellValue,
+  cellId,
+}: {
+  filePath: string;
+  cellValue: string;
+  cellId: number;
+}) => {
   const dispatch = useDispatch();
   const selectedCellId = useSelector(getSelectedCellId(filePath));
   const [isCellSelected, setIsCellSelected] = useState(
@@ -45,7 +53,7 @@ const CellEditContainer = ({ filePath, cellValue, cellId }: {filePath: string, c
     const insertionIndex = textareaRef.current.selectionStart;
     const newValue =
       currentCellValue.substring(0, insertionIndex) +
-	getCurrentTimestampAsText() +
+      getCurrentTimestampAsText() +
       currentCellValue.substring(
         textareaRef.current.selectionEnd || insertionIndex,
       );

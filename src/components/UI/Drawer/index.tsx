@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 
+import { Motion, spring } from "react-motion";
+import { IconContext } from "react-icons"
+import { FaTimes } from "react-icons/fa"
+import classNames from "classnames";
 import "./stylesheet.css";
 
-import { Motion, spring } from "react-motion";
-import classNames from "classnames";
 
-export default ({
+const Drawer = ({
   children,
   shouldIncludeCloseButton,
   onClose,
@@ -148,10 +150,14 @@ export default ({
               <div className="drawer__grabber" />
 
               {shouldIncludeCloseButton && (
-                <button
-                  className="fas fa-times fa-lg drawer__close-button"
-                  onClick={handleClose}
-                />
+                <button className="drawer__close-button" onClick={handleClose}>
+		  <IconContext.Provider
+                    value={{className:"fas fa-lg",}}>
+                    <div>
+                      <FaTimes /> ..
+                    </div>
+		  </IconContext.Provider>		  
+                </button>
               )}
 
               {children}
@@ -162,3 +168,4 @@ export default ({
     </Motion>
   );
 };
+export default Drawer;

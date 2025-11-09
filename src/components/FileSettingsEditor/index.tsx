@@ -7,8 +7,8 @@ import { Droppable } from "react-beautiful-dnd";
 import "./stylesheet.css";
 
 import * as orgActions from "../../actions/org";
-
-import FileSetting from "./components/FileSetting";
+import { getIcon } from "../UI/icons.tsx";
+import FileSettings from "./components/FileSettings";
 
 import { List } from "immutable";
 import { STATIC_FILE_PREFIX } from "../../lib/org_utils";
@@ -44,20 +44,20 @@ const FileSettingsEditor = ({
             {fileSettings.size === 0 ? (
               <div className="no-file-setting-message">
                 You don't currently have any file settings - add one by pressing
-                the <i className="fas fa-plus" /> button.
+                the {getIcon("plus")} button.
                 <br />
                 <br />
                 File settings allow you to configure how specific files are
-                handeled when multiple files are loaded. Make sure a file is
+                handled when multiple files are loaded. Make sure a file is
                 loaded to create a setting entry.
               </div>
             ) : (
               <Fragment>
                 {fileSettings.map((setting, index) => (
-                  <FileSetting
+                  <FileSettings
                     key={setting.get("id")}
                     index={index}
-                    setting={setting}
+                    settings={setting}
                     path={currentPathIfWithoutFileSetting}
                     loadedFilepaths={loadedFilepaths}
                     onFieldPathUpdate={handleFieldPathUpdate}
@@ -75,10 +75,7 @@ const FileSettingsEditor = ({
 
       {loadedFilepaths.length !== 0 && (
         <div className="new-capture-template-button-container">
-          <button
-            className="fas fa-plus fa-lg btn btn--circle"
-            onClick={handleAddNewSettingClick}
-          />
+          <button onClick={handleAddNewSettingClick}>{getIcon("plus")}</button>
         </div>
       )}
     </div>

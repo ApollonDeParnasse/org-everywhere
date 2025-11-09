@@ -3,7 +3,6 @@
 .file-setting-container {
   border-bottom: 2px solid var(--base2);
   padding: 15px 5px;
-
   -webkit-tap-highlight-color: var(--base03);
 }
 

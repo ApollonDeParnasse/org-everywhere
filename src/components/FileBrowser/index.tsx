@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-
+import { IconContext } from "react-icons";
+import { FaFolder, FaSpinner } from "react-icons/fa";
+import { getIcon } from "../UI/icons";
 import { Link } from "react-router-dom";
 
 import ActionDrawer from "./components/ActionDrawer";
@@ -11,6 +13,58 @@ import "./stylesheet.css";
 import classNames from "classnames";
 
 import * as syncBackendActions from "../../actions/sync_backend";
+
+const RegularFileIcon = ({ file }) => {
+  const isBackupFile = file.get("name").endsWith(".organice-bak");
+  const isOrgFile = file.get("name").endsWith(".org");
+  const isSettingsFile = file.get("name") === ".organice-config.json";
+  const iconName =
+    (isBackupFile && "copy" && isSettingsFile && "cogs") || "file";
+
+  const iconClass = classNames("file-browser__file-list__icon fas", {
+    "file-browser__file-list__icon--not-org": !isOrgFile,
+  });
+
+  return (
+    <Link to={`/file${file.get("path")}`} key={file.get("id")}>
+      <li className="file-browser__file-list__element">
+        <IconContext.Provider value={{ className: iconClass }}>
+          <div>
+            {getIcon(iconName)} {file.get("name")}
+          </div>
+        </IconContext.Provider>
+      </li>
+    </Link>
+  );
+};
+
+const FileDirectoryIcon = ({ file }) => {
+  const iconClass = classNames(
+    "file-browser__file-list__icon fas",
+    "file-browser__file-list__icon--directory",
+    "file-browser__file-list__icon--not-org",
+  );
+
+  return (
+    <Link to={`/files${file.get("path")}`} key={file.get("id")}>
+      <li className="file-browser__file-list__element">
+        <IconContext.Provider value={{ className: iconClass }}>
+          <div>
+            <FaFolder /> {file.get("name")}
+          </div>
+        </IconContext.Provider>
+      </li>
+    </Link>
+  );
+};
+
+const FileIcon = ({ file }) => {
+  return file && file.get("isDirectory") ? (
+    <FileDirectoryIcon file={file} />
+  ) : (
+    <RegularFileIcon file={file} />
+  );
+};
 
 const FileBrowser = ({
   path,
@@ -55,51 +109,38 @@ const FileBrowser = ({
         {!isTopLevelDirectory && (
           <Link to={`/files${getParentDirectoryPath()}`}>
             <li className="file-browser__file-list__element">
-              <i className="fas fa-folder file-browser__file-list__icon--directory" />{" "}
-              ..
+              <IconContext.Provider
+                value={{
+                  className:
+                    "fas fa-folder file-browser__file-list__icon--directory",
+                }}
+              >
+                <div>
+                  <FaFolder /> ..
+                </div>
+              </IconContext.Provider>
             </li>
           </Link>
         )}
 
-        {(listing || []).map((file) => {
-          const isDirectory = file.get("isDirectory");
-          const isBackupFile = file.get("name").endsWith(".org-everywhere-bak");
-          const isOrgFile = file.get("name").endsWith(".org");
-          const isSettingsFile =
-            file.get("name") === ".org-everywhere-config.json";
-
-          const iconClass = classNames("file-browser__file-list__icon fas", {
-            "fa-folder": isDirectory,
-            "file-browser__file-list__icon--directory": isDirectory,
-            "fa-file": !isDirectory && !isBackupFile && !isSettingsFile,
-            "file-browser__file-list__icon--not-org": !isOrgFile,
-            "fa-copy": isBackupFile,
-            "fa-cogs": isSettingsFile,
-          });
-
-          if (file.get("isDirectory")) {
-            return (
-              <Link to={`/files${file.get("path")}`} key={file.get("id")}>
-                <li className="file-browser__file-list__element">
-                  <i className={iconClass} /> {file.get("name")}/
-                </li>
-              </Link>
-            );
-          } else {
-            return (
-              <Link to={`/file${file.get("path")}`} key={file.get("id")}>
-                <li className="file-browser__file-list__element">
-                  <i className={iconClass} /> {file.get("name")}
-                </li>
-              </Link>
-            );
-          }
+        {(listing || []).map((file, key) => {
+          return <FileIcon key={key} file={file} />;
         })}
 
         {hasMore &&
           (isLoadingMore ? (
             <li className="file-browser__file-list__loading-more-container">
-              <i className="fas fa-spinner fa-lg fa-spin" />
+	      <IconContext.Provider
+                value={{
+                  className:
+                    "fas fas-lg",
+                }}
+              >
+                <div>
+		  <FaSpinner />
+                </div>
+              </IconContext.Provider>
+
             </li>
           ) : (
             <li

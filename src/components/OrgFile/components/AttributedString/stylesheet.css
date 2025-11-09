@@ -10,7 +10,7 @@
 }
 
 .attributed-string__inline-markup--text {
-  color: light-dark(black, white)
+  color: light-dark(black, white);
 }
 
 .attributed-string__inline-markup--inline-code,

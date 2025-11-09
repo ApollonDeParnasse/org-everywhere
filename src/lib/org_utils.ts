@@ -9,8 +9,6 @@ import substituteTemplateVariables from "./capture_template_substitution";
 
 export const STATIC_FILE_PREFIX = "org-everywhere_internal_";
 
-
-
 export const indexAndHeaderWithId = (headers, headerId) => {
   const headerIndex = indexOfHeaderWithId(headers, headerId);
   return { headerIndex, header: headers.get(headerIndex) };

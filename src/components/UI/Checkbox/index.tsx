@@ -1,6 +1,6 @@
 import React from "react";
 import { Motion, spring } from "react-motion";
-
+import { getIcon } from "../icons.tsx";
 import {
   interpolateColorsAndReturnCSS,
   createColorObject,
@@ -39,9 +39,9 @@ export default ({ state, onClick }) => {
             style={{ backgroundColor }}
           >
             <div className="checkbox__inner-container">
-              {state === "checked" && <i className="fas fa-check" />}
-              {state === "partial" && <i className="fas fa-minus" />}
-              {state === "unchecked" && <i className="fas fa-square" />}
+              {state === "checked" && getIcon("check")}
+              {state === "partial" && getIcon("minus")}
+              {state === "unchecked" && getIcon("square")}
             </div>
           </div>
         );

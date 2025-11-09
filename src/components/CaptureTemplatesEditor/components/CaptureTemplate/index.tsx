@@ -1,6 +1,7 @@
 import React, { Fragment, useState } from "react";
 import { UnmountClosed as Collapse } from "react-collapse";
-
+import { IconContext } from "react-icons"
+import { FaTimes, FaPlus, FaCaretRight, FaBars } from "react-icons/fa"
 import { Draggable } from "react-beautiful-dnd";
 
 import "./stylesheet.css";
@@ -178,19 +179,24 @@ export default ({
                 value={orgFilePath}
                 onChange={handleOrgFileAvailabilityChange(index)}
               />
-              <button
-                className="fas fa-times fa-lg remove-multi-textfield-button"
-                onClick={handleRemoveOrgFileAvailability(index)}
-              />
+              <button className="remove-multi-textfield-button"
+		onClick={handleRemoveOrgFileAvailability(index)}>
+		<IconContext.Provider value={{ className: "fas fa-lg" }}>
+		  <div>
+		    <FaTimes />
+		  </div>
+		  </IconContext.Provider>
+	      </button>
             </div>
           ))}
         </div>
 
         <div className="add-new-multi-textfield-button-container">
           <button
-            className="fas fa-plus add-new-multi-textfield-button"
-            onClick={handleAddNewOrgFileAvailability}
-          />
+            className="add-new-multi-textfield-button"
+            onClick={handleAddNewOrgFileAvailability}>
+	    <FaPlus />
+	  </button>
         </div>
       </Collapse>
     </div>
@@ -254,18 +260,24 @@ export default ({
               onChange={handleHeaderPathChange(index)}
             />
             <button
-              className="fas fa-times fa-lg remove-multi-textfield-button"
-              onClick={handleRemoveHeaderPath(index)}
-            />
+              className="remove-multi-textfield-button"
+              onClick={handleRemoveHeaderPath(index)}>
+	      <IconContext.Provider value={{ className: "fas fa-lg" }}>
+		  <div>
+		    <FaTimes />
+		  </div>
+	      </IconContext.Provider>
+	    </button>
           </div>
         ))}
       </div>
 
       <div className="add-new-multi-textfield-button-container">
         <button
-          className="fas fa-plus add-new-multi-textfield-button"
-          onClick={handleAddNewHeaderPath}
-        />
+          className="add-new-multi-textfield-button"
+          onClick={handleAddNewHeaderPath}>
+	  <FaPlus />
+	</button>
       </div>
     </div>
   );
@@ -359,7 +371,7 @@ export default ({
   );
 
   const caretClassName = classNames(
-    "fas fa-2x fa-caret-right capture-template-container__header__caret",
+    "fas fa-2x capture-template-container__header__caret",
     {
       "capture-template-container__header__caret--rotated": !isCollapsed,
     },
@@ -382,7 +394,11 @@ export default ({
             className="capture-template-container__header"
             onClick={handleHeaderBarClick}
           >
-            <i className={caretClassName} />
+	    <IconContext.Provider value={{ className: caretClassName }}>
+	      <div>
+		<FaCaretRight />
+	      </div>
+	    </IconContext.Provider>
             <ActionButton
               iconName={template.get("iconName")}
               letter={template.get("letter")}
@@ -392,10 +408,11 @@ export default ({
             <span className="capture-template-container__header__title">
               {template.get("description")}
             </span>
-            <i
-              className="fas fa-bars fa-lg capture-template-container__header__drag-handle"
-              {...provided.dragHandleProps}
-            />
+	    <IconContext.Provider value={{ className: "fas fa-lg capture-template-container__header__drag-handle" }}>
+	      <div {...provided.dragHandleProps}>
+		<FaBars />
+	      </div>
+	    </IconContext.Provider>
           </div>
 
           <Collapse isOpened={!isCollapsed} springConfig={{ stiffness: 300 }}>

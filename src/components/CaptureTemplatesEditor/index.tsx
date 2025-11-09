@@ -1,7 +1,8 @@
 import React, { Fragment } from "react";
 import { connect } from "react-redux";
-import { bindActionCreators } from "redux";
-
+import { bindActionCreators } from "redux"
+import { IconContext } from "react-icons"
+import { FaPlus } from "react-icons/fa"
 import { Droppable } from "react-beautiful-dnd";
 
 import "./stylesheet.css";
@@ -62,8 +63,7 @@ const CaptureTemplatesEditor = ({
           >
             {captureTemplates.size === 0 ? (
               <div className="no-capture-templates-message">
-                You don't currently have any capture templates - add one by
-                pressing the <i className="fas fa-plus" /> button.
+                You don't currently have any capture templates - add one by							      pressing the <FaPlus /> button.
                 <br />
                 <br />
                 Capture templates show up in the action drawer and give you
@@ -100,10 +100,13 @@ const CaptureTemplatesEditor = ({
       </Droppable>
 
       <div className="new-capture-template-button-container">
-        <button
-          className="fas fa-plus fa-lg btn btn--circle"
-          onClick={handleAddNewTemplateClick}
-        />
+        <button onClick={handleAddNewTemplateClick}>
+	  <IconContext.Provider value={{ className: "fa-lg btn btn--circle" }}>
+            <div>
+	      <FaPlus />
+          </div>
+        </IconContext.Provider>
+	</button>
       </div>
     </div>
   );

@@ -1,9 +1,18 @@
 import React, { PureComponent, Fragment } from "react";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-
+import {
+  FaRedo,
+  FaUndo,
+  FaCogs,
+  FaQuestionCircle,
+  FaChevronLeft,
+} from "react-icons/fa";
+import { IconContext } from "react-icons";
 import { isLandingPage } from "../../util/misc";
-
+import { List } from "immutable";
+import { bindAll, includes, last } from "lodash";
+import classNames from "classnames";
 import { Link, withRouter } from "react-router-dom";
 
 import "./stylesheet.css";
@@ -12,17 +21,11 @@ import * as baseActions from "../../actions/base";
 import * as orgActions from "../../actions/org";
 import { ActionCreators as undoActions } from "redux-undo";
 
-import ExternalLink from "../UI/ExternalLink";
-
-import { List } from "immutable";
-import _ from "lodash";
-import classNames from "classnames";
-
 class HeaderBar extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, [
+    bindAll(this, [
       "handleModalPageDoneClick",
       "handleHeaderBarTitleClick",
       "handleBackClick",
@@ -60,22 +63,22 @@ class HeaderBar extends PureComponent {
     const fileParts = window.location.href
       .split("/")
       .map((e) => decodeURIComponent(e));
-    if (_.includes(fileParts, "files")) {
-      backPath = _.last(fileParts);
+    if (includes(fileParts, "files")) {
+      backPath = last(fileParts);
     }
 
     return (
-      <div
+      <button
         onClick={() => {
           window.history.back();
         }}
         className="header-bar__back-button"
       >
-        <i className="fas fa-chevron-left" />
+        <FaChevronLeft />
         <span className="header-bar__back-button__directory-path">
           {backPath}
         </span>
-      </div>
+      </button>
     );
   }
 
@@ -98,7 +101,7 @@ class HeaderBar extends PureComponent {
         onClick={this.handleBackClick}
         className="header-bar__back-button"
       >
-        <i className="fas fa-chevron-left" />
+        <FaChevronLeft />
         <span className="header-bar__back-button__directory-path">
           File browser
         </span>
@@ -109,7 +112,7 @@ class HeaderBar extends PureComponent {
   renderHomeFileBackButton() {
     return (
       <Link to={`/`} className="header-bar__back-button">
-        <i className="fas fa-chevron-left" />
+        <FaChevronLeft />
         <span className="header-bar__back-button__directory-path">Home</span>
       </Link>
     );
@@ -118,7 +121,7 @@ class HeaderBar extends PureComponent {
   renderSignInBackButton() {
     return (
       <Link to={`/`} className="header-bar__back-button">
-        <i className="fas fa-chevron-left" />
+        <FaChevronLeft />
         <span className="header-bar__back-button__directory-path">Home</span>
       </Link>
     );
@@ -131,7 +134,7 @@ class HeaderBar extends PureComponent {
   renderSettingsSubPageBackButton() {
     return (
       <div className="header-bar__back-button" onClick={this.handleBackClick}>
-        <i className="fas fa-chevron-left" />
+        <FaChevronLeft />
         <span className="header-bar__back-button__directory-path">
           Settings
         </span>
@@ -257,22 +260,14 @@ class HeaderBar extends PureComponent {
         </div>
       );
     } else if (this.getPathRoot() !== "settings") {
-      const undoIconClassName = classNames(
-        "fas fa-undo header-bar__actions__item",
-        {
-          "header-bar__actions__item--disabled": !isUndoEnabled,
-        },
-      );
-      const redoIconClassName = classNames(
-        "fas fa-redo header-bar__actions__item",
-        {
-          "header-bar__actions__item--disabled": !isRedoEnabled,
-        },
-      );
+      const undoIconClassName = classNames("header-bar__actions__item", {
+        "header-bar__actions__item--disabled": !isUndoEnabled,
+      });
+      const redoIconClassName = classNames("header-bar__actions__item", {
+        "header-bar__actions__item--disabled": !isRedoEnabled,
+      });
 
-      const settingsIconClassName = classNames(
-        "fas fa-cogs header-bar__actions__item",
-      );
+      const settingsIconClassName = classNames("header-bar__actions__item");
 
       return (
         <div className="header-bar__actions">
@@ -286,30 +281,48 @@ class HeaderBar extends PureComponent {
 
           {isAuthenticated && !activeModalPage && !!path && (
             <Fragment>
-              <i
-                className={undoIconClassName}
+              <button
                 onClick={this.handleUndoClick}
-                title="Undo"
-              />
-              <i
-                className={redoIconClassName}
+                disabled={!this.props.isUndoEnabled}
+              >
+                <IconContext.Provider value={{ className: undoIconClassName }}>
+                  <div>
+                    <FaUndo />
+                  </div>
+                </IconContext.Provider>
+              </button>
+              <button
                 onClick={this.handleRedoClick}
-                title="Redo"
-              />
-              <i
-                className="fas fa-question-circle header-bar__actions__item"
-                onClick={this.handleHelpClick}
-                title="Help"
-              />
+                disabled={!this.props.isRedoEnabled}
+              >
+                <IconContext.Provider value={{ className: redoIconClassName }}>
+                  <div>
+                    <FaRedo />
+                  </div>
+                </IconContext.Provider>
+              </button>
+              <button onClick={this.handleHelpClick}>
+                <IconContext.Provider
+                  value={{ className: "header-bar__actions__item" }}
+                >
+                  <div>
+                    <FaQuestionCircle />
+                  </div>
+                </IconContext.Provider>
+              </button>
             </Fragment>
           )}
 
           {isAuthenticated && (
-            <div>
-              <Link to="/settings" onClick={this.handleSettingsClick}>
-                <i className={settingsIconClassName} title="Settings" />
-              </Link>
-            </div>
+            <Link to="/settings" onClick={this.handleSettingsClick}>
+              <IconContext.Provider
+                value={{ className: settingsIconClassName }}
+              >
+                <div>
+                  <FaCogs />
+                </div>
+              </IconContext.Provider>
+            </Link>
           )}
         </div>
       );

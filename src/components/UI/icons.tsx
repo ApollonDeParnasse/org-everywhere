@@ -29,6 +29,12 @@ import {
   FaFileExport,
   FaBars,
   FaStar,
+  FaSquare,
+  FaSpinner,
+  FaFolder,
+  FaCopy,
+  FaFile,
+  FaCog,
 } from "react-icons/fa";
 import { property, partialRight } from "lodash/fp";
 import { PiPlus, PiColumnsBold, PiRowsBold } from "react-icons/pi";
@@ -68,6 +74,12 @@ const ICONMAPPING = {
   "file-export": <FaFileExport />,
   bars: <FaBars />,
   stars: <FaStar />,
+  square: <FaSquare />,
+  spinner: <FaSpinner />,
+  copy: <FaCopy />,
+  cogs: <FaCog />,
+  folder: <FaFolder />,
+  file: <FaFile />,
 };
 
 export const getIcon = partialRight(property, [ICONMAPPING]);
