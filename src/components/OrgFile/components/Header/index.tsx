@@ -30,8 +30,8 @@ import {
   millisDuration,
 } from "../../../../lib/timestamps";
 import { Map } from "immutable";
-import { shareContent } from "../../../../lib/share_utils";
-import { exportHeaderWithSubheaders } from "../../../../lib/export_org";
+
+
 
 class Header extends PureComponent {
   SWIPE_ACTION_ACTIVATION_DISTANCE = 80;
@@ -57,7 +57,6 @@ class Header extends PureComponent {
       "handleDeadlineClick",
       "handleClockInOutClick",
       "handleScheduledClick",
-      "handleShareHeaderClick",
       "handleRefileHeaderRequest",
       "handleAddNoteClick",
       "handleDuplicateHeader",
@@ -162,6 +161,7 @@ class Header extends PureComponent {
       }
 
       if (dragStartX >= 2 * currentDragX) {
+	window.confirm("Delete this header?") &&
         this.setState({
           isPlayingRemoveAnimation: true,
           heightBeforeRemove: this.containerDiv.offsetHeight,
@@ -352,28 +352,6 @@ class Header extends PureComponent {
     this.handleDeadlineAndScheduledClick("SCHEDULED");
   }
 
-  handleShareHeaderClick() {
-    const { header, headers } = this.props;
-
-    const titleLine = header.get("titleLine");
-    const todoKeyword = titleLine.get("todoKeyword");
-    const title = titleLine.get("rawTitle").trim();
-    const fullTitle = todoKeyword ? `${todoKeyword} ${title}` : title;
-
-    // Export header with all sub-headers
-    const content = exportHeaderWithSubheaders(header, headers, {
-      includeSubheaders: true,
-      recursive: true,
-      includeTitle: true,
-      dontIndent: false,
-    });
-
-    // Use Web Share API with fallback to email
-    shareContent({
-      title: fullTitle,
-      text: content,
-    });
-  }
 
   handleAddNoteClick() {
     this.props.base.activatePopup("note-editor");
@@ -518,7 +496,7 @@ class Header extends PureComponent {
                 {(leftInterpolatedStyle) => {
                   const leftStyle = {
                     width: leftInterpolatedStyle.width,
-                    backgroundColor: interpolateColorsAndReturnCSS(
+                    "background-color": interpolateColorsAndReturnCSS(
                       this.state.disabledBackgroundColor,
                       leftActivatedBackgroundColor,
                       leftInterpolatedStyle.backgroundColorFactor,
@@ -526,12 +504,7 @@ class Header extends PureComponent {
                   };
 
                   const leftIconStyle = {
-                    display: swipedDistance > 30 ? "" : "none",
-                    color: interpolateColorsAndReturnCSS(
-                      disabledIconColor,
-                      activatedIconColor,
-                      leftInterpolatedStyle.backgroundColorFactor,
-                    ),
+                    display: swipedDistance > 30 ? "" : "none",                    
                   };
 
                   return (
@@ -541,9 +514,9 @@ class Header extends PureComponent {
                     >
                       <IconContext.Provider
                         value={{
-                          color: "green",
                           className:
                             "swipe-action-container__icon swipe-action-container__icon--left",
+			  style: leftIconStyle
                         }}
                       >
                         <div>
@@ -558,11 +531,7 @@ class Header extends PureComponent {
                 {(rightInterpolatedStyle) => {
                   const rightStyle = {
                     width: rightInterpolatedStyle.width,
-                    backgroundColor: interpolateColorsAndReturnCSS(
-                      this.state.disabledBackgroundColor,
-                      rightActivatedBackgroundColor,
-                      rightInterpolatedStyle.backgroundColorFactor,
-                    ),
+                    
                   };
 
                   const rightIconStyle = {
@@ -581,9 +550,9 @@ class Header extends PureComponent {
                     >
                       <IconContext.Provider
                         value={{
-                          color: "red",
                           className:
                             "swipe-action-container__icon swipe-action-container__icon--right",
+			  style: rightIconStyle
                         }}
                       >
                         <div>
@@ -633,7 +602,6 @@ class Header extends PureComponent {
                   onClockInOutClick={this.handleClockInOutClick}
                   onScheduledClick={this.handleScheduledClick}
                   hasActiveClock={hasActiveClock}
-                  onShareHeader={this.handleShareHeaderClick}
                   onRefileHeader={this.handleRefileHeaderRequest}
                   onAddNote={this.handleAddNoteClick}
                   onDuplicateHeader={this.handleDuplicateHeader}

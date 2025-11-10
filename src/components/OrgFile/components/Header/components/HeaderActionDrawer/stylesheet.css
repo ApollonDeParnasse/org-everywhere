@@ -27,28 +27,6 @@
   color: var(--base02);
 }
 
-.header-action-drawer__ff-click-catcher-container.header-action-drawer__long-press-feedback {
-  transform: scale(1.05);
-  color: var(--base02); /* Or a specific feedback color if preferred */
-  background-color: rgba(0, 0, 0, 0.05); /* Subtle background change */
-  border-radius: 4px;
-  /* Assuming var(--base02) is a greyish color like rgb(131, 148, 150) for the shadow */
-  box-shadow: 0 0 0 18px rgba(131, 148, 150, 0.25); /* Increased visible shadow during press */
-}
-
-.header-action-drawer__ff-click-catcher-container.header-action-drawer__long-press-success {
-  transform: scale(1.15);
-  color: var(--base0B); /* Success color for the icon */
-  background-color: rgba(
-    0,
-    0,
-    0,
-    0.05
-  ); /* Can use a success-themed background if available, e.g., var(--base0B-alpha-low) */
-  border-radius: 4px;
-  /* Assuming var(--base0B) is a success/greenish color like rgb(133, 153, 0) for the shadow */
-  box-shadow: 0 0 0 28px rgba(133, 153, 0, 0.3); /* Increased larger, more prominent shadow on success */
-}
 
 .header-action-drawer__ff-click-catcher {
   height: 20px;

@@ -34,11 +34,10 @@ export default () => {
       <div className="row gx-5 align-items-center">
         <div className="col-lg-6" data-aos="fade-up">
           <h1 className="page-header-ui-title">
-            org-everywhere is the best way to get stuff done
+            org-everywhere is org everywhere
           </h1>
           <p>
-            org-everywhere is Free and Open Source software that works on top of
-            Org mode files.
+            You get the point
           </p>
 
           <a className="btn btn-teal fw-500 me-2" href="/org-everywhere/sample">

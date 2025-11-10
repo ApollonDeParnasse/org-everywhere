@@ -36,9 +36,11 @@ import {
   FaFile,
   FaCog,
 } from "react-icons/fa";
-import { property, partialRight } from "lodash/fp";
 import { PiPlus, PiColumnsBold, PiRowsBold } from "react-icons/pi";
 import { TiTimes } from "react-icons/ti";
+import { IoDuplicateOutline } from "react-icons/io5";
+import { property, partialRight } from "lodash/fp";
+
 
 const ICONMAPPING = {
   times: <FaTimes />,
@@ -80,6 +82,7 @@ const ICONMAPPING = {
   cogs: <FaCog />,
   folder: <FaFolder />,
   file: <FaFile />,
+  duplicate: <IoDuplicateOutline />
 };
 
 export const getIcon = partialRight(property, [ICONMAPPING]);
