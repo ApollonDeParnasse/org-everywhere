@@ -16,6 +16,7 @@ import { renderAsText } from "../../../../../../lib/timestamps";
 import { getSelectedHeader } from "../../../../../../lib/org_utils";
 
 import { bindAll } from "lodash";
+import { isEmpty, isNumber } from "lodash/fp"
 import { parseISO, format } from "date-fns";
 
 class TimestampEditor extends PureComponent {
@@ -47,14 +48,14 @@ class TimestampEditor extends PureComponent {
 
   handleDateChange(event, planningItemIndex, timestampId) {
     // The user deleted the timestamp
-    if (_.isEmpty(event.target.value)) {
+    if (isEmpty(event.target.value)) {
       // It's a planning item and the parser knows which one.
-      if (_.isNumber(planningItemIndex)) {
+      if (isNumber(planningItemIndex)) {
         this.props.org.removePlanningItem(
           this.props.headerId,
           planningItemIndex,
         );
-      } else if (_.isNumber(timestampId)) {
+      } else if (isNumber(timestampId)) {
         this.props.org.removeTimestamp(this.props.headerId, timestampId);
       }
       if (

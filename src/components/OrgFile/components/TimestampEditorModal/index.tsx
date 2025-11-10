@@ -4,15 +4,15 @@ import "./stylesheet.css";
 
 import TimestampEditor from "./components/TimestampEditor";
 
-import _ from "lodash";
-import format from "date-fns/format";
+import { bindAll } from "lodash";
+import { format } from "date-fns/fp";
 import { Map } from "immutable";
 
 export default class TimestampEditorModal extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, ["handleAddEndTimestamp", "handleRemoveEndTimestamp"]);
+    bindAll(this, ["handleAddEndTimestamp", "handleRemoveEndTimestamp"]);
   }
 
   handleChange(key) {
@@ -23,8 +23,8 @@ export default class TimestampEditorModal extends PureComponent {
   handleAddEndTimestamp() {
     const { timestamp } = this.props;
     const [year, month, day, dayName] = format(
-      new Date(),
       "yyyy MM dd eee",
+      new Date(),
     ).split(" ");
     this.props.onChange(
       timestamp.set(

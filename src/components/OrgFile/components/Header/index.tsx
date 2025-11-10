@@ -495,12 +495,7 @@ class Header extends PureComponent {
               <Motion style={leftSwipeActionContainerStyle}>
                 {(leftInterpolatedStyle) => {
                   const leftStyle = {
-                    width: leftInterpolatedStyle.width,
-                    "background-color": interpolateColorsAndReturnCSS(
-                      this.state.disabledBackgroundColor,
-                      leftActivatedBackgroundColor,
-                      leftInterpolatedStyle.backgroundColorFactor,
-                    ),
+                    width: leftInterpolatedStyle.width,                    
                   };
 
                   const leftIconStyle = {
