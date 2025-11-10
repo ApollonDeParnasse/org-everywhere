@@ -41,7 +41,6 @@ import { TiTimes } from "react-icons/ti";
 import { IoDuplicateOutline } from "react-icons/io5";
 import { property, partialRight } from "lodash/fp";
 
-
 const ICONMAPPING = {
   times: <FaTimes />,
   check: <FaCheck />,
@@ -82,7 +81,7 @@ const ICONMAPPING = {
   cogs: <FaCog />,
   folder: <FaFolder />,
   file: <FaFile />,
-  duplicate: <IoDuplicateOutline />
+  duplicate: <IoDuplicateOutline />,
 };
 
 export const getIcon = partialRight(property, [ICONMAPPING]);

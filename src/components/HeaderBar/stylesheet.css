@@ -13,7 +13,7 @@
 
   position: sticky;
   top: 0;
-  
+
   z-index: 1;
 }
 
@@ -48,7 +48,6 @@
 }
 
 .header-bar__back-button {
-
   text-decoration: none;
 
   text-overflow: ellipsis;
@@ -72,7 +71,6 @@
 }
 
 .header-bar__actions__item {
-
   margin-left: 0.5em;
 }
 

@@ -1,5 +1,5 @@
 import React, { PureComponent, type MouseEventHandler } from "react";
-import { IconContext } from "react-icons"
+import { IconContext } from "react-icons";
 import { getIcon } from "../../../../../UI/icons.tsx";
 import "./stylesheet.css";
 
@@ -9,8 +9,12 @@ const iconWithFFClickCatcher = ({
   onClick,
   title,
   testId = "",
-}: {iconName: string, onClick: MouseEventHandler<HTMLButtonElement>, title: string, testId?: string}) => {
-    
+}: {
+  iconName: string;
+  onClick: MouseEventHandler<HTMLButtonElement>;
+  title: string;
+  testId?: string;
+}) => {
   return (
     <button
       title={title}
@@ -18,10 +22,8 @@ const iconWithFFClickCatcher = ({
       className="header-action-drawer__ff-click-catcher-container"
       data-testid={testId}
     >
-      <IconContext.Provider value={{className: "fas fa-lg"}}>
-	<div>
-	  {getIcon(iconName)}
-	</div>
+      <IconContext.Provider value={{ className: "fas fa-lg" }}>
+        <div>{getIcon(iconName)}</div>
       </IconContext.Provider>
     </button>
   );
@@ -44,7 +46,6 @@ const HeaderActionDrawer = ({
   onAddNote,
   onDuplicateHeader,
 }) => {
-
   return (
     <div className="header-action-drawer-container">
       <div className="header-action-drawer__row">

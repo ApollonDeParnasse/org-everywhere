@@ -1,7 +1,7 @@
 import React, { Fragment, useState } from "react";
 import { UnmountClosed as Collapse } from "react-collapse";
-import { IconContext } from "react-icons"
-import { FaTimes, FaPlus, FaCaretRight, FaBars } from "react-icons/fa"
+import { IconContext } from "react-icons";
+import { FaTimes, FaPlus, FaCaretRight, FaBars } from "react-icons/fa";
 import { Draggable } from "react-beautiful-dnd";
 
 import "./stylesheet.css";
@@ -179,14 +179,16 @@ export default ({
                 value={orgFilePath}
                 onChange={handleOrgFileAvailabilityChange(index)}
               />
-              <button className="remove-multi-textfield-button"
-		onClick={handleRemoveOrgFileAvailability(index)}>
-		<IconContext.Provider value={{ className: "fas fa-lg" }}>
-		  <div>
-		    <FaTimes />
-		  </div>
-		  </IconContext.Provider>
-	      </button>
+              <button
+                className="remove-multi-textfield-button"
+                onClick={handleRemoveOrgFileAvailability(index)}
+              >
+                <IconContext.Provider value={{ className: "fas fa-lg" }}>
+                  <div>
+                    <FaTimes />
+                  </div>
+                </IconContext.Provider>
+              </button>
             </div>
           ))}
         </div>
@@ -194,9 +196,10 @@ export default ({
         <div className="add-new-multi-textfield-button-container">
           <button
             className="add-new-multi-textfield-button"
-            onClick={handleAddNewOrgFileAvailability}>
-	    <FaPlus />
-	  </button>
+            onClick={handleAddNewOrgFileAvailability}
+          >
+            <FaPlus />
+          </button>
         </div>
       </Collapse>
     </div>
@@ -261,13 +264,14 @@ export default ({
             />
             <button
               className="remove-multi-textfield-button"
-              onClick={handleRemoveHeaderPath(index)}>
-	      <IconContext.Provider value={{ className: "fas fa-lg" }}>
-		  <div>
-		    <FaTimes />
-		  </div>
-	      </IconContext.Provider>
-	    </button>
+              onClick={handleRemoveHeaderPath(index)}
+            >
+              <IconContext.Provider value={{ className: "fas fa-lg" }}>
+                <div>
+                  <FaTimes />
+                </div>
+              </IconContext.Provider>
+            </button>
           </div>
         ))}
       </div>
@@ -275,9 +279,10 @@ export default ({
       <div className="add-new-multi-textfield-button-container">
         <button
           className="add-new-multi-textfield-button"
-          onClick={handleAddNewHeaderPath}>
-	  <FaPlus />
-	</button>
+          onClick={handleAddNewHeaderPath}
+        >
+          <FaPlus />
+        </button>
       </div>
     </div>
   );
@@ -394,11 +399,11 @@ export default ({
             className="capture-template-container__header"
             onClick={handleHeaderBarClick}
           >
-	    <IconContext.Provider value={{ className: caretClassName }}>
-	      <div>
-		<FaCaretRight />
-	      </div>
-	    </IconContext.Provider>
+            <IconContext.Provider value={{ className: caretClassName }}>
+              <div>
+                <FaCaretRight />
+              </div>
+            </IconContext.Provider>
             <ActionButton
               iconName={template.get("iconName")}
               letter={template.get("letter")}
@@ -408,11 +413,16 @@ export default ({
             <span className="capture-template-container__header__title">
               {template.get("description")}
             </span>
-	    <IconContext.Provider value={{ className: "fas fa-lg capture-template-container__header__drag-handle" }}>
-	      <div {...provided.dragHandleProps}>
-		<FaBars />
-	      </div>
-	    </IconContext.Provider>
+            <IconContext.Provider
+              value={{
+                className:
+                  "fas fa-lg capture-template-container__header__drag-handle",
+              }}
+            >
+              <div {...provided.dragHandleProps}>
+                <FaBars />
+              </div>
+            </IconContext.Provider>
           </div>
 
           <Collapse isOpened={!isCollapsed} springConfig={{ stiffness: 300 }}>

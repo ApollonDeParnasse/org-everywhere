@@ -130,17 +130,15 @@ const FileBrowser = ({
         {hasMore &&
           (isLoadingMore ? (
             <li className="file-browser__file-list__loading-more-container">
-	      <IconContext.Provider
+              <IconContext.Provider
                 value={{
-                  className:
-                    "fas fas-lg",
+                  className: "fas fas-lg",
                 }}
               >
                 <div>
-		  <FaSpinner />
+                  <FaSpinner />
                 </div>
               </IconContext.Provider>
-
             </li>
           ) : (
             <li

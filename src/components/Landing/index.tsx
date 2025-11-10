@@ -36,9 +36,7 @@ export default () => {
           <h1 className="page-header-ui-title">
             org-everywhere is org everywhere
           </h1>
-          <p>
-            You get the point
-          </p>
+          <p>You get the point</p>
 
           <a className="btn btn-teal fw-500 me-2" href="/org-everywhere/sample">
             Live demo

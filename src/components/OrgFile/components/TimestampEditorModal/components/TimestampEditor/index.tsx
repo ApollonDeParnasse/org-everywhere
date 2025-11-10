@@ -16,7 +16,7 @@ import { renderAsText } from "../../../../../../lib/timestamps";
 import { getSelectedHeader } from "../../../../../../lib/org_utils";
 
 import { bindAll } from "lodash";
-import { isEmpty, isNumber } from "lodash/fp"
+import { isEmpty, isNumber } from "lodash/fp";
 import { parseISO, format } from "date-fns";
 
 class TimestampEditor extends PureComponent {

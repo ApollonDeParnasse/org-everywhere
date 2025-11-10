@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 
 import { Motion, spring } from "react-motion";
-import { IconContext } from "react-icons"
-import { FaTimes } from "react-icons/fa"
+import { IconContext } from "react-icons";
+import { FaTimes } from "react-icons/fa";
 import classNames from "classnames";
 import "./stylesheet.css";
-
 
 const Drawer = ({
   children,
@@ -151,12 +150,11 @@ const Drawer = ({
 
               {shouldIncludeCloseButton && (
                 <button className="drawer__close-button" onClick={handleClose}>
-		  <IconContext.Provider
-                    value={{className:"fas fa-lg",}}>
+                  <IconContext.Provider value={{ className: "fas fa-lg" }}>
                     <div>
                       <FaTimes /> ..
                     </div>
-		  </IconContext.Provider>		  
+                  </IconContext.Provider>
                 </button>
               )}
 

@@ -31,8 +31,6 @@ import {
 } from "../../../../lib/timestamps";
 import { Map } from "immutable";
 
-
-
 class Header extends PureComponent {
   SWIPE_ACTION_ACTIVATION_DISTANCE = 80;
   FREE_DRAG_ACTIVATION_DISTANCE = 10;
@@ -161,11 +159,11 @@ class Header extends PureComponent {
       }
 
       if (dragStartX >= 2 * currentDragX) {
-	window.confirm("Delete this header?") &&
-        this.setState({
-          isPlayingRemoveAnimation: true,
-          heightBeforeRemove: this.containerDiv.offsetHeight,
-        });
+        window.confirm("Delete this header?") &&
+          this.setState({
+            isPlayingRemoveAnimation: true,
+            heightBeforeRemove: this.containerDiv.offsetHeight,
+          });
       }
     }
 
@@ -352,7 +350,6 @@ class Header extends PureComponent {
     this.handleDeadlineAndScheduledClick("SCHEDULED");
   }
 
-
   handleAddNoteClick() {
     this.props.base.activatePopup("note-editor");
   }
@@ -495,11 +492,11 @@ class Header extends PureComponent {
               <Motion style={leftSwipeActionContainerStyle}>
                 {(leftInterpolatedStyle) => {
                   const leftStyle = {
-                    width: leftInterpolatedStyle.width,                    
+                    width: leftInterpolatedStyle.width,
                   };
 
                   const leftIconStyle = {
-                    display: swipedDistance > 30 ? "" : "none",                    
+                    display: swipedDistance > 30 ? "" : "none",
                   };
 
                   return (
@@ -511,7 +508,7 @@ class Header extends PureComponent {
                         value={{
                           className:
                             "swipe-action-container__icon swipe-action-container__icon--left",
-			  style: leftIconStyle
+                          style: leftIconStyle,
                         }}
                       >
                         <div>
@@ -526,7 +523,6 @@ class Header extends PureComponent {
                 {(rightInterpolatedStyle) => {
                   const rightStyle = {
                     width: rightInterpolatedStyle.width,
-                    
                   };
 
                   const rightIconStyle = {
@@ -547,7 +543,7 @@ class Header extends PureComponent {
                         value={{
                           className:
                             "swipe-action-container__icon swipe-action-container__icon--right",
-			  style: rightIconStyle
+                          style: rightIconStyle,
                         }}
                       >
                         <div>
