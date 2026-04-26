@@ -1,0 +1,3 @@
+* Creating a dev server
+Simply type pnpm run dev
+
