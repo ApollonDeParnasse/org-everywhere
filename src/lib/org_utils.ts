@@ -1,5 +1,5 @@
 import { List, Map, fromJS } from "immutable";
-import _ from "lodash";
+import { range } from "lodash";
 import { curry } from "lodash/fp";
 import { formatDistanceToNow } from "date-fns";
 
@@ -44,7 +44,7 @@ const subheaderIndexRangeForHeaderId = (headers, headerId) => {
 
 export const subheaderIndicesOfHeaderWithId = (headers, headerId) => {
   let [begin, end] = subheaderIndexRangeForHeaderId(headers, headerId);
-  return _.range(begin, end);
+  return range(begin, end);
 };
 
 export const subheadersOfHeaderWithIndex = (headers, headerIndex) => {

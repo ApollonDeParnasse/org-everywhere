@@ -43,7 +43,7 @@ import {
   listenToNetworkConnectionEvents,
 } from "./lib/initial_setup";
 
-import _ from "lodash";
+import { bindAll } from "lodash";
 import { Map } from "immutable";
 
 import { configure } from "react-hotkeys";
@@ -183,7 +183,7 @@ export default class App extends PureComponent {
     syncOnBecomingVisible(this.store);
     listenToNetworkConnectionEvents(this.store);
 
-    _.bindAll(this, ["handleDragEnd"]);
+    bindAll(this, ["handleDragEnd"]);
   }
 
   handleDragEnd(result) {

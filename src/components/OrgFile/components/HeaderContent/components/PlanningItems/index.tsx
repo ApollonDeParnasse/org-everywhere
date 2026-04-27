@@ -5,13 +5,13 @@ import "./stylesheet.css";
 import { renderAsText } from "../../../../../../lib/timestamps";
 import { isRegularPlanningItem } from "../../../../../../lib/org_utils";
 
-import _ from "lodash";
+import { bindAll } from "lodash";
 
 export default class PlanningItems extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, ["handleTimestampClick"]);
+    bindAll(this, ["handleTimestampClick"]);
   }
 
   handleTimestampClick(planningType, planningItemIndex) {

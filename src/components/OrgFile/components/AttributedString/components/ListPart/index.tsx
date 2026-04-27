@@ -12,7 +12,7 @@ import { attributedStringToRawText } from "../../../../../../lib/export_org";
 
 import { getCurrentTimestampAsText } from "../../../../../../lib/timestamps";
 
-import _ from "lodash";
+import { bindAll } from "lodash";
 import classNames from "classnames";
 import { Map } from "immutable";
 
@@ -20,7 +20,7 @@ export default class ListPart extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, [
+    bindAll(this, [
       "handleListItemSelect",
       "handleCheckboxClick",
       "handleTextareaBlur",

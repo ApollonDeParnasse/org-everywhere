@@ -1,6 +1,6 @@
 import React, { PureComponent } from "react";
 import { connect } from "react-redux";
-import _ from "lodash";
+import { bindAll } from "lodash";
 import "./stylesheet.css";
 import { getIcon } from "../../../UI/icons.tsx";
 
@@ -12,7 +12,7 @@ class DescriptionEditorModal extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, [
+    bindAll(this, [
       "handleTextareaRef",
       "handleDescriptionChange",
       "handleInsertTimestamp",

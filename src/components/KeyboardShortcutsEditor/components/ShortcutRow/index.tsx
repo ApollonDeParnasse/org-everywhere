@@ -2,14 +2,14 @@ import React, { PureComponent } from "react";
 
 import "./stylesheet.css";
 
-import _ from "lodash";
+import { bindAll } from "lodash";
 import classNames from "classnames";
 
 export default class ShortcutRow extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, ["handleRebindClick", "handleKeyPress"]);
+    bindAll(this, ["handleRebindClick", "handleKeyPress"]);
 
     this.state = {
       isEditMode: false,

@@ -10,7 +10,7 @@ import {
   hasHeaderContent,
 } from "../../../../lib/org_utils";
 
-import _ from "lodash";
+import { bindAll } from "lodash";
 import classNames from "classnames";
 import { List, Map } from "immutable";
 
@@ -20,7 +20,7 @@ class HeaderList extends PureComponent {
 
     this.headerRefs = {};
 
-    _.bindAll(this, ["handleHeaderRef"]);
+    bindAll(this, ["handleHeaderRef"]);
   }
 
   componentDidUpdate(prevProps) {

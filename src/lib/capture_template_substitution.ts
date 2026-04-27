@@ -1,6 +1,6 @@
 import { Map } from "immutable";
 import format from "date-fns/format";
-import _ from "lodash";
+import { entries } from "lodash";
 
 export default (templateString, customVariables = Map()) => {
   if (!templateString) {
@@ -22,7 +22,7 @@ export default (templateString, customVariables = Map()) => {
   });
 
   let substitutedString = templateString;
-  _.entries(substitutions).forEach(
+  entries(substitutions).forEach(
     ([formatString, value]) =>
       (substitutedString = substitutedString.replace(
         RegExp(formatString, "g"),

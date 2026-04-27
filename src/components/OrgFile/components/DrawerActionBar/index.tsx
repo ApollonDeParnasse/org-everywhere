@@ -9,7 +9,7 @@ import * as baseActions from "../../../../actions/base";
 
 import "./stylesheet.css";
 
-import _ from "lodash";
+import { bindAll } from "lodash";
 
 import DrawerActionButtons from "./components/DrawerActionButtons";
 
@@ -19,7 +19,7 @@ class DrawerActionBar extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, [
+    bindAll(this, [
       "handleShowTitleEditModal",
       "handleShowDescriptionEditModal",
       "handleShowTagsModal",

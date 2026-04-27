@@ -5,7 +5,7 @@ import {
 } from "./clocking";
 
 import { fromJS, List } from "immutable";
-import _ from "lodash";
+import { last, range, times, flatten, takeWhile } from "lodash/fp";
 
 // TODO: Extract all match groups of `beginningRegexp` (for example
 // like `emailRegexp`), so that they can be documented and are less
@@ -210,8 +210,8 @@ export const parseMarkupAndCookies = (
         markupType,
       });
     } else if (!!match[15]) {
-      const firstTimestamp = timestampFromRegexMatch(match, _.range(16, 33));
-      const secondTimestamp = timestampFromRegexMatch(match, _.range(33, 50));
+      const firstTimestamp = timestampFromRegexMatch(match, range(16, 33));
+      const secondTimestamp = timestampFromRegexMatch(match, range(33, 50));
 
       matches.push({
         type: "timestamp",
@@ -352,7 +352,7 @@ const parseTable = (tableLines) => {
       if (line.startsWith("|-")) {
         table.contents.push([]);
       } else {
-        const lastRow = _.last(table.contents);
+        const lastRow = last(table.contents);
         const lineCells = line.substr(1, line.length - 2).split("|");
 
         if (lastRow.length === 0) {
@@ -376,7 +376,7 @@ const parseTable = (tableLines) => {
   }));
 
   // We sometimes end up with an extra, empty row - remove it if so.
-  if (_.last(table.contents).contents.length === 0) {
+  if (last(table.contents).contents.length === 0) {
     table.contents = table.contents.slice(0, table.contents.length - 1);
   }
 
@@ -386,13 +386,15 @@ const parseTable = (tableLines) => {
   );
   table.contents.forEach((row) => {
     if (row.contents.length < maxNumColumns) {
-      _.times(maxNumColumns - row.contents.length, () => {
+      const cnt = maxNumColumns - row.contents.length;
+      const func = () => {
         row.contents.push({
           id: generateId(),
           contents: [],
           rawContents: "",
         });
-      });
+      }
+      times(func, cnt);
     }
   });
 
@@ -408,8 +410,8 @@ export const parseRawText = (
   const LIST_HEADER_REGEX = /^\s*([-+*]|(\d+(\.|\)))) (.*)/;
 
   let currentListHeaderNestingLevel = null;
-  const rawLineParts = _.flatten(
-    lines.map((line, lineIndex) => {
+  const rawLineParts = flatten(
+    lines.map((line: string, lineIndex: number) => {
       const numLeadingSpaces = line.match(/^( *)/)[0].length;
 
       if (
@@ -455,9 +457,9 @@ export const parseRawText = (
   for (let partIndex = 0; partIndex < rawLineParts.length; ++partIndex) {
     const linePart = rawLineParts[partIndex];
     if (linePart.type === "raw-table") {
-      const tableLines = _.takeWhile(
-        rawLineParts.slice(partIndex),
+      const tableLines = takeWhile(
         (part) => part.type === "raw-table",
+	rawLineParts.slice(partIndex)
       ).map((part) => part.line);
 
       processedLineParts.push(parseTable(tableLines));
@@ -465,9 +467,9 @@ export const parseRawText = (
       partIndex += tableLines.length - 1;
     } else if (linePart.type === "raw-list-header") {
       const numLeadingSpaces = linePart.line.match(/^( *)/)[0].length;
-      const contentLines = _.takeWhile(
-        rawLineParts.slice(partIndex + 1),
+      const contentLines = takeWhile(
         (part) => part.type === "raw-list-content",
+	rawLineParts.slice(partIndex + 1)
       )
         .map((part) => part.line)
         .map((line) =>
@@ -567,7 +569,7 @@ export const _parsePlanningItems = (rawText) => {
 
         const timestamp = timestampFromRegexMatch(
           planningMatch,
-          _.range(planningTypeIndex + 1, planningTypeIndex + 1 + 17),
+          range(planningTypeIndex + 1, planningTypeIndex + 1 + 17),
         );
 
         return createOrUpdateTimestamp({ type, timestamp });
@@ -675,15 +677,15 @@ const parseLogbook = (rawText) => {
       const lineFullMatch = line.trim().match(logBookEntryFullRegex);
       if (lineFullMatch) {
         return {
-          start: timestampFromRegexMatch(lineFullMatch, _.range(1, 18)),
-          end: timestampFromRegexMatch(lineFullMatch, _.range(18, 39)),
+          start: timestampFromRegexMatch(lineFullMatch, range(1, 18)),
+          end: timestampFromRegexMatch(lineFullMatch, range(18, 39)),
           id: generateId(),
         };
       }
       const lineStartMatch = line.trim().match(logBookEntryStartRegex);
       if (lineStartMatch) {
         return {
-          start: timestampFromRegexMatch(lineStartMatch, _.range(1, 18)),
+          start: timestampFromRegexMatch(lineStartMatch, range(1, 18)),
           end: null,
           id: generateId(),
         };

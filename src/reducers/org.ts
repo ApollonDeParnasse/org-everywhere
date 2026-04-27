@@ -1,7 +1,7 @@
 /* global process */
 
 import { Map, List, fromJS } from "immutable";
-import _ from "lodash";
+import { times, isEmpty} from "lodash";
 
 import headline_filter_parser from "../lib/headline_filter_parser";
 import {
@@ -515,7 +515,7 @@ const removeHeader = (state, action) => {
 
   const parentHeaderId = parentIdOfHeaderWithId(headers, action.headerId);
 
-  _.times(numHeadersToRemove).forEach(() => {
+  times(numHeadersToRemove).forEach(() => {
     headers = headers.delete(headerIndex);
   });
 
@@ -542,7 +542,7 @@ const moveHeaderUp = (state, action) => {
   }
 
   const subheaders = subheadersOfHeaderWithId(headers, action.headerId);
-  _.times(1 + subheaders.size).forEach(() => {
+  times(1 + subheaders.size).forEach(() => {
     headers = headers.insert(
       previousSiblingIndex,
       headers.get(headerIndex + subheaders.size),
@@ -574,7 +574,7 @@ const moveHeaderDown = (state, action) => {
     headers,
     nextSibling.get("id"),
   );
-  _.times(1 + nextSiblingSubheaders.size).forEach(() => {
+  times(1 + nextSiblingSubheaders.size).forEach(() => {
     headers = headers.insert(
       headerIndex,
       headers.get(nextSiblingIndex + nextSiblingSubheaders.size),
@@ -2060,7 +2060,7 @@ export const setSearchFilterInformation = (state, action) => {
   state.setIn(["search", "searchFilter"], searchFilter);
 
   let searchFilterSuggestions = [];
-  if (!_.isEmpty(searchFilter)) {
+  if (!isEmpty(searchFilter)) {
     // TODO: Currently only showing suggestions based on opened file.
     // Decide if they should be based on all files.
     const currentFile = files.get(path);

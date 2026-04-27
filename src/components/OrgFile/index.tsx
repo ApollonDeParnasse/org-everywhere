@@ -41,7 +41,7 @@ import {
   STATIC_FILE_PREFIX,
 } from "../../lib/org_utils";
 
-import _ from "lodash";
+import { bindAll, isEmpty, fromPairs } from "lodash/fp";
 import { fromJS, List, Map, Set } from "immutable";
 import {
   createRawDescriptionText,
@@ -53,7 +53,7 @@ class OrgFile extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, [
+    bindAll([
       "handleSelectNextVisibleHeaderHotKey",
       "handleSelectPreviousVisibleHeaderHotKey",
       "handleToggleHeaderOpenedHotKey",
@@ -88,7 +88,7 @@ class OrgFile extends PureComponent {
       "getPopupSwitchAction",
       "checkPopupAndHeader",
       "checkPopup",
-    ]);
+    ], this);
 
     this.state = {
       hasUncaughtError: false,
@@ -102,7 +102,7 @@ class OrgFile extends PureComponent {
     if (!!staticFile) {
       this.props.org.setPath(STATIC_FILE_PREFIX + staticFile);
       setTimeout(() => (document.querySelector(".App").scrollTop = 0), 0);
-    } else if (!_.isEmpty(path)) {
+    } else if (!isEmpty(path)) {
       if (this.props.fileIsLoaded(path)) {
         this.props.org.sync({ path, shouldSuppressMessages: true });
       } else {
@@ -118,7 +118,7 @@ class OrgFile extends PureComponent {
   // action), activate the appropriate pop-up
   activatePopup() {
     const urlFragment = window.location.hash.substr(1);
-    if (!_.isEmpty(urlFragment)) {
+    if (!isEmpty(urlFragment)) {
       this.props.base.activatePopup(urlFragment);
     }
   }
@@ -140,7 +140,7 @@ class OrgFile extends PureComponent {
     }
 
     const { path } = this.props;
-    if (!_.isEmpty(path) && path !== prevProps.path) {
+    if (!isEmpty(path) && path !== prevProps.path) {
       this.props.syncBackend.downloadFile(path);
       this.props.org.setPath(path);
     }
@@ -661,7 +661,7 @@ class OrgFile extends PureComponent {
       return <div />;
     }
 
-    const keyMap = _.fromPairs(calculateActionedKeybindings(customKeybindings));
+    const keyMap = fromPairs(calculateActionedKeybindings(customKeybindings));
 
     // Automatically call preventDefault on all the keyboard events that come through for
     // these hotkeys.

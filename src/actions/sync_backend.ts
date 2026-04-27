@@ -20,7 +20,7 @@ import { createGitlabOAuth } from "../sync_backend_clients/gitlab_sync_backend_c
 
 import { addSeconds } from "date-fns";
 
-import _ from "lodash";
+import { get } from "lodash/fp";
 
 import pathParse from "path-parse";
 
@@ -94,7 +94,7 @@ export const getDirectoryListing = (path) => (dispatch, getState) => {
     })
     .catch((error) => {
       dispatch(hideLoadingMessage());
-      const error_summary = _.get(error, "error.error_summary") || "";
+      const error_summary = get("error.error_summary", error) || "";
       if (
         [400, 401].includes(error.status) ||
         error_summary.includes("expired_access_token")

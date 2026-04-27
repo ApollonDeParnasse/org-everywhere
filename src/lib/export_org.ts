@@ -1,4 +1,4 @@
-import _ from "lodash";
+import { countBy, times, flatten, dropRight  } from "lodash";
 import { fromJS } from "immutable";
 
 import { isRegularPlanningItem, subheadersOfHeaderWithId } from "./org_utils";
@@ -40,7 +40,7 @@ const tablePartToRawText = (tablePart) => {
       Math.max(
         ...row
           .get("contents")
-          .map((cell) => (_.countBy(cell.get("rawContents"))["\n"] || 0) + 1),
+          .map((cell) => (countBy(cell.get("rawContents"))["\n"] || 0) + 1),
       ),
     )
     .toJS();
@@ -49,7 +49,7 @@ const tablePartToRawText = (tablePart) => {
     return "";
   }
   const numColumns = columns.size;
-  const columnWidths = _.times(numColumns).map((columnIndex) =>
+  const columnWidths = times(numColumns).map((columnIndex) =>
     Math.max(
       ...tablePart.get("contents").map((row) => {
         const content = row.getIn(["contents", columnIndex, "contents"]);
@@ -62,14 +62,14 @@ const tablePartToRawText = (tablePart) => {
     ),
   );
 
-  const rowStrings = _.dropRight(
-    _.flatten(
+  const rowStrings = dropRight(
+    flatten(
       tablePart
         .get("contents")
         .map((row, rowIndex) => {
           const rowHeight = rowHeights[rowIndex];
 
-          const contentRows = _.times(rowHeight)
+          const contentRows = times(rowHeight)
             .map((lineIndex) =>
               row
                 .get("contents")

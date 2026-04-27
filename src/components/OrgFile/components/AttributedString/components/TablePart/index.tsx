@@ -4,7 +4,7 @@ import "./stylesheet.css";
 
 import AttributedString from "../../../AttributedString";
 
-import _ from "lodash";
+import { bindAll } from "lodash";
 import classNames from "classnames";
 import { Map } from "immutable";
 
@@ -12,7 +12,7 @@ export default class TablePart extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, ["handleTableSelect"]);
+    bindAll(this, ["handleTableSelect"]);
 
     this.state = {
       rawCellValues: this.generateCellValueMap(props.table),

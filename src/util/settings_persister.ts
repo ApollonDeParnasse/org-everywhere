@@ -1,5 +1,5 @@
 import { Map, List, Set, fromJS } from "immutable";
-import _ from "lodash";
+import { debounce, fromPairs } from "lodash";
 
 import { getOpenHeaderPaths } from "../lib/org_utils";
 
@@ -45,7 +45,7 @@ const updateConfigForGitLab = async (client, contents) => {
   }
 };
 
-const debouncedPushConfigToSyncBackend = _.debounce(
+const debouncedPushConfigToSyncBackend = debounce(
   (syncBackendClient, contents) => {
     switch (syncBackendClient.type) {
       case "Dropbox":
@@ -253,7 +253,7 @@ const getFieldsToPersist = (state, fields) => {
 };
 
 const getConfigFileContents = (fieldsToPersist) => {
-  return JSON.stringify(_.fromPairs(fieldsToPersist), null, 2);
+  return JSON.stringify(fromPairs(fieldsToPersist), null, 2);
 };
 
 export const applyCategorySettingsFromConfig = (state, config, category) => {

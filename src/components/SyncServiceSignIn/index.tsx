@@ -14,7 +14,7 @@ import {
 } from "../../sync_backend_clients/gitlab_sync_backend_client";
 
 import { DropboxAuth } from "dropbox";
-import _ from "lodash";
+import { bindAll } from "lodash";
 
 function WebDAVForm() {
   const [isVisible, setIsVisible] = useState(false);
@@ -138,7 +138,7 @@ export default class SyncServiceSignIn extends PureComponent {
   constructor(props) {
     super(props);
 
-    _.bindAll(this, ["handleDropboxClick"]);
+    bindAll(this, ["handleDropboxClick"]);
   }
 
   handleDropboxClick() {

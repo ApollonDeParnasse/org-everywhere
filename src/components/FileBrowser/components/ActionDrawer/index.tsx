@@ -4,7 +4,7 @@
 import React, { Fragment } from "react";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-import _ from "lodash";
+import { includes } from "lodash/fp";
 
 import "./../../../OrgFile/components/ActionDrawer/stylesheet.css";
 
@@ -27,7 +27,7 @@ const ActionDrawer = ({ org, files, syncBackend, path }) => {
     fileName = ensureCompleteFilename(fileName);
     let newPath = `${path}/${fileName}`;
 
-    if (_.includes(files, newPath)) {
+    if (includes(newPath, files)) {
       alert("File already exists. Aborting.");
     } else {
       syncBackend.createFile(newPath, content);
