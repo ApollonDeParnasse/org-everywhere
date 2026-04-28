@@ -14,7 +14,7 @@
   background-color: var(--base1-soft);
 }
 
-.drawer-inner-container {
+.draggable-drawer-inner-container {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -31,9 +31,24 @@
   border-top-right-radius: 20px;
 
   background-color: var(--base3);
-  max-height: 92%;
+  height: 92%;
 
   overflow: auto;
+}
+
+.drawer-inner-container {
+  position: fixed;
+  bottom: -1px;
+  left: -1px;
+  right: -1px;
+  padding: 15px 10px;
+  box-shadow: 0px -1px 35px 0px var(--base03);
+  border-bottom: none;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  background-color: var(--base3);
+  height: 92%;
+  overflow: clip;
 }
 
 .drawer__close-button {

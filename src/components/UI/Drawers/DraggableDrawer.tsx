@@ -6,7 +6,7 @@ import { FaTimes } from "react-icons/fa";
 import classNames from "classnames";
 import "./stylesheet.css";
 
-const Drawer = ({
+const DraggableDrawer = ({
   children,
   shouldIncludeCloseButton,
   onClose,
@@ -141,8 +141,8 @@ const Drawer = ({
           >
             <div
               onClick={handleInnerContainerClick}
-              className="drawer-inner-container nice-scroll"
-              data-testid="drawer"
+              className="draggable-drawer-inner-container nice-scroll"
+              data-testid="draggable-drawer"
               ref={innerContainer}
               style={interpolatedStyle}
             >
@@ -166,4 +166,5 @@ const Drawer = ({
     </Motion>
   );
 };
-export default Drawer;
+
+export default DraggableDrawer;

@@ -22,7 +22,8 @@ import NoteEditorModal from "./components/NoteEditorModal";
 import AgendaModal from "./components/AgendaModal";
 import SearchModal from "./components/SearchModal";
 import ExternalLink from "../UI/ExternalLink";
-import Drawer from "../UI/Drawer/";
+import DraggableDrawer from "../UI/Drawers/Drawer";
+import Drawer from "../UI/Drawers/Drawer";
 import DrawerActionBar from "./components/DrawerActionBar";
 
 import * as baseActions from "../../actions/base";
@@ -426,6 +427,77 @@ class OrgFile extends PureComponent {
     }
   }
 
+  maybePopup(activePopupType, setPopupCloseActionValuesAccessor) {
+    if (!activePopupType) {
+      return 
+    }
+    if (activePopupType == "table-editor") {
+      return <Drawer
+        onClose={() => {
+          this.getPopupCloseAction(activePopupType)(
+            ...(this.state.popupCloseActionValuesAccessor
+	      ? this.state.popupCloseActionValuesAccessor()
+	      : []),
+          );
+          this.setState({
+            editRawValues: this.props.preferEditRawValues,
+          });
+          this.container.focus();
+        }}
+        maxSize={this.getPopupMaxSize(activePopupType)}
+      >
+        {this.renderActivePopup(setPopupCloseActionValuesAccessor)}
+      </Drawer>
+    }
+    
+    return (
+      <DraggableDrawer
+	shouldHandleInnerContainerClick={false}
+        onClose={() => {
+          this.getPopupCloseAction(activePopupType)(
+            ...(this.state.popupCloseActionValuesAccessor
+	      ? this.state.popupCloseActionValuesAccessor()
+	      : []),
+          );
+          this.setState({
+            editRawValues: this.props.preferEditRawValues,
+          });
+          this.container.focus();
+        }}
+        maxSize={this.getPopupMaxSize(activePopupType)}
+      >
+        {this.renderActivePopup(setPopupCloseActionValuesAccessor)}
+        {(activePopupType === "title-editor" ||
+          activePopupType === "description-editor" ||
+          activePopupType === "tags-editor" ||
+          activePopupType === "property-list-editor" ||
+          activePopupType === "timestamp-editor" ||
+          activePopupType === "scheduled-editor" ||
+          activePopupType === "deadline-editor" ||
+          activePopupType === "note-editor") && (
+            <DrawerActionBar
+	      onSwitch={() => {
+                this.getPopupSwitchAction(activePopupType)(
+                  ...(this.state.popupCloseActionValuesAccessor
+                    ? this.state.popupCloseActionValuesAccessor()
+                    : []),
+                );
+	      }}
+	      editRawValues={this.state.editRawValues}
+	      setEditRawValues={(editRawValues) =>
+                this.setState({ editRawValues })
+	      }
+	      restorePreferEditRawValues={() =>
+                this.setState({
+                  editRawValues: this.props.preferEditRawValues,
+                })
+	      }
+            />
+          )}
+      </DraggableDrawer>
+    );
+  }
+  
   renderActivePopup(setPopupCloseActionValuesAccessor) {
     const {
       activePopupType,
@@ -437,6 +509,9 @@ class OrgFile extends PureComponent {
       shouldDisableActions,
       todoKeywordSets,
     } = this.props;
+
+
+
 
     switch (activePopupType) {
       case "sync-confirmation":
@@ -778,52 +853,7 @@ class OrgFile extends PureComponent {
               staticFile={staticFile}
             />
           )}
-
-          {activePopupType ? (
-            <Drawer
-              onClose={() => {
-                this.getPopupCloseAction(activePopupType)(
-                  ...(this.state.popupCloseActionValuesAccessor
-                    ? this.state.popupCloseActionValuesAccessor()
-                    : []),
-                );
-                this.setState({
-                  editRawValues: this.props.preferEditRawValues,
-                });
-                this.container.focus();
-              }}
-              maxSize={this.getPopupMaxSize(activePopupType)}
-            >
-              {this.renderActivePopup(setPopupCloseActionValuesAccessor)}
-              {(activePopupType === "title-editor" ||
-                activePopupType === "description-editor" ||
-                activePopupType === "tags-editor" ||
-                activePopupType === "property-list-editor" ||
-                activePopupType === "timestamp-editor" ||
-                activePopupType === "scheduled-editor" ||
-                activePopupType === "deadline-editor" ||
-                activePopupType === "note-editor") && (
-                <DrawerActionBar
-                  onSwitch={() => {
-                    this.getPopupSwitchAction(activePopupType)(
-                      ...(this.state.popupCloseActionValuesAccessor
-                        ? this.state.popupCloseActionValuesAccessor()
-                        : []),
-                    );
-                  }}
-                  editRawValues={this.state.editRawValues}
-                  setEditRawValues={(editRawValues) =>
-                    this.setState({ editRawValues })
-                  }
-                  restorePreferEditRawValues={() =>
-                    this.setState({
-                      editRawValues: this.props.preferEditRawValues,
-                    })
-                  }
-                />
-              )}
-            </Drawer>
-          ) : null}
+          {this.maybePopup(activePopupType, setPopupCloseActionValuesAccessor)}
         </div>
       </GlobalHotKeys>
     );
