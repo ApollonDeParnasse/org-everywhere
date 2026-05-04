@@ -1,5 +1,5 @@
 import { inRange, merge } from "lodash/fp";
-import { expect as baseExpect } from "vitest";
+import { expect } from "vitest";
 import * as matchers from "@testing-library/jest-dom/matchers";
 
 export function toBeWithinRange(
@@ -51,4 +51,4 @@ export const customMatchers = {
   toBeWithinRange,
 };
 
-export const expect = baseExpect.extend(merge(customMatchers, matchers));
+expect.extend(merge(customMatchers, matchers));

@@ -3,14 +3,13 @@
 .table-action-drawer {
   display: flex;
   justify-content: space-around;
-  min-height: "100px";
+  margin-top: 2%;
+  height: 10%;
 }
 
 .table-action-drawer-container {
   color: var(--base01);
-
   width: 50%;
-
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(2, 1fr);

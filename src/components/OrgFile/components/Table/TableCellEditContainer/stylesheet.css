@@ -1,18 +1,17 @@
 @import "../../../../../colors.css";
 
 .table-cell__edit-container {
-  width: 100%;
+  display: grid;
+  width: auto;
+  font-size: 16px;
 }
 
 .table-cell__insert-timestamp-button {
-  color: var(--base0);
-
-  font-family: Courier;
-
   display: flex;
-  align-items: center;
-}
-
-.insert-timestamp-icon {
-  margin-right: 5px;
+  flex-direction: row;
+  color: var(--base0);
+  font-family: Courier;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 0%;
 }

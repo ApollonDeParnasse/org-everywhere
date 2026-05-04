@@ -33,7 +33,6 @@
   background-color: var(--base3);
   height: 92%;
 
-  overflow: auto;
 }
 
 .drawer-inner-container {
@@ -47,9 +46,11 @@
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   background-color: var(--base3);
-  height: 92%;
+  height: 93%;
   overflow: clip;
 }
+
+
 
 .drawer__close-button {
   position: absolute;

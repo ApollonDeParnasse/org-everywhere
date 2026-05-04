@@ -22,8 +22,7 @@ import NoteEditorModal from "./components/NoteEditorModal";
 import AgendaModal from "./components/AgendaModal";
 import SearchModal from "./components/SearchModal";
 import ExternalLink from "../UI/ExternalLink";
-import DraggableDrawer from "../UI/Drawers/Drawer";
-import Drawer from "../UI/Drawers/Drawer";
+import DraggableDrawer from "../UI/Drawers/DraggableDrawer";
 import DrawerActionBar from "./components/DrawerActionBar";
 
 import * as baseActions from "../../actions/base";
@@ -432,7 +431,7 @@ class OrgFile extends PureComponent {
       return 
     }
     if (activePopupType == "table-editor") {
-      return <Drawer
+      return <TableEditorModal
         onClose={() => {
           this.getPopupCloseAction(activePopupType)(
             ...(this.state.popupCloseActionValuesAccessor
@@ -444,10 +443,8 @@ class OrgFile extends PureComponent {
           });
           this.container.focus();
         }}
-        maxSize={this.getPopupMaxSize(activePopupType)}
       >
-        {this.renderActivePopup(setPopupCloseActionValuesAccessor)}
-      </Drawer>
+      </TableEditorModal>
     }
     
     return (
@@ -664,7 +661,7 @@ class OrgFile extends PureComponent {
           />
         );
       case "table-editor":
-        return <TableEditorModal shouldDisableActions={shouldDisableActions} />;
+        return <TableEditorModal />;
       case "note-editor":
         return <NoteEditorModal shouldDisableActions={shouldDisableActions} />;
       default:
@@ -787,6 +784,7 @@ class OrgFile extends PureComponent {
     };
 
     const setPopupCloseActionValuesAccessor = (v) => {
+      console.log(v)
       this.setState({ popupCloseActionValuesAccessor: v });
     };
 

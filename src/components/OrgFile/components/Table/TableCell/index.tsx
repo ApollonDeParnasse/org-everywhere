@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import classNames from "classnames";
 import { is } from "immutable";
-import { curry } from "lodash/fp";
+import { curry, over, property, map, pipe, replace } from "lodash/fp";
 import AttributedString from "../../AttributedString";
 import TableCellEditContainer from "../TableCellEditContainer/index";
 import { getTableCell } from "../../../../../lib/org_utils";
@@ -12,6 +12,12 @@ import {
   advanceCheckboxState,
 } from "../../../../../actions/org";
 import "./stylesheet.css";
+
+// These are the default values for textArea according to MDN
+const DEFAULTROWSFOREDITCONTAINER: number = 2;
+const DEFAULTCOLSFOREDITCONTAINER: number = 20;
+
+const DEFAULTLINEHEIGHT: number = 1.2;
 
 const getInTableEditMode = curry(
   (filePath, state) =>
@@ -26,6 +32,9 @@ const TableCell = ({
   const dispatch = useDispatch();
   const inTableEditMode = useSelector(getInTableEditMode(filePath));
   const selectedCellId = useSelector(getSelectedCellId(filePath));
+  const tableCellRef = useRef<HTMLTableCellElement|null>(null)
+  const [rowsForEditContainer, setRowsForEditContainer] = useState<number>(DEFAULTROWSFOREDITCONTAINER)
+  const [colsForEditContainer, setColsForEditContainer] = useState<number>(DEFAULTCOLSFOREDITCONTAINER)
 
   const [isCellSelected, setIsCellSelected] = useState(
     cellId === selectedCellId,
@@ -73,13 +82,16 @@ const TableCell = ({
     onTimestampClick: handleTimestampClick,
   };
 
+  
   return (
-    <td className={className} key={cellId} onClick={handleCellSelect}>
+    <td className={className} key={cellId} onClick={handleCellSelect} ref={tableCellRef}>
       {isCellSelected && inTableEditMode ? (
         <TableCellEditContainer
           filePath={filePath}
           cellValue={cellRawContents}
           cellId={cellId}
+	  rows={rowsForEditContainer}
+	  cols={colsForEditContainer}
         />
       ) : (
         <AttributedString

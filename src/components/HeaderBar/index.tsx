@@ -285,21 +285,17 @@ class HeaderBar extends PureComponent {
                 onClick={this.handleUndoClick}
                 disabled={!this.props.isUndoEnabled}
               >
-                <IconContext.Provider value={{ className: undoIconClassName }}>
-                  <div>
-                    <FaUndo />
-                  </div>
-                </IconContext.Provider>
+                <div className={undoIconClassName} data-testid="undo">
+                  <FaUndo />
+                </div>
               </button>
               <button
                 onClick={this.handleRedoClick}
                 disabled={!this.props.isRedoEnabled}
               >
-                <IconContext.Provider value={{ className: redoIconClassName }}>
-                  <div>
+		  <div className={redoIconClassName} data-testid="redo">
                     <FaRedo />
                   </div>
-                </IconContext.Provider>
               </button>
               <button onClick={this.handleHelpClick}>
                 <IconContext.Provider
