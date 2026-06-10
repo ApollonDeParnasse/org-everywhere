@@ -1,4 +1,4 @@
-import { countBy, times, flatten, dropRight  } from "lodash";
+import { countBy, times, flatten, dropRight } from "lodash";
 import { fromJS } from "immutable";
 
 import { isRegularPlanningItem, subheadersOfHeaderWithId } from "./org_utils";

@@ -53,42 +53,45 @@ class OrgFile extends PureComponent {
   constructor(props) {
     super(props);
 
-    bindAll([
-      "handleSelectNextVisibleHeaderHotKey",
-      "handleSelectPreviousVisibleHeaderHotKey",
-      "handleToggleHeaderOpenedHotKey",
-      "handleAdvanceTodoHotKey",
-      "handleEditTitleHotKey",
-      "handleEditDescriptionHotKey",
-      "handleExitEditModeHotKey",
-      "handleAddHeaderHotKey",
-      "handleCreateFirstHeader",
-      "handleRemoveHeaderHotKey",
-      "handleMoveHeaderUpHotKey",
-      "handleMoveHeaderDownHotKey",
-      "handleMoveHeaderLeftHotKey",
-      "handleMoveHeaderRightHotKey",
-      "handleUndoHotKey",
-      "handleContainerRef",
-      "handleCapture",
-      "handlePopupClose",
-      "handleSearchPopupClose",
-      "handleRefilePopupClose",
-      "handleTitlePopupClose",
-      "saveTitle",
-      "handleTodoChange",
-      "handleDescriptionPopupClose",
-      "handleTablePopupClose",
-      "handleSyncConfirmationPull",
-      "handleSyncConfirmationPush",
-      "handleSyncConfirmationCancel",
-      "handleTagsChange",
-      "handlePropertyListItemsChange",
-      "getPopupCloseAction",
-      "getPopupSwitchAction",
-      "checkPopupAndHeader",
-      "checkPopup",
-    ], this);
+    bindAll(
+      [
+        "handleSelectNextVisibleHeaderHotKey",
+        "handleSelectPreviousVisibleHeaderHotKey",
+        "handleToggleHeaderOpenedHotKey",
+        "handleAdvanceTodoHotKey",
+        "handleEditTitleHotKey",
+        "handleEditDescriptionHotKey",
+        "handleExitEditModeHotKey",
+        "handleAddHeaderHotKey",
+        "handleCreateFirstHeader",
+        "handleRemoveHeaderHotKey",
+        "handleMoveHeaderUpHotKey",
+        "handleMoveHeaderDownHotKey",
+        "handleMoveHeaderLeftHotKey",
+        "handleMoveHeaderRightHotKey",
+        "handleUndoHotKey",
+        "handleContainerRef",
+        "handleCapture",
+        "handlePopupClose",
+        "handleSearchPopupClose",
+        "handleRefilePopupClose",
+        "handleTitlePopupClose",
+        "saveTitle",
+        "handleTodoChange",
+        "handleDescriptionPopupClose",
+        "handleTablePopupClose",
+        "handleSyncConfirmationPull",
+        "handleSyncConfirmationPush",
+        "handleSyncConfirmationCancel",
+        "handleTagsChange",
+        "handlePropertyListItemsChange",
+        "getPopupCloseAction",
+        "getPopupSwitchAction",
+        "checkPopupAndHeader",
+        "checkPopup",
+      ],
+      this,
+    );
 
     this.state = {
       hasUncaughtError: false,
@@ -428,33 +431,34 @@ class OrgFile extends PureComponent {
 
   maybePopup(activePopupType, setPopupCloseActionValuesAccessor) {
     if (!activePopupType) {
-      return 
+      return;
     }
     if (activePopupType == "table-editor") {
-      return <TableEditorModal
-        onClose={() => {
-          this.getPopupCloseAction(activePopupType)(
-            ...(this.state.popupCloseActionValuesAccessor
-	      ? this.state.popupCloseActionValuesAccessor()
-	      : []),
-          );
-          this.setState({
-            editRawValues: this.props.preferEditRawValues,
-          });
-          this.container.focus();
-        }}
-      >
-      </TableEditorModal>
+      return (
+        <TableEditorModal
+          onClose={() => {
+            this.getPopupCloseAction(activePopupType)(
+              ...(this.state.popupCloseActionValuesAccessor
+                ? this.state.popupCloseActionValuesAccessor()
+                : []),
+            );
+            this.setState({
+              editRawValues: this.props.preferEditRawValues,
+            });
+            this.container.focus();
+          }}
+        ></TableEditorModal>
+      );
     }
-    
+
     return (
       <DraggableDrawer
-	shouldHandleInnerContainerClick={false}
+        shouldHandleInnerContainerClick={false}
         onClose={() => {
           this.getPopupCloseAction(activePopupType)(
             ...(this.state.popupCloseActionValuesAccessor
-	      ? this.state.popupCloseActionValuesAccessor()
-	      : []),
+              ? this.state.popupCloseActionValuesAccessor()
+              : []),
           );
           this.setState({
             editRawValues: this.props.preferEditRawValues,
@@ -472,29 +476,29 @@ class OrgFile extends PureComponent {
           activePopupType === "scheduled-editor" ||
           activePopupType === "deadline-editor" ||
           activePopupType === "note-editor") && (
-            <DrawerActionBar
-	      onSwitch={() => {
-                this.getPopupSwitchAction(activePopupType)(
-                  ...(this.state.popupCloseActionValuesAccessor
-                    ? this.state.popupCloseActionValuesAccessor()
-                    : []),
-                );
-	      }}
-	      editRawValues={this.state.editRawValues}
-	      setEditRawValues={(editRawValues) =>
-                this.setState({ editRawValues })
-	      }
-	      restorePreferEditRawValues={() =>
-                this.setState({
-                  editRawValues: this.props.preferEditRawValues,
-                })
-	      }
-            />
-          )}
+          <DrawerActionBar
+            onSwitch={() => {
+              this.getPopupSwitchAction(activePopupType)(
+                ...(this.state.popupCloseActionValuesAccessor
+                  ? this.state.popupCloseActionValuesAccessor()
+                  : []),
+              );
+            }}
+            editRawValues={this.state.editRawValues}
+            setEditRawValues={(editRawValues) =>
+              this.setState({ editRawValues })
+            }
+            restorePreferEditRawValues={() =>
+              this.setState({
+                editRawValues: this.props.preferEditRawValues,
+              })
+            }
+          />
+        )}
       </DraggableDrawer>
     );
   }
-  
+
   renderActivePopup(setPopupCloseActionValuesAccessor) {
     const {
       activePopupType,
@@ -506,9 +510,6 @@ class OrgFile extends PureComponent {
       shouldDisableActions,
       todoKeywordSets,
     } = this.props;
-
-
-
 
     switch (activePopupType) {
       case "sync-confirmation":
@@ -784,7 +785,7 @@ class OrgFile extends PureComponent {
     };
 
     const setPopupCloseActionValuesAccessor = (v) => {
-      console.log(v)
+      console.log(v);
       this.setState({ popupCloseActionValuesAccessor: v });
     };
 

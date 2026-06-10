@@ -393,7 +393,7 @@ const parseTable = (tableLines) => {
           contents: [],
           rawContents: "",
         });
-      }
+      };
       times(func, cnt);
     }
   });
@@ -459,7 +459,7 @@ export const parseRawText = (
     if (linePart.type === "raw-table") {
       const tableLines = takeWhile(
         (part) => part.type === "raw-table",
-	rawLineParts.slice(partIndex)
+        rawLineParts.slice(partIndex),
       ).map((part) => part.line);
 
       processedLineParts.push(parseTable(tableLines));
@@ -469,7 +469,7 @@ export const parseRawText = (
       const numLeadingSpaces = linePart.line.match(/^( *)/)[0].length;
       const contentLines = takeWhile(
         (part) => part.type === "raw-list-content",
-	rawLineParts.slice(partIndex + 1)
+        rawLineParts.slice(partIndex + 1),
       )
         .map((part) => part.line)
         .map((line) =>

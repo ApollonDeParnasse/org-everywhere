@@ -16,14 +16,19 @@ import { getCurrentTimestampAsText } from "../../lib/timestamps";
 import { Map, Set, fromJS, List } from "immutable";
 import { formatDistanceToNow } from "date-fns";
 import { property, pipe, map, over, curry, times } from "lodash/fp";
-import { render, fireEvent, cleanup, screen, waitFor } from "@testing-library/react";
-import userEvent from '@testing-library/user-event'
+import {
+  render,
+  fireEvent,
+  cleanup,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { STATIC_FILE_PREFIX } from "../../lib/org_utils";
-
 
 afterEach(cleanup);
 
-describe("Render all views", async() => {
+describe("Render all views", async () => {
   const testOrgFile = readFixture("main_test_file");
 
   let store;
@@ -75,7 +80,7 @@ describe("Render all views", async() => {
     store.dispatch(setPath(STATIC_FILE_PREFIX + "fixtureTestFile.org"));
   });
 
-  describe("Org Functionality", async() => {
+  describe("Org Functionality", async () => {
     let container;
 
     beforeEach(() => {
@@ -91,11 +96,11 @@ describe("Render all views", async() => {
         </MemoryRouter>,
       );
 
-      container = res.container;      
+      container = res.container;
     });
 
-    describe("Works with Org files without headlines", async() => {
-      test("Works with a completely empty files", async() => {
+    describe("Works with Org files without headlines", async () => {
+      test("Works with a completely empty files", async () => {
         store.dispatch(
           parseFile(
             STATIC_FILE_PREFIX + "fixtureTestFile.org",
@@ -103,14 +108,16 @@ describe("Render all views", async() => {
           ),
         );
         expect(screen.queryByText("This file has no headlines")).toBeTruthy();
-        expect(screen.queryAllByText("Yes, your file has content.").length).toEqual(0);
+        expect(
+          screen.queryAllByText("Yes, your file has content.").length,
+        ).toEqual(0);
         // Sanity check, ensure that not the regular test file is loaded.
         expect(screen.queryByText("Top level header")).toBeFalsy();
       });
     });
 
-    describe("Actions within an Org file", async() => {
-      test("Can select a header in an org file", async() => {
+    describe("Actions within an Org file", async () => {
+      test("Can select a header in an org file", async () => {
         expect(
           container.querySelector("[data-testid='org-clock-in']"),
         ).toBeFalsy();
@@ -126,7 +133,7 @@ describe("Render all views", async() => {
       // them: https://orgmode.org/manual/Workflow-states.html
       // In org-everywhere, we can cycle through them by swiping or by clicking
       // (if enabled). This test checks for the latter.
-      test("Can advance todo state for selected header in an org file", async() => {
+      test("Can advance todo state for selected header in an org file", async () => {
         // In the very beginning, the TODO is hidden, because the file
         // starts folded down to the top level
         expect(screen.queryByText("TODO")).toBeFalsy();
@@ -148,7 +155,7 @@ describe("Render all views", async() => {
       });
 
       // Same behaviour has `S-C-RET` in Emacs Org mode.
-      test("Can create a new header with an inherited todoKeyword", async() => {
+      test("Can create a new header with an inherited todoKeyword", async () => {
         fireEvent.click(screen.queryByText("Top level header"));
         // Click 'plus' on the first header which is _not_ a todoKeyword header
         fireEvent.click(
@@ -172,7 +179,9 @@ describe("Render all views", async() => {
         fireEvent.click(screen.getByTitle("Edit title"));
 
         // Click 'plus' on the second header which _is_ a todoKeyword header
-        fireEvent.click(screen.queryByText("A todo item with schedule and deadline"));
+        fireEvent.click(
+          screen.queryByText("A todo item with schedule and deadline"),
+        );
         fireEvent.click(
           container.querySelectorAll("[data-testid='header-action-plus']")[1],
         );
@@ -182,7 +191,7 @@ describe("Render all views", async() => {
         expect(screen.getByTestId("titleLineInput").value).toEqual("TODO ");
       });
 
-      test("Can clock in & out of an event", async() => {
+      test("Can clock in & out of an event", async () => {
         expect(screen.queryByText("Clock In")).toBeFalsy();
         expect(screen.queryByText("Clock Out")).toBeFalsy();
 
@@ -227,8 +236,8 @@ describe("Render all views", async() => {
       });
     });
 
-    describe("List item manipulation", async() => {
-      test("Can create a new list item of same type in the middle of an existing list", async() => {
+    describe("List item manipulation", async () => {
+      test("Can create a new list item of same type in the middle of an existing list", async () => {
         const header = screen.queryByText("A header with plain list items");
         fireEvent.click(header);
         fireEvent.click(screen.queryByText("Plain list item 1"));
@@ -269,9 +278,9 @@ describe("Render all views", async() => {
       });
     });
 
-    describe("Tracking TODO state changes", async() => {
-      describe("Default settings", async() => {
-        test.skip("Does not track TODO state change for repeating todos", async() => {
+    describe("Tracking TODO state changes", async () => {
+      describe("Default settings", async () => {
+        test.skip("Does not track TODO state change for repeating todos", async () => {
           expect(screen.queryByText(":LOGBOOK:...")).toBeFalsy();
           expect(store.getState().base.toJS().shouldLogIntoDrawer).toBeFalsy();
 
@@ -306,55 +315,58 @@ describe("Render all views", async() => {
       });
     });
 
-    describe("Renders everything starting from an Org file", async() => {
-      test("renders an Org file", async() => {
+    describe("Renders everything starting from an Org file", async () => {
+      test("renders an Org file", async () => {
         expect(screen.getAllByText(/\*/)).toHaveLength(8);
       });
 
-      describe("Custom todo sequences", async() => {
-        test("It recognizes custom todo sequences and their DONE state", async() => {
+      describe("Custom todo sequences", async () => {
+        test("It recognizes custom todo sequences and their DONE state", async () => {
           fireEvent.click(screen.getByText("Top level header"));
           expect(
-            screen.queryByText("TODO").classList.contains("todo-keyword--done-state"),
+            screen
+              .queryByText("TODO")
+              .classList.contains("todo-keyword--done-state"),
           ).toBe(false);
           fireEvent.click(screen.queryByText("TODO"));
           expect(
-            screen.queryByText("DONE").classList.contains("todo-keyword--done-state"),
+            screen
+              .queryByText("DONE")
+              .classList.contains("todo-keyword--done-state"),
           ).toBe(true);
           expect(
-            screen.queryByText("FINISHED").classList.contains(
-              "todo-keyword--done-state",
-            ),
+            screen
+              .queryByText("FINISHED")
+              .classList.contains("todo-keyword--done-state"),
           ).toBe(true);
         });
       });
 
-      describe("Undo / Redo", async() => {
-        test("On loading an Org file, both are disabled", async() => {
-	  
-	  await waitFor(() => {
-	    expect(
-            screen.getByTestId("undo").classList.contains(
-              "header-bar__actions__item--disabled",
-            ),
-          ).toBe(true)
-	  })
+      describe("Undo / Redo", async () => {
+        test("On loading an Org file, both are disabled", async () => {
           await waitFor(() => {
-	    expect(
-            screen.getByTestId("redo").classList.contains(
-              "header-bar__actions__item--disabled",
-            ),
-          ).toBe(true)
-	  })
+            expect(
+              screen
+                .getByTestId("undo")
+                .classList.contains("header-bar__actions__item--disabled"),
+            ).toBe(true);
+          });
+          await waitFor(() => {
+            expect(
+              screen
+                .getByTestId("redo")
+                .classList.contains("header-bar__actions__item--disabled"),
+            ).toBe(true);
+          });
         });
 
-        test('Undo becomes available on "edit header"', async() => {
+        test('Undo becomes available on "edit header"', async () => {
           await userEvent.click(screen.queryByText("Top level header"));
           await userEvent.click(screen.queryByText("TODO"));
 
           // Open the the title edit textarea
           await userEvent.click(
-             container.querySelector('[data-testid="edit-header-title"]'),
+            container.querySelector('[data-testid="edit-header-title"]'),
           );
 
           // Close the title edit textarea
@@ -362,15 +374,15 @@ describe("Render all views", async() => {
 
           // Undo should become available
           expect(
-            container.querySelector('[data-testid="undo"]').classList.contains(
-              "header-bar__actions__item--disabled",
-            ),
+            container
+              .querySelector('[data-testid="undo"]')
+              .classList.contains("header-bar__actions__item--disabled"),
           ).toBe(false);
         });
       });
 
-      describe("Planning items", async() => {
-        test("deletes planning items", async() => {
+      describe("Planning items", async () => {
+        test("deletes planning items", async () => {
           fireEvent.click(screen.queryByText("Top level header"));
           fireEvent.click(
             screen.queryByText("A todo item with schedule and deadline"),
@@ -406,7 +418,7 @@ describe("Render all views", async() => {
       });
 
       /* global global */
-      describe("Sharing", async() => {
+      describe("Sharing", async () => {
         let windowSpy: null | vi.spyOn;
         beforeEach(() => {
           windowSpy = vi.spyOn(global, "open");
@@ -417,8 +429,8 @@ describe("Render all views", async() => {
           windowSpy?.mockRestore();
         });
 
-	// did I delete this
-        test.skip("sends the selected header and its body as an email", async() => {
+        // did I delete this
+        test.skip("sends the selected header and its body as an email", async () => {
           fireEvent.click(screen.queryByText("Another top level header"));
           fireEvent.click(screen.getByTestId("share"));
           expect(global.open).toBeCalledWith(
@@ -431,8 +443,8 @@ describe("Render all views", async() => {
         });
       });
 
-      describe("Search", async() => {
-        test("renders Search for an Org file", async() => {
+      describe("Search", async () => {
+        test("renders Search for an Org file", async () => {
           expect(screen.queryByText("Search")).toBeFalsy();
           expect(
             screen.queryByText("A todo item with schedule and deadline"),
@@ -445,7 +457,7 @@ describe("Render all views", async() => {
           );
         });
 
-        test("searches in all headers", async() => {
+        test("searches in all headers", async () => {
           fireEvent.click(screen.getByTitle("Show Search / Task List"));
           const drawerElem = screen.getByTestId("draggable-drawer");
           const input = screen.getByPlaceholderText(
@@ -466,7 +478,7 @@ describe("Render all views", async() => {
           expect(drawerElem).not.toHaveTextContent("Another top level header");
         });
 
-        test("searches in sub-headers when narrowed", async() => {
+        test("searches in sub-headers when narrowed", async () => {
           // Click 'narrow' on the first header
           fireEvent.click(screen.queryByText("Top level header"));
           fireEvent.click(
@@ -488,8 +500,8 @@ describe("Render all views", async() => {
         });
       });
 
-      describe("Refile", async() => {
-        test("removes selected header and subheader from search", async() => {
+      describe("Refile", async () => {
+        test("removes selected header and subheader from search", async () => {
           fireEvent.click(screen.queryByText("Top level header"));
           fireEvent.click(screen.getByTestId("org-refile"));
 
@@ -499,8 +511,8 @@ describe("Render all views", async() => {
         });
       });
 
-      describe("TaskList", async() => {
-        test("renders TaskList for an Org file", async() => {
+      describe("TaskList", async () => {
+        test("renders TaskList for an Org file", async () => {
           expect(screen.queryByText("Task list")).toBeFalsy();
           expect(
             screen.queryByText("A todo item with schedule and deadline"),
@@ -517,13 +529,13 @@ describe("Render all views", async() => {
 
         // Order by state first and then by date. Ergo TODO is before
         // DONE and yesterday is before today.
-        test("orders tasks for an Org file", async() => {
+        test("orders tasks for an Org file", async () => {
           fireEvent.click(screen.getByTitle("Show Search / Task List"));
           const drawerElem = screen.getByTestId("draggable-drawer");
           expect(drawerElem).toMatchSnapshot();
         });
 
-        test("search in TaskList filters headers (by default only with todoKeywords)", async() => {
+        test("search in TaskList filters headers (by default only with todoKeywords)", async () => {
           fireEvent.click(screen.getByTitle("Show Search / Task List"));
           const drawerElem = screen.getByTestId("draggable-drawer");
           const input = screen.getByPlaceholderText(
@@ -545,7 +557,7 @@ describe("Render all views", async() => {
 
         // More rigorous testing of the search parser is here:
         // headline_filter_parser.unit.test.js
-        test("search in TaskList filters headers (on demand without todoKeywords)", async() => {
+        test("search in TaskList filters headers (on demand without todoKeywords)", async () => {
           fireEvent.click(screen.getByTitle("Show Search / Task List"));
           fireEvent.click(screen.getByText("Task List"));
           const drawerElem = screen.getByTestId("draggable-drawer");
@@ -560,8 +572,8 @@ describe("Render all views", async() => {
         });
       });
 
-      describe("Agenda", async() => {
-        test("renders Agenda for an Org file", async() => {
+      describe("Agenda", async () => {
+        test("renders Agenda for an Org file", async () => {
           // Agenda is not visible by default
           expect(screen.queryByText("Agenda")).toBeFalsy();
           expect(screen.queryByText("Day")).toBeFalsy();
@@ -578,14 +590,14 @@ describe("Render all views", async() => {
           ).toBeTruthy();
         });
 
-        test("Agenda starts on Monday by default", async() => {
+        test("Agenda starts on Monday by default", async () => {
           fireEvent.click(screen.getByTitle("Show agenda"));
           expect(
             container.querySelectorAll(".agenda-day__title__day-name")[0],
           ).toHaveTextContent("Monday");
         });
 
-        test("Clicking a TODO within the agenda highlights it in the main view", async() => {
+        test("Clicking a TODO within the agenda highlights it in the main view", async () => {
           expect(
             screen.queryByText("A todo item with schedule and deadline"),
           ).toBeFalsy();
@@ -600,7 +612,7 @@ describe("Render all views", async() => {
           ).toBeTruthy();
         });
 
-        test("Clicking the Timestamp in a TODO within the agenda toggles from the date to the time", async() => {
+        test("Clicking the Timestamp in a TODO within the agenda toggles from the date to the time", async () => {
           const expectedDate = new Date(2019, 8, 19, 12, 0);
           fireEvent.click(screen.getByTitle("Show agenda"));
           const timeSinceScheduled = formatDistanceToNow(expectedDate);
@@ -611,7 +623,7 @@ describe("Render all views", async() => {
           expect(screen.queryByText(`${timeSinceScheduled} ago`)).toBeTruthy();
         });
 
-        test("Agenda shows only actionable TODOs, not with a DONE state", async() => {
+        test("Agenda shows only actionable TODOs, not with a DONE state", async () => {
           fireEvent.click(screen.getByTitle("Show agenda"));
 
           const drawerElem = screen.getByTestId("draggable-drawer");
@@ -629,14 +641,15 @@ describe("Render all views", async() => {
         });
       });
 
-      describe("TableEditor", async() => {
+      describe("TableEditor", async () => {
         let testOrgFileWithTable;
 
         const drawerWithTable: string = "table-drawer";
         const editCellButtonId: string = "edit-cell-button";
         const editCellContainerId: string = "edit-cell-container";
 
-        const convertToSet = (collection: Array<T>): Set<T> => new Set(collection);
+        const convertToSet = (collection: Array<T>): Set<T> =>
+          new Set(collection);
         const getTableRows = property(["rows"]);
 
         const getContentOfTableColumn = curry((columnNumber, table) => {
@@ -684,16 +697,18 @@ describe("Render all views", async() => {
           store.dispatch(setPath(STATIC_FILE_PREFIX + "fixtureTestFile.org"));
         });
 
-        test("opens when a table cell is clicked on", async() => {
+        test("opens when a table cell is clicked on", async () => {
           // click table
           fireEvent.click(screen.getByText("Dogs"));
           // click cell to open table ediotr
           fireEvent.click(screen.getByText("Argos"));
           // assert edit table component
-          expect(screen.getByTestId(drawerWithTable)).toHaveTextContent("Edit Table");
+          expect(screen.getByTestId(drawerWithTable)).toHaveTextContent(
+            "Edit Table",
+          );
         });
 
-        test("can edit cell value", async() => {
+        test("can edit cell value", async () => {
           const cellToClick = "Bauschan";
           // click table
           fireEvent.click(screen.getByText("Dogs"));
@@ -717,16 +732,18 @@ describe("Render all views", async() => {
           expect(screen.getAllByText(newValue)).toBeTruthy();
         });
 
-        test("can insert timestamp in a cell", async() => {
+        test("can insert timestamp in a cell", async () => {
           const cellToClick = "Luster";
           // click table
           await userEvent.click(screen.getByText("Dogs"));
           // click cell to open table editor
           await userEvent.click(screen.getByText(cellToClick));
           // assert pencil edit button exists
-          await waitFor(() => expect(screen.getByTestId(editCellButtonId)).toBeTruthy())
+          await waitFor(() =>
+            expect(screen.getByTestId(editCellButtonId)).toBeTruthy(),
+          );
 
-	  const cellToEdit = screen.getAllByText(cellToClick)[1]
+          const cellToEdit = screen.getAllByText(cellToClick)[1];
           // click cell again
           await userEvent.click(cellToEdit);
           // // click pencil to edit cell
@@ -735,13 +752,15 @@ describe("Render all views", async() => {
           const expectedDate = format("yyyy-MM-dd", new Date());
 
           // click insert timestamp
-          await userEvent.click(screen.getByText("Insert timestamp"))
+          await userEvent.click(screen.getByText("Insert timestamp"));
           await userEvent.click(screen.getByText("Edit Table"));
-	  
-          expect(screen.getAllByText(expectedDate, {exact: false})).toBeTruthy()
+
+          expect(
+            screen.getAllByText(expectedDate, { exact: false }),
+          ).toBeTruthy();
         });
 
-        test("can move row up", async() => {
+        test("can move row up", async () => {
           const cellToClick = "6";
           // click table
           fireEvent.click(screen.getByText("Dogs"));
@@ -777,7 +796,7 @@ describe("Render all views", async() => {
           expect(secondTestRowBeforeEdit).toStrictEqual(firstTestRowAfterEdit);
         });
 
-        test("can move row down", async() => {
+        test("can move row down", async () => {
           const cellToClick = "17";
           // click table
           fireEvent.click(screen.getByText("Dogs"));
@@ -814,7 +833,7 @@ describe("Render all views", async() => {
           expect(secondTestRowBeforeEdit).toStrictEqual(firstTestRowAfterEdit);
         });
 
-        test("can move column to the right", async() => {
+        test("can move column to the right", async () => {
           const cellToClick = "Rufus";
 
           fireEvent.click(screen.getByText("Dogs"));
@@ -857,7 +876,7 @@ describe("Render all views", async() => {
           );
         });
 
-        test("can move column to the left", async() => {
+        test("can move column to the left", async () => {
           const cellToClick = "Edward Rochester";
           // click table
           fireEvent.click(screen.getByText("Dogs"));
@@ -899,7 +918,7 @@ describe("Render all views", async() => {
           );
         });
 
-        test("can add row", async() => {
+        test("can add row", async () => {
           const cellToClick = "Anika R.";
           // click table
           fireEvent.click(screen.getByText("Dogs"));
@@ -950,7 +969,7 @@ describe("Render all views", async() => {
           expect(secondTestRowAfterEdit).not.toEqual(secondTestRowBeforeEdit);
         });
 
-        test("can add column", async() => {
+        test("can add column", async () => {
           const cellToClick = "45";
           // click table
           fireEvent.click(screen.getByText("Dogs"));
@@ -1007,7 +1026,7 @@ describe("Render all views", async() => {
           );
         });
 
-        test("can delete row", async() => {
+        test("can delete row", async () => {
           const cellToClick = "Gyp";
           // click table
           fireEvent.click(screen.getByText("Dogs"));
@@ -1042,7 +1061,7 @@ describe("Render all views", async() => {
           expect(setOfTableRowsAfterEdit.has(testRowToDelete)).toBeFalsy();
         });
 
-        test("can delete column", async() => {
+        test("can delete column", async () => {
           const cellToClick = "Score";
           // click table
           fireEvent.click(screen.getByText("Dogs"));
@@ -1081,8 +1100,8 @@ describe("Render all views", async() => {
         });
       });
 
-      describe("Link recognition", async() => {
-        test("recognizes canonical format +xxxxxxxxx phone numbers", async() => {
+      describe("Link recognition", async () => {
+        test("recognizes canonical format +xxxxxxxxx phone numbers", async () => {
           fireEvent.click(
             screen.queryByText(
               "A header with a URL, mail address and phone number as content",
@@ -1096,7 +1115,7 @@ describe("Render all views", async() => {
           expect(elem[0]).toHaveTextContent("+49123456789");
         });
 
-        test("recognizes phone numbers", async() => {
+        test("recognizes phone numbers", async () => {
           fireEvent.click(
             screen.queryByText(
               "A header with a URL, mail address and phone number as content",
@@ -1128,7 +1147,7 @@ describe("Render all views", async() => {
           }
         });
 
-        test("does not recognize random numbers as phone numbers", async() => {
+        test("does not recognize random numbers as phone numbers", async () => {
           fireEvent.click(
             screen.queryByText(
               "A header with a URL, mail address and phone number as content",
@@ -1146,7 +1165,7 @@ describe("Render all views", async() => {
           }
         });
 
-        test("recognizes URLs", async() => {
+        test("recognizes URLs", async () => {
           fireEvent.click(
             screen.queryByText(
               "A header with a URL, mail address and phone number as content",
@@ -1165,14 +1184,14 @@ describe("Render all views", async() => {
           );
         });
 
-        describe("recognizes file: links", async() => {
+        describe("recognizes file: links", async () => {
           beforeEach(() => {
             fireEvent.click(
               screen.queryByText("A header with various links as content"),
             );
           });
 
-          test("relative link to .org file", async() => {
+          test("relative link to .org file", async () => {
             const elem = screen.getAllByText(
               "an existing .org file in the same directory",
             );
@@ -1188,21 +1207,21 @@ describe("Render all views", async() => {
             );
           });
 
-          test("relative link to subdir", async() => {
+          test("relative link to subdir", async () => {
             const elem = screen.getAllByText("subdir");
             expect(elem.length).toEqual(1);
             expect(elem[0]).toHaveAttribute("href", "/files/dir1/dir2/subdir");
             expect(elem[0]).toHaveTextContent("subdir");
           });
 
-          test("relative link to subdir/", async() => {
+          test("relative link to subdir/", async () => {
             const elem = screen.getAllByText("subdir/");
             expect(elem.length).toEqual(1);
             expect(elem[0]).toHaveAttribute("href", "/files/dir1/dir2/subdir/");
             expect(elem[0]).toHaveTextContent("subdir/");
           });
 
-          test("relative link to fictitious .org file in subdir", async() => {
+          test("relative link to fictitious .org file in subdir", async () => {
             const elem = screen.getAllByText(
               "a fictitious .org file in a sub-directory",
             );
@@ -1216,7 +1235,7 @@ describe("Render all views", async() => {
             );
           });
 
-          test("relative link to fictitious .org file in a parent directory", async() => {
+          test("relative link to fictitious .org file in a parent directory", async () => {
             const elem = screen.getAllByText(
               "a fictitious .org file in a parent directory",
             );
@@ -1230,21 +1249,21 @@ describe("Render all views", async() => {
             );
           });
 
-          test("relative link to ../subdir", async() => {
+          test("relative link to ../subdir", async () => {
             const elem = screen.getAllByText("../subdir");
             expect(elem.length).toEqual(1);
             expect(elem[0]).toHaveAttribute("href", "/files/dir1/subdir");
             expect(elem[0]).toHaveTextContent("../subdir");
           });
 
-          test("relative link to ../subdir/", async() => {
+          test("relative link to ../subdir/", async () => {
             const elem = screen.getAllByText("../subdir/");
             expect(elem.length).toEqual(1);
             expect(elem[0]).toHaveAttribute("href", "/files/dir1/subdir/");
             expect(elem[0]).toHaveTextContent("../subdir/");
           });
 
-          test("relative link to fictitious .org file in a grand-parent directory", async() => {
+          test("relative link to fictitious .org file in a grand-parent directory", async () => {
             const elem = screen.getAllByText(
               "a fictitious .org file in a grand-parent directory",
             );
@@ -1255,7 +1274,7 @@ describe("Render all views", async() => {
             );
           });
 
-          test("relative link to fictitious .org file in a too-high ancestor directory", async() => {
+          test("relative link to fictitious .org file in a too-high ancestor directory", async () => {
             const elem = screen.getAllByText(
               "a fictitious .org file in a too-high ancestor directory",
             );
@@ -1269,7 +1288,7 @@ describe("Render all views", async() => {
             );
           });
 
-          test("relative link to too-high ancestor directory", async() => {
+          test("relative link to too-high ancestor directory", async () => {
             const elem = screen.getAllByText("a too-high ancestor directory");
             expect(elem.length).toEqual(1);
             // INFO: This file cannot be opened, because it is not
@@ -1281,7 +1300,7 @@ describe("Render all views", async() => {
             expect(elem[0]).toHaveTextContent("a too-high ancestor directory");
           });
 
-          test("absolute link to fictitious .org file in home directory", async() => {
+          test("absolute link to fictitious .org file in home directory", async () => {
             const elem = screen.getAllByText(
               "a fictitious .org file in home directory",
             );
@@ -1298,7 +1317,7 @@ describe("Render all views", async() => {
             );
           });
 
-          test("absolute link to fictitious .org file", async() => {
+          test("absolute link to fictitious .org file", async () => {
             const elem = screen.getAllByText("a fictitious .org file");
             expect(elem.length).toEqual(1);
             expect(elem[0]).toHaveAttribute("data-target", "/foo/bar/baz.org");
@@ -1306,7 +1325,7 @@ describe("Render all views", async() => {
           });
         });
 
-        test("recognizes email addresses", async() => {
+        test("recognizes email addresses", async () => {
           fireEvent.click(
             screen.queryByText(
               "A header with a URL, mail address and phone number as content",

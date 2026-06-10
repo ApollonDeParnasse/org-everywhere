@@ -109,7 +109,7 @@ const TableActionButtons = ({ filePath }: { filePath: string }) => {
 
             <button
               className="table-action-drawer__sub-icon-container"
-	      data-testid="delete-row-button"
+              data-testid="delete-row-button"
               onClick={() =>
                 selectedTableCellId ? handleRemoveTableRow() : undefined
               }

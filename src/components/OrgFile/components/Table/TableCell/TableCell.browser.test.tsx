@@ -26,7 +26,6 @@ import { shuffle, first, trim, pipe, range, curry, take } from "lodash/fp";
 import { render, fireEvent, cleanup } from "@testing-library/react";
 import TableCell from "./index";
 
-
 const capture = Map({ captureTemplates: [] });
 const testBaseState = {
   org: {

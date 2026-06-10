@@ -401,9 +401,10 @@ export const fastCheckNLengthArrayOfStringCountStartingIndexTuplesGenerator =
   );
 
 export const fastCheckTestSingleStringCountStartingIndexTupleGenerator = pipe([
-  partialRight(fastCheckNLengthArrayOfStringCountStartingIndexTuplesGenerator, [
-    1,
-  ]),
+  partialRight(
+    fastCheckNLengthArrayOfStringCountStartingIndexTuplesGenerator,
+    [1],
+  ),
   first,
 ]);
 

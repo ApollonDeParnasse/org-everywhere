@@ -32,9 +32,13 @@ const TableCell = ({
   const dispatch = useDispatch();
   const inTableEditMode = useSelector(getInTableEditMode(filePath));
   const selectedCellId = useSelector(getSelectedCellId(filePath));
-  const tableCellRef = useRef<HTMLTableCellElement|null>(null)
-  const [rowsForEditContainer, setRowsForEditContainer] = useState<number>(DEFAULTROWSFOREDITCONTAINER)
-  const [colsForEditContainer, setColsForEditContainer] = useState<number>(DEFAULTCOLSFOREDITCONTAINER)
+  const tableCellRef = useRef<HTMLTableCellElement | null>(null);
+  const [rowsForEditContainer, setRowsForEditContainer] = useState<number>(
+    DEFAULTROWSFOREDITCONTAINER,
+  );
+  const [colsForEditContainer, setColsForEditContainer] = useState<number>(
+    DEFAULTCOLSFOREDITCONTAINER,
+  );
 
   const [isCellSelected, setIsCellSelected] = useState(
     cellId === selectedCellId,
@@ -82,16 +86,20 @@ const TableCell = ({
     onTimestampClick: handleTimestampClick,
   };
 
-  
   return (
-    <td className={className} key={cellId} onClick={handleCellSelect} ref={tableCellRef}>
+    <td
+      className={className}
+      key={cellId}
+      onClick={handleCellSelect}
+      ref={tableCellRef}
+    >
       {isCellSelected && inTableEditMode ? (
         <TableCellEditContainer
           filePath={filePath}
           cellValue={cellRawContents}
           cellId={cellId}
-	  rows={rowsForEditContainer}
-	  cols={colsForEditContainer}
+          rows={rowsForEditContainer}
+          cols={colsForEditContainer}
         />
       ) : (
         <AttributedString

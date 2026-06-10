@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FaPlus } from "react-icons/fa"
+import { FaPlus } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { curry } from "lodash/fp";
 import { getCurrentTimestampAsText } from "../../../../../lib/timestamps";
@@ -15,7 +15,7 @@ const CellEditContainer = ({
   cellValue,
   cellId,
   rows,
-  cols
+  cols,
 }: {
   filePath: string;
   cellValue: string;
@@ -75,15 +75,13 @@ const CellEditContainer = ({
     }
   };
 
-
-
   return (
     <div className="table-cell__edit-container">
       <textarea
         data-testid="edit-cell-container"
         className="table-cell_edit-container-textarea"
         rows={rows}
-	cols={cols}
+        cols={cols}
         value={currentCellValue}
         onChange={handleCellChange}
         onBlur={handleTextareaBlur}
@@ -93,9 +91,7 @@ const CellEditContainer = ({
         className="table-cell__insert-timestamp-button"
         onClick={handleInsertTimestamp}
       >
-	<div>
-	  Insert timestamp
-	</div>
+        <div>Insert timestamp</div>
         <div className="table-cell__insert-timestamp-icon">
           <FaPlus />
         </div>

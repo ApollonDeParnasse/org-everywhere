@@ -52,7 +52,7 @@ const testBaseState = {
     isAuthenticated: true,
   }),
   capture,
-  base: new fromJS({
+  base: fromJS({
     customKeybindings: {},
     shouldTapTodoToAdvance: true,
     isLoading: Set(),

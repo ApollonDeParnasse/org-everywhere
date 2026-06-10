@@ -1,7 +1,7 @@
 /* global process */
 
 import { Map, List, fromJS } from "immutable";
-import { times, isEmpty} from "lodash";
+import { times, isEmpty } from "lodash";
 
 import headline_filter_parser from "../lib/headline_filter_parser";
 import {

@@ -293,9 +293,9 @@ class HeaderBar extends PureComponent {
                 onClick={this.handleRedoClick}
                 disabled={!this.props.isRedoEnabled}
               >
-		  <div className={redoIconClassName} data-testid="redo">
-                    <FaRedo />
-                  </div>
+                <div className={redoIconClassName} data-testid="redo">
+                  <FaRedo />
+                </div>
               </button>
               <button onClick={this.handleHelpClick}>
                 <IconContext.Provider
