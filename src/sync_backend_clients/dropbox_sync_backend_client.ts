@@ -1,14 +1,30 @@
 /* global process */
-
-import { isEmpty } from "lodash";
+import { Dropbox, DropboxAuth } from "dropbox";
+import { Map, List } from "immutable";
+import { isEmpty, isString, property } from "lodash/fp";
+import type { MapOf } from 'immutable'
+import type {
+  DropboxResponse,
+  files,
+  DropboxResponseError
+} from "dropbox"
+import type {
+  Client,
+  DirectoryListing,
+  DirectoryListingEntry,
+  AdditionalSyncBackendState
+} from "../types"
 import { orgFileExtensions } from "../lib/org_utils";
 import { persistField, getPersistedField } from "../util/settings_persister";
-
-import { Dropbox } from "dropbox";
-
 import parseQueryString from "../util/parse_query_string";
 
-import { fromJS, Map } from "immutable";
+
+export interface DropboxFileMetadata extends files.FileMetadata {
+  fileBlob?: Blob;
+}
+export type DropboxMetadata = files.FileMetadataReference | files.FolderMetadataReference | files.DeletedMetadataReference;
+export type DropboxFileReference = files.FileMetadataReference | files.FolderMetadataReference;
+
 
 /**
  * Gets a directory listing ready to be rendered by org-everywhere.
@@ -17,12 +33,24 @@ import { fromJS, Map } from "immutable";
  *  - Sorts both folders and files alphabetically.
  * @param {Array} listing
  */
-export const filterAndSortDirectoryListing = (listing) => {
-  const filteredListing = listing.filter((file) => {
+
+/**
+ * Gets a directory listing ready to be rendered by org-everywhere.
+ *  - Filters files from `listing` down to org files.
+ *  - Sorts folders atop of files.
+ *  - Sorts both folders and files alphabetically.
+ */
+export const filterAndSortDirectoryListing = (listing: Array<DropboxMetadata>): Array<DropboxFileReference> => {
+  const filteredListing: Array<DropboxFileReference> = listing.filter<files.FileMetadataReference | files.FolderMetadataReference>((file: DropboxMetadata): file is DropboxFileReference => {
     // Show all folders
-    if (file[".tag"] === "folder") return true;
+    if (file[".tag"] === "folder") {
+      return true;
+    }
     // Filter out all non-org files
-    return file.name.match(orgFileExtensions);
+    if (file[".tag"] === "file" && file.name.match(orgFileExtensions)) {
+      return true
+    }
+    return false
   });
   return filteredListing.sort((a, b) => {
     // Folders before files
@@ -35,62 +63,65 @@ export const filterAndSortDirectoryListing = (listing) => {
   });
 };
 
-function getCodeFromUrl() {
+function getCodeFromUrl(): string {
   return parseQueryString(window.location.search).code;
 }
 
-export default () => {
-  let dbxPromise;
+export default (): Client => {
+  let dbxPromise: Promise<Dropbox>;
 
-  const isSignedIn = () => new Promise((resolve) => resolve(true));
+  const isSignedIn: () => Promise<boolean> = () => new Promise((resolve) => resolve(true));
 
-  const transformDirectoryListing = (listing) => {
-    const sortedListing = filterAndSortDirectoryListing(listing);
-    return fromJS(
-      sortedListing.map((entry) => ({
+  
+  const transformDirectoryListing = (listing: Array<DropboxMetadata>): List<MapOf<DirectoryListingEntry>> => {
+    const sortedListing: Array<DropboxFileReference> = filterAndSortDirectoryListing(listing);
+    return List(
+      sortedListing.map((entry: DropboxFileReference): MapOf<DirectoryListingEntry> => Map({
         id: entry.id,
         name: entry.name,
         isDirectory: entry[".tag"] === "folder",
         path: entry.path_display,
-      })),
-    );
+      })))
   };
 
-  const getDirectoryListing = (path) =>
+    const getDirectoryListing = (path: string): Promise<DirectoryListing> =>
     new Promise((resolve, reject) => {
       dbxPromise
-        .then((dbx) => {
-          dbx.filesListFolder({ path }).then((response) => {
-            resolve({
-              listing: transformDirectoryListing(response.result.entries),
-              hasMore: response.result.has_more,
-              additionalSyncBackendState: Map({
-                cursor: response.result.cursor,
-              }),
-            });
-          });
-        })
-        .catch(reject);
-    });
-
-  const getMoreDirectoryListing = (additionalSyncBackendState) => {
-    const cursor = additionalSyncBackendState.get("cursor");
-    return new Promise((resolve, reject) =>
-      dbxPromise.then((dbx) => {
-        dbx.filesListFolderContinue({ cursor }).then((response) =>
+        .then((dbx: Dropbox) => {
+        dbx.filesListFolder({ path }).then((response: DropboxResponse<files.ListFolderResult>) => {
           resolve({
             listing: transformDirectoryListing(response.result.entries),
             hasMore: response.result.has_more,
             additionalSyncBackendState: Map({
               cursor: response.result.cursor,
             }),
-          }),
-        );
-      }),
-    );
-  };
+          });
+        });
+      })
+        .catch(reject);
+    });
 
-  const uploadFile = (path, contents) =>
+
+  const getMoreDirectoryListing = (additionalSyncBackendState: MapOf<AdditionalSyncBackendState>): Promise<DirectoryListing> => {
+    const cursor = additionalSyncBackendState.get("cursor");
+    return new Promise((resolve, reject) =>
+      dbxPromise.then((dbx) => {
+	if (cursor) {
+	  dbx.filesListFolderContinue({ cursor }).then((response: DropboxResponse<files.ListFolderResult>) =>
+            resolve({
+              listing: transformDirectoryListing(response.result.entries),
+              hasMore: response.result.has_more,
+              additionalSyncBackendState: Map({
+		cursor: response.result.cursor,
+              }),
+            }),
+          )}
+      })
+	.catch(reject)
+    )};
+
+
+  const uploadFile = (path: string, contents: string) =>
     new Promise((resolve, reject) =>
       dbxPromise.then((dbx) => {
         dbx
@@ -110,99 +141,98 @@ export default () => {
   const updateFile = uploadFile;
   const createFile = uploadFile;
 
-  const getFileContentsAndMetadata = (path) =>
-    new Promise((resolve, reject) =>
+  const getFileContentsAndMetadata = (path: string) =>
+    new Promise<{contents: string, lastModifiedAt: string}>((resolve, reject) =>
       dbxPromise.then((dbx) => {
         dbx
           .filesDownload({ path })
-          .then((response) => {
-            const reader = new FileReader();
-            reader.addEventListener("loadend", () =>
-              resolve({
-                contents: reader.result,
-                lastModifiedAt: response.result.server_modified,
-              }),
-            );
-            reader.readAsText(response.result.fileBlob);
-          })
+          .then((response: DropboxResponse<DropboxFileMetadata>) => {
+          const reader = new FileReader();
+          reader.addEventListener("loadend", () => {
+	    const contents = reader.result
+	    resolve({
+              contents: isString(contents) ? contents : "",
+              lastModifiedAt: response.result.server_modified,
+            })}
+          );
+	  const fileBlob = response.result?.fileBlob;
+	  fileBlob && reader.readAsText(fileBlob);
+        })
           .catch((error) => {
-            const objectContainsTagErrorP = (function () {
-              try {
-                return (
-                  JSON.parse(error.error).error.path[".tag"] === "not_found"
-                );
-              } catch (e) {
-                return false;
-              }
-            })();
-            if (
-              (typeof error === "string" &&
-                error.match(/missing required field 'path'/)) ||
-              objectContainsTagErrorP
-            ) {
-              reject();
+          const objectContainsTagErrorP = (function () {
+            try {
+              return (
+                JSON.parse(error.error).error.path[".tag"] === "not_found"
+              );
+            } catch (e) {
+              return false;
             }
-          });
+          })();
+          if (
+            (typeof error === "string" &&
+              error.match(/missing required field 'path'/)) ||
+              objectContainsTagErrorP
+          ) {
+            reject();
+          }
+        });
       }),
     );
 
-  const getFileContents = (path) => {
-    if (isEmpty(path)) return Promise.reject("No path given");
-    return new Promise((resolve, reject) =>
-      getFileContentsAndMetadata(path)
+  const getFileContents = (path: string): Promise<string> => {
+    if (isEmpty(path)) {
+      return Promise.reject("No path given");
+    }
+    return new Promise((resolve, reject) => {
+      return getFileContentsAndMetadata(path)
         .then(({ contents }) => resolve(contents))
-        .catch(reject),
+        .catch(reject)
+    }
     );
   };
 
-  const deleteFile = (path) =>
-    new Promise((resolve, reject) =>
+  const deleteFile = (path: string) => 
+    new Promise<DropboxResponse<files.DeleteResult>>((resolve, reject) =>
       dbxPromise.then((dbx) => {
         dbx
-          .filesDelete({ path })
+          .filesDeleteV2({ path })
           .then(resolve)
-          .catch((error) =>
-            reject(error.error.error[".tag"] === "path_lookup", error),
+          .catch((error: DropboxResponseError<files.DeleteError>) =>
+            reject(error.error[".tag"] === "path_lookup"),
           );
       }),
     );
 
-  /* Dropbox documentation on OAuth2 and PKCE:
-
-  -  SDK Repo: https://github.com/dropbox/dropbox-sdk-js
-  -  OAuth Guide: https://developers.dropbox.com/oauth-guide
-  -  PKCE: What and Why?: https://dropbox.tech/developers/pkce--what-and-why-
-  -  Single HTML file example: https://github.com/dropbox/dropbox-sdk-js/blob/main/examples/javascript/pkce-browser/index.html
-  -  SDK Docs: https://dropbox.github.io/dropbox-sdk-js/index.html
-  -  Migrating App Permissions and Access Tokens: https://dropbox.tech/developers/migrating-app-permissions-and-access-tokens */
 
   const REDIRECT_URI = window.location.origin + "/org-everywhere/";
 
-  dbxPromise = new Promise((resolve, reject) => {
+  dbxPromise = new Promise((resolve, _) => {
     const clientId = import.meta.env.VITE_REACT_APP_DROPBOX_CLIENT_ID;
-    const dbx = new Dropbox({
+    const dbxAuth = new DropboxAuth({
       clientId,
       fetch: fetch.bind(window),
     });
-    const dbxAuth = dbx.auth;
 
-    if (getCodeFromUrl()) {
-      dbxAuth.setCodeVerifier(getPersistedField("codeVerifier"));
+
+    const codeVerifier = getPersistedField("codeVerifier")
+    codeVerifier && dbxAuth.setCodeVerifier(codeVerifier);
+    if (getCodeFromUrl()) {      
       dbxAuth
         .getAccessTokenFromCode(REDIRECT_URI, getCodeFromUrl())
         .then((response) => {
-          dbxAuth.setRefreshToken(response.result.refresh_token);
-          persistField("dropboxRefreshToken", response.result.refresh_token);
+	const refreshToken = property(["result", "refresh_token"], response);
+        refreshToken && dbxAuth.setRefreshToken(refreshToken);	
+        persistField("dropboxRefreshToken", refreshToken);
 
-          resolve(dbx);
+        resolve(new Dropbox({auth: dbxAuth}));
         })
         .catch((error) => {
           console.error(error);
         });
     } else {
-      dbxAuth.setCodeVerifier(getPersistedField("codeVerifier"));
-      dbxAuth.setRefreshToken(getPersistedField("dropboxRefreshToken"));
-      resolve(dbx);
+      const refreshToken = getPersistedField("dropboxRefreshToken")
+      refreshToken && dbxAuth.setRefreshToken(refreshToken);
+      resolve(new Dropbox({auth: dbxAuth}));
     }
   });
 
