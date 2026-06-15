@@ -9,7 +9,7 @@
 .table-cell__insert-timestamp-button {
   display: flex;
   flex-direction: row;
-  color: var(--base0);
+  color: var(--base7);
   font-family: Courier;
   justify-content: space-between;
   align-items: flex-start;
