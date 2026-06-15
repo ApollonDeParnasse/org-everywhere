@@ -5,7 +5,9 @@ import React, { Fragment } from "react";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { includes } from "lodash/fp";
-
+import { List } from "immutable";
+import type { MapOf } from "immutable";
+import type { Client, DirectoryListingEntry } from "../../../../types";
 import "./../../../OrgFile/components/ActionDrawer/stylesheet.css";
 
 import * as orgActions from "../../../../actions/org";
@@ -13,11 +15,18 @@ import * as syncActions from "../../../../actions/sync_backend";
 
 import ActionButton from "../../../OrgFile/components/ActionDrawer/components/ActionButton";
 
-const ensureCompleteFilename = (fileName) => {
+const ensureCompleteFilename = (fileName: string) => {
   return fileName.endsWith(".org") ? fileName : `${fileName}.org`;
 };
 
-const ActionDrawer = ({ org, files, syncBackend, path }) => {
+interface ActionDrawerProps {
+  org: any;
+  files: List<MapOf<DirectoryListingEntry>>;
+  syncBackend: Client;
+  path: string
+}
+
+const ActionDrawer = ({ org, files, syncBackend, path }: ActionDrawerProps) => {
   const handleAddNewOrgFileClick = () => {
     const content = "* First header\nExtend the file from here.";
     let fileName = prompt("New filename:");
@@ -67,11 +76,12 @@ const ActionDrawer = ({ org, files, syncBackend, path }) => {
 };
 
 const mapStateToProps = (state) => {
-  const path = state.syncBackend.get("currentPath");
-  let files = state.syncBackend.getIn([
+  const path: string = state.syncBackend.get("currentPath");
+  let files: List<MapOf<DirectoryListingEntry>> = state.syncBackend.getIn([
     "currentFileBrowserDirectoryListing",
     "listing",
   ]);
+  // this does not make sense
   files = files ? files.map((e) => e.get("id")).toJS() : [];
   return {
     path,

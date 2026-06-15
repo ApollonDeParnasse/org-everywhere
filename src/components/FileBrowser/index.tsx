@@ -3,8 +3,11 @@ import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { IconContext } from "react-icons";
 import { FaFolder, FaSpinner } from "react-icons/fa";
-import { getIcon } from "../UI/icons";
 import { Link } from "react-router-dom";
+import { List } from "immutable";
+import type { MapOf } from "immutable";
+import type { SyncBackend, ClientType, Client, DirectoryListingEntry } from "../../types";
+import { getIcon } from "../UI/icons";
 
 import ActionDrawer from "./components/ActionDrawer";
 
@@ -14,14 +17,14 @@ import classNames from "classnames";
 
 import * as syncBackendActions from "../../actions/sync_backend";
 
-const RegularFileIcon = ({ file }) => {
-  const isBackupFile = file.get("name").endsWith(".organice-bak");
-  const isOrgFile = file.get("name").endsWith(".org");
-  const isSettingsFile = file.get("name") === ".organice-config.json";
-  const iconName =
+const RegularFileIcon = ({ file }: {file: MapOf<DirectoryListingEntry>}) => {
+  const isBackupFile: boolean = file.get("name").endsWith(".organice-bak");
+  const isOrgFile: boolean = file.get("name").endsWith(".org");
+  const isSettingsFile: boolean = file.get("name") === ".organice-config.json";
+  const iconName: string =
     (isBackupFile && "copy" && isSettingsFile && "cogs") || "file";
 
-  const iconClass = classNames("file-browser__file-list__icon fas", {
+  const iconClass: string = classNames("file-browser__file-list__icon fas", {
     "file-browser__file-list__icon--not-org": !isOrgFile,
   });
 
@@ -38,8 +41,8 @@ const RegularFileIcon = ({ file }) => {
   );
 };
 
-const FileDirectoryIcon = ({ file }) => {
-  const iconClass = classNames(
+const FileDirectoryIcon = ({ file }: {file: MapOf<DirectoryListingEntry>}) => {
+  const iconClass: string = classNames(
     "file-browser__file-list__icon fas",
     "file-browser__file-list__icon--directory",
     "file-browser__file-list__icon--not-org",
@@ -58,13 +61,22 @@ const FileDirectoryIcon = ({ file }) => {
   );
 };
 
-const FileIcon = ({ file }) => {
+const FileIcon = ({ file }: {file: MapOf<DirectoryListingEntry>}) => {
   return file && file.get("isDirectory") ? (
     <FileDirectoryIcon file={file} />
   ) : (
     <RegularFileIcon file={file} />
   );
 };
+
+interface FileBrowserProps {
+  path: string;
+  listing: List<MapOf<DirectoryListingEntry>>;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  syncBackendType: ClientType;
+  syncBackend: Client;
+}
 
 const FileBrowser = ({
   path,
@@ -73,14 +85,13 @@ const FileBrowser = ({
   isLoadingMore,
   syncBackendType,
   syncBackend,
-  // INFO: This was required back when we had Google Drive support.
-  // Leaving it here in case another sync backend requires it.
-  // additionalSyncBackendState,
-}) => {
-  useEffect(() => syncBackend.getDirectoryListing(path), [syncBackend, path]);
+}: FileBrowserProps) => {
+  useEffect(() => {syncBackend.getDirectoryListing(path)}, [syncBackend, path]);
 
+  // is this the problem
   const handleLoadMoreClick = () => syncBackend.loadMoreDirectoryListing();
 
+  // use path-parse here?
   const getParentDirectoryPath = () => {
     switch (syncBackendType) {
       case "Dropbox":
@@ -123,7 +134,7 @@ const FileBrowser = ({
           </Link>
         )}
 
-        {(listing || []).map((file, key) => {
+        {(listing || []).map((file: MapOf<DirectoryListingEntry>, key: number) => {
           return <FileIcon key={key} file={file} />;
         })}
 
@@ -181,3 +192,4 @@ const mapDispatchToProps = (dispatch) => {
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(FileBrowser);
+3
