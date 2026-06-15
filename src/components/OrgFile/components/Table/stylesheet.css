@@ -1,21 +1,22 @@
 @import "../../../../colors.css";
 .table-part {
   border-collapse: collapse;
+  min-height: 100%;
 }
 
 .table-part__row {
-  height: fit-content;
+  height: 100%;
+  overflow-x: scroll;
 }
 
 .table-part__cell {
   border: 1px solid var(--base01);
   white-space: pre;
   vertical-align: top;
-  min-width: 50px;
-  min-height: 20px;
-  overflow-x: scroll;
+  min-width: 25%;
   font-size: 16px;
   line-height: 1.2;
+  overflow-x: scroll;
 }
 
 .table-part__cell--selected {

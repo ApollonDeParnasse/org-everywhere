@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from "react";
+import React, { useState, useLayoutEffect, useRef } from "react";
 import { IconContext } from "react-icons";
 import { FaTimes } from "react-icons/fa";
 import classNames from "classnames";
@@ -29,6 +29,7 @@ const TableEditorModal = ({ onClose }: { onClose: () => void }) => {
   const descriptionItemIndex = file.get("selectedDescriptionItemIndex");
   const tableGetter = getTable({ filePath, headerIndex, descriptionItemIndex });
   const table = useSelector(tableGetter, is);
+  const tableContainerRef = useRef<null|HTMLTableElement>(null);
 
   const outerClassName = classNames("table-drawer-outer-container", {
     "table-drawer-outer-container--visible": isVisible,
@@ -39,6 +40,7 @@ const TableEditorModal = ({ onClose }: { onClose: () => void }) => {
     table,
     headerIndex,
     descriptionItemIndex,
+    tableContainerRef
   };
 
   const handlePopupClose = () => {
@@ -67,7 +69,7 @@ const TableEditorModal = ({ onClose }: { onClose: () => void }) => {
             </div>
           </IconContext.Provider>
         </div>
-        <div className="table-drawer-inner-inner-container">
+        <div ref={tableContainerRef}  className="table-drawer-inner-inner-container">
           <Table props={tableProps} />
         </div>
         <TableActionButtons filePath={filePath} />
