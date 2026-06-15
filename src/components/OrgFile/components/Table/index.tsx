@@ -1,4 +1,4 @@
-import React, {type RefObject } from "react";
+import React, { type RefObject, useMemo } from "react";
 import TableCell from "./TableCell/index";
 import "./stylesheet.css";
 
@@ -13,13 +13,18 @@ interface TableProps {
 const Table = ({
   props: { filePath, table, headerIndex, descriptionItemIndex, tableContainerRef },
 }: {props: TableProps}) => {
-  const containerHeight: number | null = tableContainerRef?.current ? parseInt(getComputedStyle(tableContainerRef?.current).height) : null
+
+  const containerHeight = useMemo((): number | null => {
+    console.log("called", filePath, headerIndex, descriptionItemIndex)
+    return tableContainerRef?.current ? parseInt(getComputedStyle(tableContainerRef?.current).height) : null
+  }, [filePath, headerIndex, descriptionItemIndex])
+  
   return (
     <table className="table-part">
       <tbody>
         {table.get("contents").map((row, rowIndex: number) => {
           return (
-            <tr className={"table-part__row"} key={row.get("id")} style={{height: containerHeight ? containerHeight * 0.025 : "auto"}}>
+            <tr className={"table-part__row"} key={row.get("id")} style={{height: containerHeight ? containerHeight * 0.03 : "auto"}}>
               {row.get("contents").map((cell, columnIndex: number) => {
                 const cellId = cell.get("id");
                 const cellProps = {
