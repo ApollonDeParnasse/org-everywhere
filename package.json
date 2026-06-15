@@ -87,6 +87,7 @@
     "typescript-eslint": "^8.33.1",
     "unplugin-auto-import": "^19.3.0",
     "vite-css-modules": "^1.15.0",
+    "vite-plugin-mkcert": "^2.1.0",
     "vite-plugin-node-polyfills": "^0.24.0",
     "vitest": "^3.2.2"
   }
