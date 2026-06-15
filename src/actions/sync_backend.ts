@@ -1,5 +1,9 @@
 import { ActionCreators } from "redux-undo";
-
+import { addSeconds } from "date-fns";
+import { get } from "lodash/fp";
+import pathParse from "path-parse";
+import { List } from "immutable";
+import type { MapOf } from "immutable";
 import {
   setLoadingMessage,
   hideLoadingMessage,
@@ -17,12 +21,12 @@ import {
   persistField,
 } from "../util/settings_persister";
 import { createGitlabOAuth } from "../sync_backend_clients/gitlab_sync_backend_client";
-
-import { addSeconds } from "date-fns";
-
-import { get } from "lodash/fp";
-
-import pathParse from "path-parse";
+import type {
+  Client,
+  DirectoryListing,
+  DirectoryListingEntry,
+  AdditionalSyncBackendState,
+} from "../types";
 
 export const signOut = () => (dispatch, getState) => {
   switch (getState().syncBackend.get("client", {}).type) {
@@ -57,11 +61,12 @@ export const signOut = () => (dispatch, getState) => {
   }
 };
 
+// path is optional?
 export const setCurrentFileBrowserDirectoryListing = (
-  directoryListing,
-  hasMore,
-  additionalSyncBackendState,
-  path,
+  directoryListing: List<MapOf<DirectoryListingEntry>>,
+  hasMore: boolean,
+  additionalSyncBackendState: MapOf<AdditionalSyncBackendState>,
+  path: string,
 ) => ({
   type: "SET_CURRENT_FILE_BROWSER_DIRECTORY_LISTING",
   directoryListing,
@@ -70,29 +75,31 @@ export const setCurrentFileBrowserDirectoryListing = (
   path,
 });
 
-export const setIsLoadingMoreDirectoryListing = (isLoadingMore) => ({
+export const setIsLoadingMoreDirectoryListing = (isLoadingMore: boolean) => ({
   type: "SET_IS_LOADING_MORE_DIRECTORY_LISTING",
   isLoadingMore,
 });
 
-export const getDirectoryListing = (path) => (dispatch, getState) => {
+export const getDirectoryListing = (path: string) => (dispatch, getState) => {
   dispatch(setLoadingMessage("Getting listing..."));
 
   const client = getState().syncBackend.get("client");
   client
     .getDirectoryListing(path)
-    .then(({ listing, hasMore, additionalSyncBackendState }) => {
-      dispatch(
-        setCurrentFileBrowserDirectoryListing(
-          listing,
-          hasMore,
-          additionalSyncBackendState,
-          path,
-        ),
-      );
-      dispatch(hideLoadingMessage());
-    })
-    .catch((error) => {
+    .then(
+      ({ listing, hasMore, additionalSyncBackendState }: DirectoryListing) => {
+        dispatch(
+          setCurrentFileBrowserDirectoryListing(
+            listing,
+            hasMore,
+            additionalSyncBackendState,
+            path,
+          ),
+        );
+        dispatch(hideLoadingMessage());
+      },
+    )
+    .catch((error: { status: number; }) => {
       dispatch(hideLoadingMessage());
       const error_summary = get("error.error_summary", error) || "";
       if (
@@ -110,7 +117,7 @@ export const getDirectoryListing = (path) => (dispatch, getState) => {
 export const loadMoreDirectoryListing = () => (dispatch, getState) => {
   dispatch(setIsLoadingMoreDirectoryListing(true));
 
-  const client = getState().syncBackend.get("client");
+  const client: Client = getState().syncBackend.get("client");
   const currentFileBrowserDirectoryListing = getState().syncBackend.get(
     "currentFileBrowserDirectoryListing",
   );
@@ -118,22 +125,24 @@ export const loadMoreDirectoryListing = () => (dispatch, getState) => {
     .getMoreDirectoryListing(
       currentFileBrowserDirectoryListing.get("additionalSyncBackendState"),
     )
-    .then(({ listing, hasMore, additionalSyncBackendState }) => {
-      const extendedListing = currentFileBrowserDirectoryListing
-        .get("listing")
-        .concat(listing);
-      dispatch(
-        setCurrentFileBrowserDirectoryListing(
-          extendedListing,
-          hasMore,
-          additionalSyncBackendState,
-        ),
-      );
-      dispatch(setIsLoadingMoreDirectoryListing(false));
-    });
+    .then(
+      ({ listing, hasMore, additionalSyncBackendState }: DirectoryListing) => {
+        const extendedListing = currentFileBrowserDirectoryListing
+          .get("listing")
+          .concat(listing);
+        dispatch(
+          setCurrentFileBrowserDirectoryListing(
+            extendedListing,
+            hasMore,
+            additionalSyncBackendState,
+          ),
+        );
+        dispatch(setIsLoadingMoreDirectoryListing(false));
+      },
+    );
 };
 
-export const pushBackup = (pathOrFileId, contents) => {
+export const pushBackup = (pathOrFileId: string, contents: string) => {
   return (dispatch, getState) => {
     const client = getState().syncBackend.get("client");
     switch (client.type) {
@@ -149,13 +158,13 @@ export const pushBackup = (pathOrFileId, contents) => {
   };
 };
 
-export const downloadFile = (path) => {
+export const downloadFile = (path: string) => {
   return (dispatch, getState) => {
     dispatch(setLoadingMessage(`Downloading file ...`));
     getState()
       .syncBackend.get("client")
       .getFileContents(path)
-      .then((fileContents) => {
+      .then((fileContents: string) => {
         dispatch(hideLoadingMessage());
         dispatch(pushBackup(path, fileContents));
         dispatch(parseFile(path, fileContents));
@@ -174,11 +183,11 @@ export const downloadFile = (path) => {
 /**
  * @param {String} path Returns the directory name of `path`.
  */
-function dirName(path) {
+function dirName(path: string): string {
   return pathParse(path).dir;
 }
 
-export const createFile = (path, content) => {
+export const createFile = (path: string, content: string) => {
   return (dispatch, getState) => {
     dispatch(setLoadingMessage(`Creating file: ${path}`));
     getState()
