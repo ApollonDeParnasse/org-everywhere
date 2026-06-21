@@ -7,24 +7,42 @@ interface TableProps {
   table: any;
   headerIndex: number;
   descriptionItemIndex: number;
-  tableContainerRef: RefObject<null|HTMLTableElement>;
+  tableContainerRef: RefObject<null | HTMLTableElement>;
 }
 
-const Table = ({
-  props: { filePath, table, headerIndex, descriptionItemIndex, tableContainerRef },
-}: {props: TableProps}) => {
+const MINROWSIZEPERCENTAGE: number = 0.03
+const MINROWSIZEHEIGHT: number = 30
 
-  const containerHeight = useMemo((): number | null => {
-    console.log("called", filePath, headerIndex, descriptionItemIndex)
-    return tableContainerRef?.current ? parseInt(getComputedStyle(tableContainerRef?.current).height) : null
-  }, [filePath, headerIndex, descriptionItemIndex])
-  
+const Table = ({
+  props: {
+    filePath,
+    table,
+    headerIndex,
+    descriptionItemIndex,
+    tableContainerRef,
+  },
+}: {
+  props: TableProps;
+}) => {
+
+  const rowHeightScaledToContainer: number = tableContainerRef?.current
+    ? parseInt(getComputedStyle(tableContainerRef?.current).height) * MINROWSIZEPERCENTAGE
+    : 0;
+
+  const height: number = rowHeightScaledToContainer < MINROWSIZEHEIGHT ? MINROWSIZEHEIGHT : rowHeightScaledToContainer;
+
   return (
     <table className="table-part">
       <tbody>
         {table.get("contents").map((row, rowIndex: number) => {
           return (
-            <tr className={"table-part__row"} key={row.get("id")} style={{height: containerHeight ? containerHeight * 0.03 : "auto"}}>
+            <tr
+              className={"table-part__row"}
+              key={row.get("id")}
+              style={{
+                height,
+              }}
+            >
               {row.get("contents").map((cell, columnIndex: number) => {
                 const cellId = cell.get("id");
                 const cellProps = {
