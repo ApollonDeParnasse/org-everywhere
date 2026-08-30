@@ -31,6 +31,8 @@ import {
   curry,
   uniq,
 } from "lodash/fp";
+import { pipe as fpipe } from "fp-ts/function";
+import { match, P } from "ts-pattern";
 import {
   Project,
   SyntaxKind,
@@ -60,24 +62,18 @@ import {
   VariableDeclaration,
   PropertySignature,
   TypeAliasDeclaration,
+  PropertyAssignmentStructure,
+  printStructure,
+  TypeLiteralNode,
 } from "ts-morph";
-
-const filterMap = curry(pipe([map, compact]));
-const arrayToSet = <T>(x: Array<T>): Set<T> => new Set(x);
-const includesAny = includes("any");
-
-const reduceReplaceAll = (
-  valuesToReplace: Array<string>,
-  strToEdit: string,
-): string => {
-  return reduce(
-    (currStrToEdit: string, valueToReplace: string): string => {
-      return currStrToEdit.replaceAll(valueToReplace, "");
-    },
-    strToEdit,
-    valuesToReplace,
-  );
-};
+import {
+  arrayToSet,
+  includesAny,
+  curriedFilterMap,
+  reduceReplace,
+  reduceReplaceAll,
+  capitalize
+} from "./Utilities";
 
 const STATETYPENAME: string = "State";
 
@@ -284,7 +280,7 @@ const getAllActionValues = (
 
 const REPLACERS = [replace("\n", " "), replace("/\s+/g", " ")];
 
-const capitalize = (x: string) => x[0].toUpperCase() + x.slice(1);
+
 const runReplacers = (string: string): string => {
   return reduce(
     (prev: string, curr: (str: string) => string): string => {
@@ -690,7 +686,7 @@ const annotateAllDeclarations = async (
 
       // skip arrow functions
       if (descendant.getFirstChildByKind(SyntaxKind.ArrowFunction)) return;
-      // skip curried functions
+x      // skip curried functions
       if (
         descendant
           .getFirstChildByKind(SyntaxKind.CallExpression)
@@ -714,7 +710,7 @@ const annotateAllDeclarations = async (
 
 //await annotateAllActionDispatcherReturnValues([["./src/actions/sync_backend.ts", "SyncBackendAction"]])
 //await annotateAllDeclarations(["./src/actions/org.ts"])
-await annotateAllDeclarations(["./src/lib/org_utils.ts"]);
+//await annotateAllDeclarations(["./src/lib/org_utils.ts"]);
 
 const annotateAllActionCreatorReturnValues = annotateAllXReturnValues(
   ACTIONTYPESTOCREATE,
@@ -1143,7 +1139,188 @@ const annotateAllReturnTypesInFiles = async (
   await project.save();
 };
 
-await annotateAllReturnTypesInFiles(["./src/lib/org_utils.ts"]);
+//await annotateAllReturnTypesInFiles(["./src/lib/org_utils.ts"]);
+
+const TYPESSET = new Set([
+  "BaseState",
+  "SyncBackendState",
+  "OrgCaptureState",
+  "Search",
+  "OrgFile",
+  "FinderTab",
+  "AgendaTimeframe",
+  "OrgTodoKeywordSet",
+  "PendingCapture",
+  "FileSetting",
+  "DirectoryListingEntry",
+  "DirectoryListing",
+  "OrgTimestampPart",
+  "OrgTitleLine",
+  "AdditionalSyncBackendState",
+]);
+
+const isSubRecordType = (typeName: string, typesSets = TYPESSET): boolean => {
+  return typesSets.has(typeName);
+};
+
+const handleMapOfProp = (typeName: string): string => {
+  const replacementTuples: Array<[string, string]> = [
+    ["MapOf<", ""],
+    [">", ""],
+  ];
+  const subTypeName = reduceReplace(replacementTuples, typeName);
+  return convertPropTypeIntoValue(subTypeName)
+};
+
+const convertPropTypeIntoValue = (typeName: string): string => {
+  return match(typeName)
+    .returnType<string>()
+    .with(P.when(isSubRecordType), (): string => `make${typeName}()`)
+    .with(P.string.includes("undefined"), (): string => "undefined")
+    .with(P.string.startsWith("List<"), (): string => "List([])")
+    .with(P.string.startsWith("Set<"), (): string => "Set([])")
+    .with("Map<string,string>", (): string => "Map({})")
+    .with(P.string.startsWith("MapOf<"), (): string =>
+      handleMapOfProp(typeName),
+    )
+    .with("BulletStyle", (): string => "-")
+    .with("DelayUnit", (): string => "h")
+    .with("RepeaterUnit", (): string => "h")
+    .with("string", (): string => '""')
+    .with("number", (): string => "0")
+    .with("boolean", (): string => "false")
+    .with("Date", (): string => "new Date()")
+    .with("any", (): string => "undefined")
+    .with(P._, (): string => "")
+    .run();
+};
+
+const createDefaultRecordString = (
+  defaultRecordName: string,
+  aliasName: string,
+  typeLiteral: TypeLiteralNode,
+): string => {
+  const objLiteralExpression: ObjectLiteralExpression =
+    createNewObjectLiteralExpression();
+  const propertyAssignments = map(
+    (prop: PropertySignature): PropertyAssignmentStructure => {
+      const name = prop.getName();
+      const typeName = prop.getType().getText();
+      if (name === "type") {
+        return {
+          kind: StructureKind.PropertyAssignment,
+          name,
+          initializer: prop.getInitializerOrThrow().getText(),
+        };
+      }
+      return {
+        kind: StructureKind.PropertyAssignment,
+        name,
+        initializer: convertPropTypeIntoValue(typeName),
+      };
+    },
+  )(typeLiteral.getProperties());
+
+  objLiteralExpression.addPropertyAssignments(propertyAssignments);
+
+  return `const ${defaultRecordName}: ${aliasName} = ${objLiteralExpression.getText()}`;
+};
+
+const createFactoryStatement = (
+  defaultRecordName: string,
+  recordTypeName: string,
+  aliasName: string,
+): string => {
+  return `export const make${recordTypeName}: ImmutableRecord.Factory<${aliasName}> = ImmutableRecord(${defaultRecordName});`;
+};
+
+const createRecordTypeStatement = (
+  recordTypeName: string,
+  aliasName: string,
+): string => {
+  return `export type ${recordTypeName} = ImmutableRecord<${aliasName}>`;
+};
+
+const addRecordTypeForTypeToFile =
+  (file: SourceFile) =>
+  (aliasName: string): void => {
+    const alias: TypeAliasDeclaration = file.getTypeAliasOrThrow(aliasName);
+    const typeLiteral: TypeLiteralNode = alias.getFirstChildByKindOrThrow(
+      SyntaxKind.TypeLiteral,
+    );
+    const aliasIndex: number = alias.getChildIndex();
+
+    const recordTypeName: string = `${aliasName}Record`;
+    const defaultRecordName: string = `default${aliasName}`;
+
+    const recordStatements: Array<string> = [
+      createDefaultRecordString(defaultRecordName, aliasName, typeLiteral),
+      createFactoryStatement(defaultRecordName, recordTypeName, aliasName),
+      createRecordTypeStatement(recordTypeName, aliasName),
+    ];
+
+    file.insertStatements(aliasIndex, recordStatements);
+  };
+
+const createRecordTypesForTypesInFile = async (
+  file: string,
+  typesToIgnore: Set<string>,
+): Promise<void> => {
+  const project = new Project({});
+  const typesFile = project.addSourceFileAtPath(file);
+  const validTypeAliasDeclarations: Set<string> = fpipe(
+    typesFile.getTypeAliases(),
+    curriedFilterMap((alias: TypeAliasDeclaration): string | undefined => {
+      if (!alias.getFirstChildByKind(SyntaxKind.TypeLiteral)) undefined;
+      return alias.getName();
+    }),
+    arrayToSet,
+  );
+
+  const filteredTypes: Array<string> =
+    validTypeAliasDeclarations.difference(typesToIgnore);
+  forEach(addRecordTypeForTypeToFile(typesFile))(filteredTypes);
+  await typesFile.save();
+};
+
+const IGNORE = new Set([
+  "OrgTimestampPart",
+  "OrgLinkToken",
+  "OrgSimpleToken",
+  "OrgRawListContentToken",
+  "OrgRawListHeaderToken",
+  "OrgRawTableToken",
+  "OrgRecursiveToken",
+  "OrgToken",
+  "OrgAction",
+  "SyncBackendAction",
+  "UpdateOrgCaptureAction",
+  "ReorderOrgCaptureTemplateAction",
+  "RestoreOrgCaptureAction",
+  "OrgCaptureAction",
+]);
+
+const project = new Project({});
+
+// const typesFile = project.addSourceFileAtPath("src/types.ts");
+// const maybeGetProps = (node: TypeAliasDeclaration): Array<string> => {
+//   const typeLiteral = node.getFirstChildByKind(SyntaxKind.TypeLiteral)
+//   if (!typeLiteral) return []
+//   if (IGNORE.has(node.getName())) return []
+//   return curriedFilterMap((prop: PropertySignature) => {
+//     if (prop.getStructure().name === "type") return undefined
+//     return prop.getStructure().type
+//   })(typeLiteral.getProperties())
+// }
+
+// fpipe(
+//   typesFile.getDescendantsOfKind(SyntaxKind.TypeAliasDeclaration),
+//   flatMap(maybeGetProps),
+//   arrayToSet,
+//   console.log
+// )
+
+//await createRecordTypesForTypesInFile("src/types.ts", IGNORE)
 
 //await fixMapOfTypes("./src/reducers/*")
 

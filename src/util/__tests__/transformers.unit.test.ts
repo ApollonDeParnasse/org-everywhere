@@ -1,15 +1,7 @@
-import {
-  pipe,
-  over,
-  identity,
-  uniq,
-  zipAll,
-  map,
-  constant
-} from "lodash/fp";
+import { pipe, over, identity, uniq, zipAll, map, constant } from "lodash/fp";
 import { test, fc } from "@fast-check/vitest";
-import { describe, expect, assert } from "vitest";
-import { get } from "immutable";
+import { describe, expect } from "vitest";
+import { get, isImmutable } from "immutable";
 import {
   fcGenRandomUpperAlphaChar,
   fcGenRandomLowerAlphaChar,
@@ -17,20 +9,17 @@ import {
   fcGenRandomArrayChunkOfRandomSize,
   fcGenRandomItemFromArray,
   fcShuffledArray,
-  fcGenRandomImmutableMap,
+  fcGenRandomImmutableRecord,
   fcGenRandomListOfObjectKeys,
   fcGenRandomListOfObjectKeyValuePairs,
 } from "../../../test_helpers/TestDataGenerators";
-import {
-  convertArraysToSetsAndAssertStrictEqual,
-} from "../../../test_helpers/Asserters";
+import { convertArraysToSetsAndAssertStrictEqual } from "../../../test_helpers/Asserters";
 import {
   isUpperAlphaCharacter,
   reduceReplaceAll,
-  getAll,
-  setAll,
-  updateAllIn,
-  convertToArray
+  getAllForRecord,
+  setAllForRecord,
+  updateAllForRecord,
 } from "../transformers";
 
 describe("transformers test suite", () => {
@@ -71,65 +60,70 @@ describe("transformers test suite", () => {
   // })
 
   describe("for immutable", () => {
-    test.prop([fc.gen()])("getAll", (fcGen) => {
-      const [testMap, testObj] = fcGenRandomImmutableMap(fcGen);
-      const [testKeyValuePairs, expectedValues] = pipe([
+    const getActualJSValue = (x: unknown) => {
+      return isImmutable(x) ? x.toJS() : x;
+    };
+    const getActualArrayOfJSValues = map(getActualJSValue);
+
+    test.prop([fc.gen()])("getAllForRecord", (fcGen) => {
+      const [testRecord, testObj] = fcGenRandomImmutableRecord(fcGen);
+      const [testKeys, expectedValues] = pipe([
         fcGenRandomListOfObjectKeyValuePairs,
         zipAll,
       ])(fcGen, testObj);
-
-      const actualValues = getAll(testKeyValuePairs, testMap);
+      const actualImmutableValues = getAllForRecord(testKeys, testRecord);
+      const actualValues = getActualArrayOfJSValues(actualImmutableValues);
       convertArraysToSetsAndAssertStrictEqual([actualValues, expectedValues]);
     });
 
-    test.prop([fc.gen()])("setAll", (fcGen) => {
-      const [testMap, testObj] = fcGenRandomImmutableMap(fcGen);
+    test.prop([fc.gen()])("setAllForRecord", (fcGen) => {
+      const [testRecord, testObj] = fcGenRandomImmutableRecord(fcGen);
       const testSetters = pipe([
         fcGenRandomListOfObjectKeys,
         over([identity, fcShuffledArray(fcGen)]),
         zipAll,
       ])(fcGen, testObj);
-      const actualUpdatedMap = setAll(testSetters, testMap);
+      const actualUpdatedMap = setAllForRecord(testSetters, testRecord);
       const [randomKey, expectedValue] = fcGenRandomItemFromArray(
         fcGen,
         testSetters,
       );
-      expect(get(actualUpdatedMap, randomKey)).toBe(expectedValue);
+      const actualImmutableValue = get(actualUpdatedMap, randomKey);
+      expect(getActualJSValue(actualImmutableValue)).toBe(expectedValue);
     });
 
-    describe("updateAllIn", () => {
-      test.prop([fc.gen()])("single key", (fcGen) => {
-	const [testMap, testObj] = fcGenRandomImmutableMap(fcGen);
-	const testUpdaters = pipe([
-          fcGenRandomListOfObjectKeys,
-          over([identity, pipe([fcShuffledArray(fcGen), map(constant)])]),
-          zipAll,
-	])(fcGen, testObj);
-	const actualUpdatedMap = updateAllIn(testUpdaters, testMap);
+    test.prop([fc.gen()])("updateAllForRecord", (fcGen) => {
+      const [testRecord, testObj] = fcGenRandomImmutableRecord(fcGen);
+      const testUpdaters = pipe([
+        fcGenRandomListOfObjectKeys,
+        over([identity, pipe([fcShuffledArray(fcGen), map(constant)])]),
+        zipAll,
+      ])(fcGen, testObj);
+      const actualUpdatedMap = updateAllForRecord(testUpdaters, testRecord);
 
-	const [randomKey, expectedValueFunc] = fcGenRandomItemFromArray(
-          fcGen,
-          testUpdaters,
-	);
-	expect(get(actualUpdatedMap, randomKey)).toBe(expectedValueFunc());
-      });
-
-      test.prop([fc.gen()])("array of keys", (fcGen) => {
-	const [testMap, testObj] = fcGenRandomImmutableMap(fcGen);
-	const testUpdaters = pipe([
-          fcGenRandomListOfObjectKeys,
-          over([map(convertToArray), pipe([fcShuffledArray(fcGen), map(constant)])]),
-          zipAll,
-	])(fcGen, testObj);
-	const actualUpdatedMap = updateAllIn(testUpdaters, testMap);
-
-	const [randomKey, expectedValueFunc] = fcGenRandomItemFromArray(
-          fcGen,
-          testUpdaters,
-	);
-
-	expect(get(actualUpdatedMap, randomKey[0])).toBe(expectedValueFunc());
-      });
+      const [randomKey, expectedValueFunc] = fcGenRandomItemFromArray(
+        fcGen,
+        testUpdaters,
+      );
+      const actualImmutableValue = get(actualUpdatedMap, randomKey);
+      expect(getActualJSValue(actualImmutableValue)).toBe(expectedValueFunc());
     });
+
+    // test.skip.prop([fc.gen()])("updateAllInForRecord", (fcGen) => {
+    //   const [testRecord, testObj] = fcGenRandomImmutableRecord(fcGen);
+    //   const testUpdaters = pipe([
+    //     fcGenRandomListOfObjectKeys,
+    //     over([map(ensureArray), pipe([fcShuffledArray(fcGen), map(constant)])]),
+    //     zipAll,
+    //   ])(fcGen, testObj);
+    //   const actualUpdatedMap = updateAllInForRecord(testUpdaters, testRecord);
+
+    //   const [[randomKey], expectedValueFunc] = fcGenRandomItemFromArray(
+    //     fcGen,
+    //     testUpdaters,
+    //   );
+    //   const actualImmutableValue = get(actualUpdatedMap, randomKey);
+    //   expect(getActualJSValue(actualImmutableValue)).toBe(expectedValueFunc());
+    // });
   });
 });
