@@ -10,14 +10,14 @@ import { getSelectedHeader } from "../../../../lib/org_utils";
 import { renderAsText } from "../../../../lib/timestamps";
 import type {
   OrgFile,
-  OrgTimestampPart,
+  OrgTimestampPartRecord,
   PlanningType,
   Popup,
   RepeaterType,
   DelayType,
   DelayUnit,
   StartOrEnd,
-  RepeaterUnit
+  RepeaterUnit,
 } from "../../../../types";
 import { getIcon } from "../../../UI/icons";
 import Switch from "../../../UI/Switch/";
@@ -42,14 +42,12 @@ import {
 
 interface TimestampEditorProps {
   headerId: number;
-  timestamp: MapOf<OrgTimestampPart>;
+  timestamp: OrgTimestampPartRecord;
   timestampId: number;
   planningItemIndex: number;
   onClose: Function;
   onChange: Function;
 }
-
-
 
 const TimestampEditor = (props: TimestampEditorProps) => {
   const {
@@ -104,17 +102,17 @@ const TimestampEditor = (props: TimestampEditorProps) => {
   const handleAddTime = (startOrEnd: StartOrEnd) => {
     return (_: MouseEvent): void => {
       onChange(addTime(startOrEnd, timestamp));
-    }
+    };
   };
   const handleRemoveTime = (startOrEnd: StartOrEnd) => {
     return (_: MouseEvent): void => {
       onChange(removeTime(startOrEnd, timestamp));
-    }
+    };
   };
   const handleTimeChange = (startOrEnd: StartOrEnd) => {
     return (event: ChangeEvent<HTMLInputElement>): void => {
       onChange(timeChange(startOrEnd, timestamp, event.target.value));
-    }
+    };
   };
   const handleAddRepeater = (_: MouseEvent): void => {
     onChange(addRepeater(timestamp));
@@ -123,13 +121,15 @@ const TimestampEditor = (props: TimestampEditorProps) => {
     onChange(removeRepeater(timestamp));
   };
   const handleRepeaterTypeChange = (newRepeaterType: RepeaterType): void => {
-    onChange(repeaterTypeChange(newRepeaterType, timestamp));
+    onChange(repeaterTypeChange(newRepeaterType)(timestamp));
   };
-  const handleRepeaterValueChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    onChange(repeaterValueChange(event.target.value, timestamp));
+  const handleRepeaterValueChange = (
+    event: ChangeEvent<HTMLInputElement>,
+  ): void => {
+    onChange(repeaterValueChange(event.target.value)(timestamp));
   };
   const handleRepeaterUnitChange = (newRepeaterUnit: RepeaterUnit): void => {
-    onChange(repeaterUnitChange(newRepeaterUnit, timestamp));
+    onChange(repeaterUnitChange(newRepeaterUnit)(timestamp));
   };
   const handleAddDelay = (_: MouseEvent): void => {
     onChange(addDelay(timestamp));
@@ -138,13 +138,15 @@ const TimestampEditor = (props: TimestampEditorProps) => {
     onChange(removeDelay(timestamp));
   };
   const handleDelayTypeChange = (newDelayType: DelayType): void => {
-    onChange(delayTypeChange(newDelayType, timestamp));
+    onChange(delayTypeChange(newDelayType)(timestamp));
   };
-  const handleDelayValueChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    onChange(delayValueChange(event.target.value, timestamp));
+  const handleDelayValueChange = (
+    event: ChangeEvent<HTMLInputElement>,
+  ): void => {
+    onChange(delayValueChange(event.target.value)(timestamp));
   };
   const handleDelayUnitChange = (newDelayUnit: DelayUnit): void => {
-    onChange(delayUnitChange(newDelayUnit, timestamp));
+    onChange(delayUnitChange(newDelayUnit)(timestamp));
   };
   const renderTimeField = (
     label: string,

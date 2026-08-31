@@ -1,6 +1,64 @@
 import { List, Set } from "immutable";
-import type { MapOf } from "immutable";
+import { Record as ImmutableRecord, type MapOf } from "immutable";
 import type { ActionTypes } from "redux-undo";
+
+export type StartOrEnd = "start" | "end";
+
+export type OrgMarkupType =
+  | "inline-code"
+  | "bold"
+  | "italic"
+  | "strikethrough"
+  | "underline"
+  | "verbatim";
+
+export type AgendaTimeframe = "Week" | "Day" | "Month";
+export type TimestampUnit = "h" | "d" | "m" | "w" | "y";
+export type DelayUnit = TimestampUnit;
+export type RepeaterUnit = TimestampUnit;
+export type RepeaterType = "+" | "++" | ".+";
+export type DelayType = "-" | "--";
+
+export type LogEntryType = "start" | "end";
+export type PlanningType = "DEADLINE" | "SCHEDULED";
+
+export type Context = "agenda" | "search" | "task-list" | "refile";
+export type FinderTab = "Search" | "Clock List" | "Task List";
+export type BulletStyle = "Fancy" | "Classic";
+
+export type OrgCheckboxState = "unchecked" | "checked" | "partial";
+
+export type ClientType = "WebDAV" | "Dropbox" | "GitLab";
+
+export type ForceAction = "manual" | "push" | "pull" | undefined;
+
+export type EditModeType =
+  | "list-title"
+  | "list-contents"
+  | "table"
+  | "description";
+
+export type PopupType =
+  | "deadline-editor"
+  | "scheduled-editor"
+  | "timestamp-editor"
+  | "sync-confirmation"
+  | "capture"
+  | "tags-editor"
+  | "property-list-editor"
+  | "agenda"
+  | "search"
+  | "refile"
+  | "title-editor"
+  | "description-editor"
+  | "table-editor";
+
+export type ModalPage =
+  | "sample"
+  | "keyboard_shortcuts_editor"
+  | "capture_templates_editor"
+  | "file_settings_editor"
+  | "settings";
 
 export type OrgTimestampPart = {
   isActive: boolean;
@@ -8,20 +66,48 @@ export type OrgTimestampPart = {
   year: string;
   month: string;
   day: string;
-  dayName: string | undefined | null;
+  dayName: string | undefined;
   startHour: string;
   startMinute: string;
-  endHour: string | undefined | null;
-  endMinute: string | undefined | null;
-  repeaterType: string | undefined | null;
-  repeaterValue: string | undefined | null;
-  repeaterUnit: string | undefined | null;
-  delayType: string | undefined | null;
-  delayValue: string | undefined | null;
-  delayUnit: string | undefined | null;
-  repeaterDeadlineValue: string | undefined | null;
-  repeaterDeadlineUnit: string | undefined | null;
+  endHour: string | undefined;
+  endMinute: string | undefined;
+  repeaterType: RepeaterType | undefined;
+  repeaterValue: string | undefined;
+  repeaterUnit: RepeaterUnit | undefined;
+  delayType: DelayType | undefined;
+  delayValue: string | undefined;
+  delayUnit: DelayUnit | undefined;
+  repeaterDeadlineValue: string | undefined;
+  repeaterDeadlineUnit: RepeaterUnit | undefined;
 };
+
+export type OrgTimestampPartKey = keyof OrgTimestampPart;
+
+// when we parse and handle time, does january become 01 or 00?
+const defaultOrgTimestampPartValues: OrgTimestampPart = {
+  isActive: false,
+  withStartTime: false,
+  year: "1970",
+  month: "01",
+  day: "01",
+  dayName: undefined,
+  startHour: "00",
+  startMinute: "00",
+  endHour: undefined,
+  endMinute: undefined,
+  repeaterType: undefined,
+  repeaterValue: undefined,
+  repeaterUnit: undefined,
+  delayType: undefined,
+  delayValue: undefined,
+  delayUnit: undefined,
+  repeaterDeadlineValue: undefined,
+  repeaterDeadlineUnit: undefined,
+};
+
+export const makeOrgTimestampPartRecord: ImmutableRecord.Factory<OrgTimestampPart> =
+  ImmutableRecord(defaultOrgTimestampPartValues);
+export type OrgTimestampPartRecord = ImmutableRecord<OrgTimestampPart>;
 
 export type OrgLinkToken = {
   type: "link";
@@ -56,8 +142,8 @@ export type OrgSimpleToken =
       type: "timestamp";
       rawText: string;
       index: number;
-      firstTimestamp: OrgTimestampPart | null;
-      secondTimestamp: OrgTimestampPart | null;
+      firstTimestamp: OrgTimestampPart | undefined;
+      secondTimestamp: OrgTimestampPart | undefined;
     }
   | {
       type: "url";
@@ -101,28 +187,6 @@ export type OrgRecursiveToken =
 
 export type OrgToken = OrgRecursiveToken | OrgSimpleToken;
 
-export type OrgMarkupType =
-  | "inline-code"
-  | "bold"
-  | "italic"
-  | "strikethrough"
-  | "underline"
-  | "verbatim";
-
-export type AgendaTimeframe = "Week" | "Day" | "Month";
-export type TimestampUnit = "h" | "d" | "m" | "w" | "y";
-export type DelayUnit = TimestampUnit;
-export type RepeaterUnit = TimestampUnit;
-export type RepeaterType = "+" | "++" | ".+";
-export type DelayType = "-" | "--";
-
-export type LogEntryType = "start" | "end";
-export type PlanningType = "DEADLINE" | "SCHEDULED";
-
-export type Context = "agenda" | "search" | "task-list" | "refile";
-export type FinderTab = "Search" | "Clock List" | "Task List";
-export type BulletStyle = "Fancy" | "Classic";
-
 export type OrgTodoKeywordSet = {
   keywords: List<string>;
   completedKeywords: List<string>;
@@ -149,6 +213,13 @@ export type OrgLink = {
   };
 };
 
+// name is temporary
+export type OrgLink2 = {
+  id: number;
+  type: "url" | "phone-number" | "e-mail" | "www-url";
+  content: string;
+};
+
 export type OrgPercentageCookie = {
   id: number;
   type: "percentage-cookie";
@@ -173,8 +244,8 @@ export type OrgInlineMarkup = {
 export type OrgClockString = {
   id: number;
   type: "timestamp";
-  firstTimestamp: OrgTimestampPart | null;
-  secondTimestamp: OrgTimestampPart | null;
+  firstTimestamp: OrgTimestampPart | undefined;
+  secondTimestamp: OrgTimestampPart | undefined;
 };
 
 export type OrgTimestampType =
@@ -202,16 +273,14 @@ export type OrgPropertyListItem = {
   id: number;
 };
 
-export type OrgCheckboxState = "unchecked" | "checked" | "partial";
-
 export type OrgListItem = {
   type: "list-item";
   id: number;
   titleLine: List<MapOf<OrgTitleElement>>;
   contents: any;
-  forceNumber: string | null;
+  forceNumber: string | undefined;
   isCheckbox: boolean;
-  checkboxState: OrgCheckboxState | null;
+  checkboxState: OrgCheckboxState | undefined;
 };
 
 export type OrgList = {
@@ -219,7 +288,7 @@ export type OrgList = {
   id: number;
   items: List<MapOf<OrgListItem>>;
   bulletCharacter: string;
-  numberTerminatorCharacter: string | null;
+  numberTerminatorCharacter: string | undefined;
   isOrdered: boolean;
 };
 
@@ -259,7 +328,7 @@ export type OrgTitleLine = {
 };
 
 export type OrgHeadline = {
-  title: "headline";
+  type: "headline";
   titleLine: MapOf<OrgTitleLine>;
   rawDescription: string;
   description: List<any>;
@@ -274,6 +343,7 @@ export type OrgHeadline = {
 
 export type OrgElement =
   | OrgLink
+  | OrgLink2
   | OrgPercentageCookie
   | OrgFractionCookie
   | OrgCookie
@@ -289,12 +359,7 @@ export type OrgElement =
   | OrgTable
   | OrgTitleLine
   | OrgHeadline
-  | OrgText
-  | {
-      id: number;
-      type: "url" | "phone-number" | "e-mail" | "www-url";
-      content: string;
-    };
+  | OrgText;
 
 export type OrgFile = {
   headers: List<MapOf<OrgHeadline>>;
@@ -304,17 +369,15 @@ export type OrgFile = {
   lastSyncAt: Date;
   fileConfigLines: List<string>;
   linesBeforeHeadings: List<string>;
-  narrowedHeaderId: number | null;
+  narrowedHeaderId: number | undefined;
   selectedHeaderId: number;
   selectedHeaderIndex: number;
-  editMode: EditModeType | null;
+  editMode: EditModeType | undefined;
   selectedTableId: number;
   selectedDescriptionItemIndex: number;
-  selectedTableCellId: number | null;
-  selectedListItemId: number | null;
+  selectedTableCellId: number | undefined;
+  selectedListItemId: number | undefined;
 };
-
-export type ClientType = "WebDAV" | "Dropbox" | "GitLab";
 
 export type DirectoryListingEntry = {
   id: string;
@@ -350,42 +413,12 @@ export interface Client {
   deleteFile: (path: string) => Promise<any>;
 }
 
-export type ForceAction = "manual" | "push" | "pull" | null;
-
 export interface SyncOptions {
   forceAction: ForceAction;
   successMessage: string;
   shouldSuppressMessages: boolean;
   path: string;
 }
-
-export type EditModeType =
-  | "list-title"
-  | "list-contents"
-  | "table"
-  | "description";
-
-export type PopupType =
-  | "deadline-editor"
-  | "scheduled-editor"
-  | "timestamp-editor"
-  | "sync-confirmation"
-  | "capture"
-  | "tags-editor"
-  | "property-list-editor"
-  | "agenda"
-  | "search"
-  | "refile"
-  | "title-editor"
-  | "description-editor"
-  | "table-editor";
-
-export type ModalPage =
-  | "sample"
-  | "keyboard_shortcuts_editor"
-  | "capture_templates_editor"
-  | "file_settings_editor"
-  | "settings";
 
 export type Search = {
   searchFilter: string;
@@ -909,7 +942,7 @@ export type OrgCaptureAction =
 export type BaseAction =
   | {
       type: "SET_LOADING_MESSAGE";
-      loadingMessage: string | null;
+      loadingMessage: string | undefined;
     }
   | {
       type: "HIDE_LOADING_MESSAGE";
@@ -1064,7 +1097,7 @@ export type OrgCaptureTemplate = {
 
 export type SyncBackendState = {
   isAuthenticated: boolean;
-  client: Client | null;
+  client: Client | undefined;
   currentFileBrowserDirectoryListing: MapOf<DirectoryListing>;
   currentPath: string;
 };
@@ -1076,7 +1109,7 @@ export type OrgCaptureState = {
 export type Popup = { type: PopupType; data: Map<string, string> };
 
 export type BaseState = {
-  loadingMessage: string | null;
+  loadingMessage: string | undefined;
   fontSize: number;
   bulletStyle: BulletStyle;
   shouldTapTodoToAdvance: boolean;
@@ -1097,7 +1130,7 @@ export type BaseState = {
   lastViewedPath: string;
   customKeybindings: Map<string, string>;
   modalPageStack: List<ModalPage>;
-  activePopup: MapOf<Popup> | null;
+  activePopup: MapOf<Popup> | undefined;
   isLoading: Set<string>;
   online: boolean;
   agendaTimeframe: AgendaTimeframe;
@@ -1124,9 +1157,9 @@ export type State = {
   base: BaseState;
   syncBackend: SyncBackendState;
   org: {
-    past: Array<MapOf<OrgState>>;
+    past: List<MapOf<OrgState>>;
     present: MapOf<OrgState>;
-    future: Array<MapOf<OrgState>>;
+    future: List<MapOf<OrgState>>;
   };
   capture: OrgCaptureState;
 };

@@ -1,6 +1,6 @@
 import { test, fc } from "@fast-check/vitest";
 import { describe, expect, assert } from "vitest";
-import { isMap } from "immutable";
+import { isMap, isRecord } from "immutable";
 import {
   forEach,
   over,
@@ -11,7 +11,7 @@ import {
   isDate,
   isObject,
   isEmpty,
-  split
+  split,
 } from "lodash/fp";
 import {
   isWithinInterval,
@@ -74,7 +74,8 @@ import {
   fcGenListOfNObjectKeyValuePairs,
   fcGenRandomListOfObjectKeyValuePairs,
   fcGenRandomRepeaterValue,
-  fcGenRandomTimeString
+  fcGenRandomTimeString,
+  fcGenRandomImmutableRecord
 } from "../TestDataGenerators.ts";
 
 const isRepeaterType = (
@@ -312,7 +313,9 @@ describe("TestDataGenerators test suite", () => {
           const actualObj = fcGenObject(testKeysCount, fcGen);
           expect(isObject(actualObj)).toBeTruthy();
           assert.lengthOf(Object.keys(actualObj), testKeysCount);
-          expect(fcGenRandomItemFromArray(Object.values(actualObj))).toBeDefined();
+          expect(
+            fcGenRandomItemFromArray(Object.values(actualObj)),
+          ).toBeDefined();
         },
       );
       test.prop([fc.gen()])("fcGenRandomObject", (fcGen) => {
@@ -321,17 +324,14 @@ describe("TestDataGenerators test suite", () => {
         expect(Object.keys(actualObj).length).toBeGreaterThan(0);
       });
 
-      test.prop([fc.map(fc.string(), fc.anything(), { minKeys: 1 }), fc.gen()])(
-        "fcGenRandomObjectKeyValuePair",
-        (testMap, fcGen) => {
-          const testObj: Record<string, any> = Object.fromEntries(testMap);
-          const [actualKey, actualValue] = fcGenRandomObjectKeyValuePair(
-            fcGen,
-            testObj,
-          );
-          expect(testObj[actualKey]).toBe(actualValue);
-        },
-      );
+      test.prop([fc.gen()])("fcGenRandomObjectKeyValuePair", (fcGen) => {
+        const testObj: Record<string, any> = fcGenRandomObject(fcGen);
+        const [actualKey, actualValue] = fcGenRandomObjectKeyValuePair(
+          fcGen,
+          testObj,
+        );
+        expect(testObj[actualKey]).toBe(actualValue);
+      });
 
       test.prop([fc.gen(), fc.integer({ min: 1, max: 25 })])(
         "fcGenListOfNObjectKeys",
@@ -379,21 +379,23 @@ describe("TestDataGenerators test suite", () => {
         },
       );
 
-      test.prop([fc.gen()])("fcGenRandomListOfObjectKeyValuePairs", (fcGen) => {
-        const testObj = fcGenRandomObject(fcGen);
-        const actualPairs = fcGenRandomListOfObjectKeyValuePairs(
-          fcGen,
-          testObj,
-        );
+      test.prop([fc.gen()])(
+        "fcGenRandomListOfObjectKeyValuePairs",
+        (fcGen) => {
+          const testObj = fcGenRandomObject(fcGen);
+          const actualPairs = fcGenRandomListOfObjectKeyValuePairs(
+            fcGen,
+            testObj,
+          );
 
-        const [actualKey, actualValue] = fcGenRandomItemFromArray(
-          fcGen,
-          actualPairs,
-        );
+          const [actualKey, actualValue] = fcGenRandomItemFromArray(
+            fcGen,
+            actualPairs,
+          );
 
-
-        expect(testObj[actualKey]).toBe(actualValue);
-      });
+          expect(testObj[actualKey]).toBe(actualValue);
+        },
+      );
     });
 
     describe("Immutable Object generators suite", () => {
@@ -402,12 +404,19 @@ describe("TestDataGenerators test suite", () => {
         expect(isMap(actualMap)).toBeTruthy();
         expect(actualMap.isEmpty()).toBe(false);
         expect(isObject(actualObj)).toBeTruthy();
+	expect(isEmpty(actualObj)).toBe(false);
+
+      });
+      test.prop([fc.gen()])("fcGenRandomImmutableRecord", (fcGen) => {
+        const [actualRecord, actualObj] = fcGenRandomImmutableRecord(fcGen);
+        expect(isRecord(actualRecord)).toBeTruthy();
+        expect(isObject(actualObj)).toBeTruthy();
         expect(isEmpty(actualObj)).toBe(false);
       });
     });
 
     describe("Color generators suite", () => {
-      test.skip.prop([fc.gen()])("fcGenRandomColorObject", (fcGen) => {
+      test.prop([fc.gen()])("fcGenRandomColorObject", (fcGen) => {
         const {
           r: actualR,
           g: actualG,
@@ -423,7 +432,7 @@ describe("TestDataGenerators test suite", () => {
     });
 
     describe("Timestamp generators suite", () => {
-      test.skip.prop([fc.gen()])("fcGenTimeRangeParts", (fcGen) => {
+      test.prop([fc.gen()])("fcGenTimeRangeParts", (fcGen) => {
         const testDate = fcGenValidJSDateObject(fcGen);
         const testTimeRangeStartParts: Array<string> = over([
           getHourPartFromDate,
@@ -463,22 +472,26 @@ describe("TestDataGenerators test suite", () => {
       });
 
       test.prop([fc.gen()])("fcGenRandomTimeString", (fcGen) => {
-	const actualTime = fcGenRandomTimeString(fcGen)
-	const [actualHour, actualMinute] = split(":",actualTime)
-	parseIntAndAssertIntegerInRangeInclusive([0, 23], actualHour);
-	parseIntAndAssertIntegerInRangeInclusive([0, 59], actualMinute);
-
+        const actualTime = fcGenRandomTimeString(fcGen);
+        const [actualHour, actualMinute] = split(":", actualTime);
+        parseIntAndAssertIntegerInRangeInclusive([0, 23], actualHour);
+        parseIntAndAssertIntegerInRangeInclusive([0, 59], actualMinute);
       });
 
-      test.prop([fc.boolean(), fc.gen()])("fcGenRandomRepeaterValue", (withStartTime, fcGen) => {
-	const actualRepeaterValue = fcGenRandomRepeaterValue(withStartTime, fcGen)
-	assert.isNumber(actualRepeaterValue)
-      });
-
+      test.prop([fc.boolean(), fc.gen()])(
+        "fcGenRandomRepeaterValue",
+        (withStartTime, fcGen) => {
+          const actualRepeaterValue = fcGenRandomRepeaterValue(
+            withStartTime,
+            fcGen,
+          );
+          assert.isNumber(actualRepeaterValue);
+        },
+      );
 
       describe("Individual repeater types suite", () => {
         describe("fcGenOrgTimestampPartRecordWithCumulateRepeater", () => {
-          test.skip.prop([fc.boolean(), fc.gen()])(
+          test.prop([fc.boolean(), fc.gen()])(
             "withDeadline",
             (withStartTime, fcGen) => {
               const [
@@ -498,12 +511,12 @@ describe("TestDataGenerators test suite", () => {
                   month: expect.any(String),
                   day: expect.any(String),
                   dayName: expect.any(String),
-                  endHour: null,
-                  endMinute: null,
+                  endHour: undefined,
+                  endMinute: undefined,
                   repeaterType: "+",
-                  repeaterValue: expect.any(Number),
+                  repeaterValue: expect.any(String),
                   repeaterUnit: expect.any(String),
-                  repeaterDeadlineValue: expect.any(Number),
+                  repeaterDeadlineValue: expect.any(String),
                   repeaterDeadlineUnit: expect.any(String),
                 });
 
@@ -528,7 +541,7 @@ describe("TestDataGenerators test suite", () => {
             },
           );
 
-          test.skip.prop([fc.boolean(), fc.gen()])(
+          test.prop([fc.boolean(), fc.gen()])(
             "withoutDeadline",
             (withStartTime, fcGen) => {
               const [
@@ -548,13 +561,13 @@ describe("TestDataGenerators test suite", () => {
                   month: expect.any(String),
                   day: expect.any(String),
                   dayName: expect.any(String),
-                  endHour: null,
-                  endMinute: null,
+                  endHour: undefined,
+                  endMinute: undefined,
                   repeaterType: "+",
-                  repeaterValue: expect.any(Number),
+                  repeaterValue: expect.any(String),
                   repeaterUnit: expect.any(String),
-                  repeaterDeadlineValue: null,
-                  repeaterDeadlineUnit: null,
+                  repeaterDeadlineValue: undefined,
+                  repeaterDeadlineUnit: undefined,
                 });
 
                 expect(
@@ -574,7 +587,7 @@ describe("TestDataGenerators test suite", () => {
         });
 
         describe("fcGenOrgTimestampPartRecordWithCatchupRepeater", () => {
-          test.skip.prop([fc.boolean(), fc.gen()])(
+          test.prop([fc.boolean(), fc.gen()])(
             "withDeadline",
             (withStartTime, fcGen) => {
               const [
@@ -594,12 +607,12 @@ describe("TestDataGenerators test suite", () => {
                   month: expect.any(String),
                   day: expect.any(String),
                   dayName: expect.any(String),
-                  endHour: null,
-                  endMinute: null,
+                  endHour: undefined,
+                  endMinute: undefined,
                   repeaterType: "++",
-                  repeaterValue: expect.any(Number),
+                  repeaterValue: expect.any(String),
                   repeaterUnit: expect.any(String),
-                  repeaterDeadlineValue: expect.any(Number),
+                  repeaterDeadlineValue: expect.any(String),
                   repeaterDeadlineUnit: expect.any(String),
                 });
 
@@ -624,7 +637,7 @@ describe("TestDataGenerators test suite", () => {
             },
           );
 
-          test.skip.prop([fc.boolean(), fc.gen()])(
+          test.prop([fc.boolean(), fc.gen()])(
             "withoutDeadline",
             (withStartTime, fcGen) => {
               const [
@@ -644,13 +657,13 @@ describe("TestDataGenerators test suite", () => {
                   month: expect.any(String),
                   day: expect.any(String),
                   dayName: expect.any(String),
-                  endHour: null,
-                  endMinute: null,
+                  endHour: undefined,
+                  endMinute: undefined,
                   repeaterType: "++",
-                  repeaterValue: expect.any(Number),
+                  repeaterValue: expect.any(String),
                   repeaterUnit: expect.any(String),
-                  repeaterDeadlineValue: null,
-                  repeaterDeadlineUnit: null,
+                  repeaterDeadlineValue: undefined,
+                  repeaterDeadlineUnit: undefined,
                 });
 
                 expect(
@@ -659,7 +672,6 @@ describe("TestDataGenerators test suite", () => {
                     actualTimestampPartObject.repeaterUnit,
                   ),
                 ).toBeTruthy();
-                assert.isNumber(actualTimestampPartObject.repeaterValue);
               })([
                 testTimestampPartRecord.toJS(),
                 expectedNextRepeatTimestampPartObject,
@@ -670,7 +682,7 @@ describe("TestDataGenerators test suite", () => {
           );
         });
         describe("fcGenOrgTimestampPartRecordWithCatchupRepeater", () => {
-          test.skip.prop([fc.boolean(), fc.gen()])(
+          test.prop([fc.boolean(), fc.gen()])(
             "withDeadline",
             (withStartTime, fcGen) => {
               const [
@@ -690,12 +702,12 @@ describe("TestDataGenerators test suite", () => {
                   month: expect.any(String),
                   day: expect.any(String),
                   dayName: expect.any(String),
-                  endHour: null,
-                  endMinute: null,
+                  endHour: undefined,
+                  endMinute: undefined,
                   repeaterType: "++",
-                  repeaterValue: expect.any(Number),
+                  repeaterValue: expect.any(String),
                   repeaterUnit: expect.any(String),
-                  repeaterDeadlineValue: expect.any(Number),
+                  repeaterDeadlineValue: expect.any(String),
                   repeaterDeadlineUnit: expect.any(String),
                 });
 
@@ -720,7 +732,7 @@ describe("TestDataGenerators test suite", () => {
             },
           );
 
-          test.skip.prop([fc.boolean(), fc.gen()])(
+          test.prop([fc.boolean(), fc.gen()])(
             "withoutDeadline",
             (withStartTime, fcGen) => {
               const [
@@ -740,13 +752,13 @@ describe("TestDataGenerators test suite", () => {
                   month: expect.any(String),
                   day: expect.any(String),
                   dayName: expect.any(String),
-                  endHour: null,
-                  endMinute: null,
+                  endHour: undefined,
+                  endMinute: undefined,
                   repeaterType: "++",
-                  repeaterValue: expect.any(Number),
+                  repeaterValue: expect.any(String),
                   repeaterUnit: expect.any(String),
-                  repeaterDeadlineValue: null,
-                  repeaterDeadlineUnit: null,
+                  repeaterDeadlineValue: undefined,
+                  repeaterDeadlineUnit: undefined,
                 });
 
                 expect(
@@ -755,7 +767,6 @@ describe("TestDataGenerators test suite", () => {
                     actualTimestampPartObject.repeaterUnit,
                   ),
                 ).toBeTruthy();
-                assert.isNumber(actualTimestampPartObject.repeaterValue);
               })([
                 testTimestampPartRecord.toJS(),
                 expectedNextRepeatTimestampPartObject,
@@ -767,7 +778,7 @@ describe("TestDataGenerators test suite", () => {
         });
 
         describe("fcGenOrgTimestampPartRecordWithRestartRepeater", () => {
-          test.skip.prop([fc.boolean(), fc.gen()])(
+          test.prop([fc.boolean(), fc.gen()])(
             "withDeadline",
             (withStartTime, fcGen) => {
               const [
@@ -787,12 +798,12 @@ describe("TestDataGenerators test suite", () => {
                   month: expect.any(String),
                   day: expect.any(String),
                   dayName: expect.any(String),
-                  endHour: null,
-                  endMinute: null,
+                  endHour: undefined,
+                  endMinute: undefined,
                   repeaterType: ".+",
-                  repeaterValue: expect.any(Number),
+                  repeaterValue: expect.any(String),
                   repeaterUnit: expect.any(String),
-                  repeaterDeadlineValue: expect.any(Number),
+                  repeaterDeadlineValue: expect.any(String),
                   repeaterDeadlineUnit: expect.any(String),
                 });
 
@@ -817,7 +828,7 @@ describe("TestDataGenerators test suite", () => {
             },
           );
 
-          test.skip.prop([fc.boolean(), fc.gen()])(
+          test.prop([fc.boolean(), fc.gen()])(
             "withoutDeadline",
             (withStartTime, fcGen) => {
               const [
@@ -837,13 +848,13 @@ describe("TestDataGenerators test suite", () => {
                   month: expect.any(String),
                   day: expect.any(String),
                   dayName: expect.any(String),
-                  endHour: null,
-                  endMinute: null,
+                  endHour: undefined,
+                  endMinute: undefined,
                   repeaterType: ".+",
-                  repeaterValue: expect.any(Number),
+                  repeaterValue: expect.any(String),
                   repeaterUnit: expect.any(String),
-                  repeaterDeadlineValue: null,
-                  repeaterDeadlineUnit: null,
+                  repeaterDeadlineValue: undefined,
+                  repeaterDeadlineUnit: undefined,
                 });
 
                 expect(
@@ -852,7 +863,6 @@ describe("TestDataGenerators test suite", () => {
                     actualTimestampPartObject.repeaterUnit,
                   ),
                 ).toBeTruthy();
-                assert.isNumber(actualTimestampPartObject.repeaterValue);
               })([
                 testTimestampPartRecord.toJS(),
                 expectedNextRepeatTimestampPartObject,
@@ -905,7 +915,7 @@ describe("TestDataGenerators test suite", () => {
                   actualTimestampObject.repeaterUnit,
                 ),
               ).toBeTruthy();
-              assert.isNumber(actualTimestampObject.repeaterValue);
+              assert.isString(actualTimestampObject.repeaterValue);
             }
 
             if (withDeadline) {
@@ -915,7 +925,7 @@ describe("TestDataGenerators test suite", () => {
                   actualTimestampObject.repeaterDeadlineUnit,
                 ),
               ).toBeTruthy();
-              assert.isNumber(actualTimestampObject.repeaterDeadlineValue);
+              assert.isString(actualTimestampObject.repeaterDeadlineValue);
             }
 
             if (withDelay) {
@@ -923,7 +933,7 @@ describe("TestDataGenerators test suite", () => {
               expect(
                 isDelayUnit(withStartTime, actualTimestampObject.delayUnit),
               ).toBeTruthy();
-              assert.isNumber(actualTimestampObject.delayValue);
+              assert.isString(actualTimestampObject.delayValue);
             }
 
             if (withEndTime) {
@@ -934,26 +944,29 @@ describe("TestDataGenerators test suite", () => {
             }
           };
 
-        test.skip.prop([fc.gen()])("runner", (fcGen) => {
+        test.prop([fc.gen()])("runner", (fcGen) => {
           forEach(testRunner(fcGen))(REGULARTIMESTAMPTESTCASES);
         });
       });
 
-      test.skip.prop([fc.gen()])("fcGenRandomOrgTimestampPartRecord", (fcGen) => {
-        const [actualTimestamp, actualDate, actualText] =
-          fcGenRandomOrgTimestampPartRecord(fcGen);
-        expect(actualDate).toEqual(expect.any(Date));
-        assert.isString(actualText);
+      test.prop([fc.gen()])(
+        "fcGenRandomOrgTimestampPartRecord",
+        (fcGen) => {
+          const [actualTimestamp, actualDate, actualText] =
+            fcGenRandomOrgTimestampPartRecord(fcGen);
+          expect(actualDate).toEqual(expect.any(Date));
+          assert.isString(actualText);
 
-        expect(actualTimestamp.toJS()).toMatchObject({
-          isActive: expect.any(Boolean),
-          withStartTime: expect.any(Boolean),
-          year: expect.any(String),
-          month: expect.any(String),
-          day: expect.any(String),
-          dayName: expect.any(String),
-        });
-      });
+          expect(actualTimestamp.toJS()).toMatchObject({
+            isActive: expect.any(Boolean),
+            withStartTime: expect.any(Boolean),
+            year: expect.any(String),
+            month: expect.any(String),
+            day: expect.any(String),
+            dayName: expect.any(String),
+          });
+        },
+      );
 
       describe("fcGenOrgTimestampPartRecordWithRepeater", () => {
         const testRunner =
@@ -979,18 +992,18 @@ describe("TestDataGenerators test suite", () => {
                 month: expect.any(String),
                 day: expect.any(String),
                 dayName: expect.any(String),
-                endHour: null,
-                endMinute: null,
+                endHour: undefined,
+                endMinute: undefined,
                 repeaterType,
-                repeaterValue: expect.any(Number),
+                repeaterValue: expect.any(String),
                 repeaterUnit: expect.any(String),
-                delayType: null,
-                delayValue: null,
-                delayUnit: null,
+                delayType: undefined,
+                delayValue: undefined,
+                delayUnit: undefined,
               });
               if (withDeadline) {
                 expect(actualTimestampPartObject).toMatchObject({
-                  repeaterDeadlineValue: expect.any(Number),
+                  repeaterDeadlineValue: expect.any(String),
                   repeaterDeadlineUnit: expect.any(String),
                 });
               }
@@ -1002,12 +1015,12 @@ describe("TestDataGenerators test suite", () => {
             expect(isDate(testCurrentDate)).toBeTruthy();
           };
 
-        test.skip.prop([fc.gen()])("runner", (fcGen) => {
+        test.prop([fc.gen()])("runner", (fcGen) => {
           forEach(testRunner(fcGen))(TIMESTAMPSWITHREPEATERTESTCASES);
         });
       });
 
-      test.skip.prop([fc.gen()])(
+      test.prop([fc.gen()])(
         "fcGenRandomOrgTimestampPartWithRepeater",
         (fcGen) => {
           const [
@@ -1024,10 +1037,10 @@ describe("TestDataGenerators test suite", () => {
               month: expect.any(String),
               day: expect.any(String),
               dayName: expect.any(String),
-              endHour: null,
-              endMinute: null,
+              endHour: undefined,
+              endMinute: undefined,
               repeaterType: expect.any(String),
-              repeaterValue: expect.any(Number),
+              repeaterValue: expect.any(String),
               repeaterUnit: expect.any(String),
             });
           })([

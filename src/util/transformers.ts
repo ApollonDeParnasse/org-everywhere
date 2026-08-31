@@ -53,8 +53,9 @@ import {
   set,
 } from "immutable";
 import type { ReadonlyNonEmptyArray } from "fp-ts/ReadonlyNonEmptyArray";
+import { flap } from "fp-ts/Array";
 import { sequenceT } from "fp-ts/Apply";
-import { pipe as fpipe } from "fp-ts/function";
+import { pipe as fpipe, flip } from "fp-ts/function";
 import {
   prepend,
   Applicative as readonlyArrayApplicative,
@@ -533,8 +534,8 @@ export const setRecord = <
   return set<TProps, C, K>(record, key, value);
 };
 export const curriedSetRecord = <TProps extends object, C extends ImmutableRecord<TProps>, K extends keyof TProps>(key: K) => (value: TProps[K]) => (record: C): C => {
-    return setRecord(key, value, record)
-}
+    return setRecord(key, value, record)}
+
 
 export const updateRecord = <
   TProps extends object,
@@ -619,3 +620,5 @@ export const updateAllForRecord = <
 export const curriedUpdateAllForRecord = <TProps extends object, C extends ImmutableRecord<TProps>, K extends keyof TProps>(keyUpdaterPairs: Array<[K, (value: TProps[K]) => TProps[K]]>) => (record: C): C => {
     return updateAllForRecord(keyUpdaterPairs, record)
 }
+
+export const over = flip(flap)

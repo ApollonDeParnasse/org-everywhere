@@ -9,7 +9,6 @@ import {
   property,
   join,
   toString,
-  identity,
   map,
   shuffle,
   size,
@@ -21,8 +20,11 @@ import {
   merge,
   range,
   take,
-  partial
+  partial,
+  zipObject,
 } from "lodash/fp";
+import { pipe as fpipe, identity } from "fp-ts/function";
+import { mapFst } from "fp-ts/Tuple";
 import { match } from "ts-pattern";
 import {
   add as addDateUnits,
@@ -32,7 +34,11 @@ import {
   addHours,
   type Duration,
 } from "date-fns/fp";
-import { type MapOf, Map, fromJS } from "immutable";
+import {
+  type MapOf,
+  Map,
+  Record as ImmutableRecord
+} from "immutable";
 import type { ColorObject } from "color";
 import type {
   OrgTimestampPart,
@@ -41,7 +47,9 @@ import type {
   RepeaterType,
   DelayType,
   DelayUnit,
+  OrgTimestampPartRecord,
 } from "../src/types";
+import { makeOrgTimestampPartRecord } from "../src/types";
 import {
   unfold,
   unfoldAndShuffleArray,
@@ -58,7 +66,7 @@ import {
   getTimestampPartsFromDate,
   addTimestampUnitToDate,
   createNextRepeatTimestampPartObject,
-  padTimePart
+  padTimePart,
 } from "../src/lib/timestamps";
 import { createHeadingStars } from "../src/lib/org_utils";
 import {
@@ -73,10 +81,7 @@ import {
   TESTREPEATERUNITSWITHOUTHOURS,
   TESTDELAYTYPES,
   TESTMINHOURSDIFF,
-  TESTMINDAYSDIFF,
-  TESTSECONDSINADAY,
-  TESTSECONDSINANHOUR,
-  TESTSECONDSINAMINUTE,
+  TESTMINDAYSDIFF
 } from "./Constants";
 
 export const randomArrayValue = pipe([shuffle, first]);
@@ -90,10 +95,16 @@ export const randomArrayIndexMinusLastIndex = pipe([
   randomArrayValue,
 ]);
 
-const MINUTES = unfold(identity, 60)
-const HOURS = unfold(identity, 24)
-export const randomMinutePart = pipe([partial(randomArrayValue, [MINUTES]), padTimePart])
-export const randomHourPart = pipe([partial(randomArrayValue, [HOURS]), padTimePart])
+const MINUTES = unfold(identity, 60);
+const HOURS = unfold(identity, 24);
+export const randomMinutePart = pipe([
+  partial(randomArrayValue, [MINUTES]),
+  padTimePart,
+]);
+export const randomHourPart = pipe([
+  partial(randomArrayValue, [HOURS]),
+  padTimePart,
+]);
 
 // fast-check
 
@@ -143,7 +154,6 @@ export const curriedFCRandomItemFromArray =
 
 export const fcGetTwoRandomItemsFromArray = fcShuffledSubarray(2);
 
-
 export const fcNRandomArrayIndicesAsIntegers = curry(
   (
     count: number,
@@ -169,7 +179,8 @@ export const fcGetRandomArrayChunk = curry(
   },
 );
 
-export const fcGenRandomInteger = (fcGen: fc.GeneratorValue) => fcGen(fc.integer);
+export const fcGenRandomInteger = (fcGen: fc.GeneratorValue) =>
+  fcGen(fc.integer);
 export const fcGenRandomIntegerBetweenOneAndMaxSafeInteger = (
   fcGen: fc.GeneratorValue,
 ) => fcGen(fc.integer, { min: 1 });
@@ -237,8 +248,6 @@ const defaultConvertFCGenIntoRandomGen =
     return generator(randomNumber, fcGen);
   };
 
-
-
 const flippedConvertFCGenIntoRandomGen =
   <T>(generator: (fcGen: fc.GeneratorValue, randomNumber: number) => T) =>
   (fcGen: fc.GeneratorValue): T => {
@@ -246,15 +255,24 @@ const flippedConvertFCGenIntoRandomGen =
     return generator(fcGen, randomNumber);
   };
 
-export const convertFCGenWithSingleArgIntoRandomGen = <A, B>(generator: (randomNumber: number, fcGen: fc.GeneratorValue, arg: A) => B) =>
+export const convertFCGenWithSingleArgIntoRandomGen =
+  <A, B>(
+    generator: (randomNumber: number, fcGen: fc.GeneratorValue, arg: A) => B,
+  ) =>
   (fcGen: fc.GeneratorValue, arg: A): B => {
     const randomNumber = fcGenRandomIntegerBetween1And25(fcGen);
     return generator(randomNumber, fcGen, arg);
   };
 
-export const defaultConvertFCGenIntoRandomGenBasedOnArgLength = <A, B>(generator: (randomNumber: number, fcGen: fc.GeneratorValue, arg: A) => B) =>
-  (fcGen: fc.GeneratorValue, arg: A): B => {
-    const randomNumber = fcGenRandomIntegerBetweenOneAnd(fcGen, Object.keys(arg).length)
+export const defaultConvertFCGenIntoRandomGenBasedOnArgLength =
+  <A extends object, B>(
+    generator: (randomNumber: number, fcGen: fc.GeneratorValue, arg: A) => B,
+  ) =>
+    (fcGen: fc.GeneratorValue, arg: A): B => {
+    const randomNumber = fcGenRandomIntegerBetweenOneAnd(
+      fcGen,
+      Object.keys(arg).length,
+    );
     return generator(randomNumber, fcGen, arg);
   };
 
@@ -312,62 +330,6 @@ export const fcCallRandomFCGenWithArg = curry(
     return arrayOfFCGens[index](arg, fcGen);
   },
 );
-
-// Objects
-export const fcGenRandomObjectKey = curry(
-  (fcGen: fc.GeneratorValue, object: Record<string, any>): string => {
-    return pipe([Object.keys, fcGenRandomItemFromArray(fcGen)])(object);
-  },
-);
-
-export const fcGenRandomObjectValue = curry(
-  (fcGen: fc.GeneratorValue, object: Record<string, any>): string => {
-    return pipe([Object.values, fcGenRandomItemFromArray(fcGen)])(object);
-  },
-);
-
-export const fcGenRandomObjectKeyValuePair = curry(
-  <T>(fcGen: fc.GeneratorValue, object: Record<string, T>): [string, T] => {
-    const key: string = fcGenRandomObjectKey(fcGen, object);
-    const val: T = object[key];
-    return [key, val];
-  },
-);
-
-export const fcGenListOfNObjectKeys = curry(
-  <T>(pairs: number, fcGen: fc.GeneratorValue, object: Record<string, T>): Array<[string, T]> => {
-    return pipe([
-      Object.keys,
-      fcShuffledSubarray(
-            pairs,
-            fcGen,
-      ),
-    ])(object)
-
-  },
-);
-
-export const fcGenRandomListOfObjectKeys = defaultConvertFCGenIntoRandomGenBasedOnArgLength(fcGenListOfNObjectKeys);
-
-export const fcGenListOfNObjectKeyValuePairs = curry(
-  <T>(pairs: number, fcGen: fc.GeneratorValue, object: Record<string, T>): Array<[string, T]> => {
-    return pipe([
-      fcGenListOfNObjectKeys,
-      map(over([identity, (key: string) => object[key]])),
-    ])(pairs, fcGen, object)
-
-  },
-);
-
-export const fcGenRandomListOfObjectKeyValuePairs = defaultConvertFCGenIntoRandomGenBasedOnArgLength(fcGenListOfNObjectKeyValuePairs)
-
-export const fcGenObject = (keys: number, fcGen: fc.GeneratorValue): Record<string, any> => {
-  return fcGen(fc.dictionary, fc.string(), fc.anything(), { minKeys: keys, maxKeys: keys, noNullPrototype: true })
-}
-
-export const fcGenRandomObject = defaultConvertFCGenIntoRandomGen(fcGenObject)
-export const fcGenRandomImmutableMap = pipe([fcGenRandomObject, over([fromJS, identity])])
-
 
 export const fcGenRandomArrayChunkSize = curry(
   <T>(fcGen: fc.GeneratorValue, array: Array<T>): number => {
@@ -465,9 +427,9 @@ export const fcArrayOfNFloatsBetweenZeroAndOne = (
   fcGen: fc.GeneratorValue,
   floatCount: number,
 ): Array<number> => {
-  return unfold((_: number) => fcGenRandomFloatBetweenZeroAndOneExclusive(fcGen))(
-    floatCount,
-  );
+  return unfold((_: number) =>
+    fcGenRandomFloatBetweenZeroAndOneExclusive(fcGen),
+  )(floatCount);
 };
 
 export const fcGenRandomDoubleInRange = curry(
@@ -538,9 +500,10 @@ export const fcGenRandomLowerAlphaChar = fcGenRandomCharacterGenerator(
 
 export const fcTestLinearRangeGenerator = curry(
   (fcGen: fc.GeneratorValue, rangeSize: number): [number, number] => {
-    return pipe([fcGenRandomInteger, convertRangeSizeAndMinIntoRange(rangeSize)])(
-      fcGen,
-    );
+    return pipe([
+      fcGenRandomInteger,
+      convertRangeSizeAndMinIntoRange(rangeSize),
+    ])(fcGen);
   },
 );
 
@@ -643,7 +606,9 @@ export const fcNLengthStringGenerator = (
   ])(fcGen, stringLength);
 };
 
-export const fcGenRandomStringGenerator = (fcGen: fc.GeneratorValue): string => {
+export const fcGenRandomStringGenerator = (
+  fcGen: fc.GeneratorValue,
+): string => {
   return pipe([
     fcGenRandomIntegerBetweenTwoAnd(fcGen),
     fcNLengthUniqueStringArrayGenerator(fcGen),
@@ -688,6 +653,83 @@ export const fcGenRandomAlphaString = fcCallRandomFCGen([
   fcGenRandomLengthLowerAlphaStringGenerator,
 ]);
 
+// Objects
+export const fcGenRandomObjectKey = curry(
+  (fcGen: fc.GeneratorValue, object: Record<string, any>): string => {
+    return pipe([Object.keys, fcGenRandomItemFromArray(fcGen)])(object);
+  },
+);
+
+export const fcGenRandomObjectValue = curry(
+  <T>(fcGen: fc.GeneratorValue, object: Record<string, T>): T => {
+    return fpipe(Object.values(object), fcGenRandomItemFromArray(fcGen));
+  },
+);
+
+export const fcGenRandomObjectKeyValuePair = curry(
+  <T>(fcGen: fc.GeneratorValue, object: Record<string, T>): [string, T] => {
+    return fpipe(Object.entries(object), fcGenRandomItemFromArray(fcGen));
+  },
+);
+
+export const fcGenListOfNObjectKeys = curry(
+  <T>(
+    pairs: number,
+    fcGen: fc.GeneratorValue,
+    object: Record<string, T>,
+  ): Array<[string, T]> => {
+    return fpipe(Object.keys(object), fcShuffledSubarray(pairs, fcGen));
+  },
+);
+
+export const fcGenRandomListOfObjectKeys =
+  defaultConvertFCGenIntoRandomGenBasedOnArgLength(fcGenListOfNObjectKeys);
+
+export const fcGenListOfNObjectKeyValuePairs = curry(
+  <T>(
+    pairs: number,
+    fcGen: fc.GeneratorValue,
+    object: Record<string, T>,
+  ): Array<[string, T]> => {
+    return fpipe(Object.entries(object), fcShuffledSubarray(pairs, fcGen));
+  },
+);
+
+export const fcGenRandomListOfObjectKeyValuePairs =
+  defaultConvertFCGenIntoRandomGenBasedOnArgLength(
+    fcGenListOfNObjectKeyValuePairs,
+  );
+
+export const fcGenObject = (
+  keysCount: number,
+  fcGen: fc.GeneratorValue,
+): Record<string, any> => {
+  const keys = fcNLengthUniqueStringArrayGenerator(fcGen, keysCount);
+  const values = fcGen(fc.array, fc.anything(), {
+    minLength: keysCount,
+    maxLength: keysCount,
+  });
+  return zipObject(keys, values);
+};
+
+export const fcGenRandomObject = defaultConvertFCGenIntoRandomGen(fcGenObject);
+export const fcGenRandomImmutableMap = (fcGen: fc.GeneratorValue): [MapOf<Record<string, any>>, Record<string, any>] => {
+  return fpipe(fcGenRandomObject(fcGen),
+    (x: Record<string, any>): [Record<string, any>, Record<string, any>] => [identity(x), identity(x)],
+    mapFst((x: Record<string, any>): MapOf<Record<string, any>> => Map(x)))
+}
+
+export const fcGenRandomImmutableRecord = (fcGen: fc.GeneratorValue): [ImmutableRecord<Record<string, any>>, Record<string, any>] => {
+  // is there a better way to do this?
+  const recordMaker = (object: Record<string, any>): ImmutableRecord<Record<string, any>> => {
+    const defaultMaker = ImmutableRecord(object)
+    return defaultMaker(object)
+  }
+  return fpipe(fcGenRandomObject(fcGen),
+    (x: Record<string, any>): [Record<string, any>, Record<string, any>] => [identity(x), identity(x)],
+    mapFst(recordMaker))
+}
+
 export const fcShuffledSubArrayOfTemplateVariables = fcShuffledSubarray(
   TESTORGCAPTURETEMPLATES,
 );
@@ -729,7 +771,9 @@ export const fcGenRandomColorObjectArray = (
   );
 };
 
-export const fcGenRandomColorObject = (fcGen: fc.GeneratorValue): ColorObject => {
+export const fcGenRandomColorObject = (
+  fcGen: fc.GeneratorValue,
+): ColorObject => {
   const [r, g, b] = fcGenRandomColorObjectArray(fcGen);
   const alpha = fcGenRandomFloatBetweenZeroAndOneExclusive(fcGen);
   return {
@@ -878,7 +922,10 @@ export const fcGenRandomRepeaterValue = (
   withStartTime: boolean,
   fcGen: fc.GeneratorValue,
 ): number => {
-  return pipe([fcGenRandomRepeaterUnit, (unit: string): number => fcGenRepeaterValue(unit, fcGen)])(withStartTime, fcGen)
+  return pipe([
+    fcGenRandomRepeaterUnit,
+    (unit: string): number => fcGenRepeaterValue(unit, fcGen),
+  ])(withStartTime, fcGen);
 };
 
 const fcGenRandomRepeaterDeadlineValue = (
@@ -890,15 +937,23 @@ const fcGenRandomRepeaterDeadlineValue = (
   return val.toString();
 };
 
-export const fcGenRandomDelayType = curriedFCRandomItemFromArray(TESTDELAYTYPES);
+export const fcGenRandomDelayType =
+  curriedFCRandomItemFromArray(TESTDELAYTYPES);
 export const fcGenRandomDelayUnit = fcGenRandomRepeaterUnit;
 export const fcGenDelayValue = fcGenRepeaterValue;
 
 export const fcGenRandomTimeString = pipe([
   over([fcGenRandomHours, fcGenRandomMinutes]),
   map(padTimePart),
-  join(":")
-])
+  join(":"),
+]);
+
+export const fcGenRandomTimeStringMV = pipe([
+  over([fcGenRandomHours, fcGenRandomMinutes]),
+  map(padTimePart),
+  over([join(":"), identity]),
+]);
+
 export const fcGenTimeRangeParts = (
   [hourOne, minuteOne]: Array<string>,
   fcGen: fc.GeneratorValue,
@@ -923,8 +978,6 @@ export const fcGenTimeRangeParts = (
   ]);
 };
 
-
-
 export const fcGenOrgTimestampPartObject = (
   {
     isActive = false,
@@ -941,38 +994,38 @@ export const fcGenOrgTimestampPartObject = (
     getTimestampPartsFromDate(testDate);
 
   const [startHour, startMinute, endHour, endMinute]:
-    | [string, string, null, null]
+    | [string, string, undefined, undefined]
     | Array<string> = withEndTime
     ? fcGenTimeRangeParts(startTimeParts, fcGen)
-    : [startTimeParts[0], startTimeParts[1], null, null];
+    : [startTimeParts[0], startTimeParts[1], undefined, undefined];
 
-  const repeaterType: RepeaterType | null = withRepeater
+  const repeaterType: RepeaterType | undefined = withRepeater
     ? fcGenRandomRepeaterType(fcGen)
-    : null;
-  const repeaterUnit: RepeaterUnit | null = withRepeater
+    : undefined;
+  const repeaterUnit: RepeaterUnit | undefined = withRepeater
     ? fcGenRandomRepeaterUnit(withStartTime, fcGen)
-    : null;
-  const repeaterValue: string | null =
+    : undefined;
+  const repeaterValue: string | undefined =
     withRepeater && repeaterUnit
       ? fcGenRepeaterValue(repeaterUnit, fcGen).toString()
-      : null;
-  const repeaterDeadlineUnit: RepeaterUnit | null = withDeadline
+      : undefined;
+  const repeaterDeadlineUnit: RepeaterUnit | undefined = withDeadline
     ? repeaterUnit
-    : null;
-  const repeaterDeadlineValue: string | null =
+    : undefined;
+  const repeaterDeadlineValue: string | undefined =
     withDeadline && repeaterValue
       ? fcGenRandomRepeaterDeadlineValue(repeaterValue, fcGen)
-      : null;
-  const delayType: DelayType | null = withDelay
+      : undefined;
+  const delayType: DelayType | undefined = withDelay
     ? fcGenRandomDelayType(fcGen)
-    : null;
-  const delayUnit: DelayUnit | null = withDelay
+    : undefined;
+  const delayUnit: DelayUnit | undefined = withDelay
     ? fcGenRandomDelayUnit(withStartTime, fcGen)
-    : null;
-  const delayValue: string | null =
+    : undefined;
+  const delayValue: string | undefined =
     withDelay && delayUnit
       ? fcGenDelayValue(delayUnit, fcGen).toString()
-      : null;
+      : undefined;
 
   const timestamp: OrgTimestampPart = {
     isActive,
@@ -1025,7 +1078,7 @@ export const fcGenOrgTimestampPartRecord = (
     withDelay = false,
   }: Record<string, boolean>,
   fcGen: fc.GeneratorValue,
-): [MapOf<OrgTimestampPart>, Date, string] => {
+): [OrgTimestampPartRecord, Date, string] => {
   const [timestamp, testDate, timestampString] = fcGenOrgTimestampPartObject(
     {
       isActive,
@@ -1037,7 +1090,7 @@ export const fcGenOrgTimestampPartRecord = (
     },
     fcGen,
   );
-  return [Map(timestamp), testDate, timestampString];
+  return [makeOrgTimestampPartRecord(timestamp), testDate, timestampString];
 };
 
 export const fcGenRandomOrgTimestampPartObject = (
@@ -1053,10 +1106,10 @@ export const fcGenRandomOrgTimestampPartObject = (
 
 export const fcGenRandomOrgTimestampPartRecord = (
   fcGen: fc.GeneratorValue,
-): [MapOf<OrgTimestampPart>, Date, string] => {
+): [OrgTimestampPartRecord, Date, string] => {
   const [timestamp, testDate, timestampString] =
     fcGenRandomOrgTimestampPartObject(fcGen);
-  return [Map(timestamp), testDate, timestampString];
+  return [makeOrgTimestampPartRecord(timestamp), testDate, timestampString];
 };
 
 export const fcGenOrgTimestampPartObjectWithRepeaterTypeX = (
@@ -1071,18 +1124,21 @@ export const fcGenOrgTimestampPartObjectWithRepeaterTypeX = (
   },
   fcGen: fc.GeneratorValue,
 ): [OrgTimestampPart, Date, RepeaterUnit, string, string] => {
-  const repeaterUnit: RepeaterUnit = fcGenRandomRepeaterUnit(withStartTime, fcGen);
+  const repeaterUnit: RepeaterUnit = fcGenRandomRepeaterUnit(
+    withStartTime,
+    fcGen,
+  );
   const repeaterValue: string = fcGenRepeaterValue(
     repeaterUnit,
     fcGen,
   ).toString();
-  const repeaterDeadlineUnit: RepeaterUnit | null = withDeadline
+  const repeaterDeadlineUnit: RepeaterUnit | undefined = withDeadline
     ? repeaterUnit
-    : null;
-  const repeaterDeadlineValue: string | null =
+    : undefined;
+  const repeaterDeadlineValue: string | undefined =
     withDeadline && repeaterValue
       ? fcGenRandomRepeaterDeadlineValue(repeaterValue, fcGen)
-      : null;
+      : undefined;
 
   const [timestamp, date, text] = fcGenOrgTimestampPartObject(
     { withStartTime, isActive: true },
@@ -1105,7 +1161,7 @@ export const fcGenOrgTimestampPartRecordWithCumulateRepeater = (
     withDeadline,
   }: { withStartTime: boolean; withDeadline: boolean },
   fcGen: fc.GeneratorValue,
-): [MapOf<OrgTimestampPart>, Date, OrgTimestampPart] => {
+): [OrgTimestampPartRecord, Date, OrgTimestampPart] => {
   const repeaterType: RepeaterType = "+";
   const [timestampWithRepeater, date, repeaterUnit, repeaterValue] =
     fcGenOrgTimestampPartObjectWithRepeaterTypeX(
@@ -1126,7 +1182,7 @@ export const fcGenOrgTimestampPartRecordWithCumulateRepeater = (
       expectedRepeatDate,
     );
 
-  return [Map(timestampWithRepeater), currentDate, nextRepeatTimestamp];
+  return [makeOrgTimestampPartRecord(timestampWithRepeater), currentDate, nextRepeatTimestamp];
 };
 
 // adding (repeaterValue * periodsElapsed) to a date is not
@@ -1150,7 +1206,7 @@ export const fcGenOrgTimestampPartRecordWithCatchupRepeater = (
     withDeadline,
   }: { withStartTime: boolean; withDeadline: boolean },
   fcGen: fc.GeneratorValue,
-): [MapOf<OrgTimestampPart>, Date, OrgTimestampPart] => {
+): [OrgTimestampPartRecord, Date, OrgTimestampPart] => {
   const repeaterType: RepeaterType = "++";
   const [timestampWithRepeater, date, repeaterUnit, repeaterValue] =
     fcGenOrgTimestampPartObjectWithRepeaterTypeX(
@@ -1181,7 +1237,7 @@ export const fcGenOrgTimestampPartRecordWithCatchupRepeater = (
   const nextRepeatTimestamp: OrgTimestampPart =
     createNextRepeatTimestampPartObject(timestampWithRepeater, nextRepeatDate);
 
-  return [Map(timestampWithRepeater), currentDate, nextRepeatTimestamp];
+  return [makeOrgTimestampPartRecord(timestampWithRepeater), currentDate, nextRepeatTimestamp];
 };
 
 // .+
@@ -1191,7 +1247,7 @@ export const fcGenOrgTimestampPartRecordWithRestartRepeater = (
     withDeadline,
   }: { withStartTime: boolean; withDeadline: boolean },
   fcGen: fc.GeneratorValue,
-): [MapOf<OrgTimestampPart>, Date, OrgTimestampPart] => {
+): [OrgTimestampPartRecord, Date, OrgTimestampPart] => {
   const repeaterType: RepeaterType = ".+";
   const [timestampWithRepeater, date, repeaterUnit, repeaterValue] =
     fcGenOrgTimestampPartObjectWithRepeaterTypeX(
@@ -1219,7 +1275,7 @@ export const fcGenOrgTimestampPartRecordWithRestartRepeater = (
   const nextRepeatTimestamp: OrgTimestampPart =
     createNextRepeatTimestampPartObject(timestampWithRepeater, nextRepeatDate);
 
-  return [Map(timestampWithRepeater), currentDate, nextRepeatTimestamp];
+  return [makeOrgTimestampPartRecord(timestampWithRepeater), currentDate, nextRepeatTimestamp];
 };
 
 export const fcGenOrgTimestampPartRecordWithRepeater = (
@@ -1233,22 +1289,22 @@ export const fcGenOrgTimestampPartRecordWithRepeater = (
     withDeadline: boolean;
   },
   fcGen: fc.GeneratorValue,
-): [MapOf<OrgTimestampPart>, Date, OrgTimestampPart] => {
+): [OrgTimestampPartRecord, Date, OrgTimestampPart] => {
   return match(repeaterType)
-    .returnType<[MapOf<OrgTimestampPart>, Date, OrgTimestampPart]>()
-    .with("+", (): [MapOf<OrgTimestampPart>, Date, OrgTimestampPart] =>
+    .returnType<[OrgTimestampPartRecord, Date, OrgTimestampPart]>()
+    .with("+", (): [OrgTimestampPartRecord, Date, OrgTimestampPart] =>
       fcGenOrgTimestampPartRecordWithCumulateRepeater(
         { withStartTime, withDeadline },
         fcGen,
       ),
     )
-    .with("++", (): [MapOf<OrgTimestampPart>, Date, OrgTimestampPart] =>
+    .with("++", (): [OrgTimestampPartRecord, Date, OrgTimestampPart] =>
       fcGenOrgTimestampPartRecordWithCatchupRepeater(
         { withStartTime, withDeadline },
         fcGen,
       ),
     )
-    .with(".+", (): [MapOf<OrgTimestampPart>, Date, OrgTimestampPart] =>
+    .with(".+", (): [OrgTimestampPartRecord, Date, OrgTimestampPart] =>
       fcGenOrgTimestampPartRecordWithRestartRepeater(
         { withStartTime, withDeadline },
         fcGen,
@@ -1259,7 +1315,7 @@ export const fcGenOrgTimestampPartRecordWithRepeater = (
 
 export const fcGenRandomOrgTimestampPartRecordWithRepeater = (
   fcGen: fc.GeneratorValue,
-): [MapOf<OrgTimestampPart>, Date, OrgTimestampPart] => {
+): [OrgTimestampPartRecord, Date, OrgTimestampPart] => {
   const [withStartTime, withDeadline] = unfold(
     (_: number): boolean => fcGenRandomBoolean(fcGen),
     2,
@@ -1271,7 +1327,7 @@ export const fcGenRandomOrgTimestampPartRecordWithRepeater = (
         withDeadline,
       }: { withStartTime: boolean; withDeadline: boolean },
       fcGen: fc.GeneratorValue,
-    ) => [MapOf<OrgTimestampPart>, Date, OrgTimestampPart]
+    ) => [OrgTimestampPartRecord, Date, OrgTimestampPart]
   > = [
     fcGenOrgTimestampPartRecordWithCumulateRepeater,
     fcGenOrgTimestampPartRecordWithCatchupRepeater,

@@ -60,11 +60,11 @@ const getFromCurrentDateCreator = (funcName: string): string => {
     .toString();
 };
 
-await createAListOfFunctions(
-  getFromCurrentDateCreator,
-  funcs,
-  "src/lib/timestamps.ts",
-);
+// await createAListOfFunctions(
+//   getFromCurrentDateCreator,
+//   funcs,
+//   "src/lib/timestamps.ts",
+// );
 
 const createCurriedVersionsOfArrowFunctions = async(file: string, funcs: Array<string>): Promise<void> => {
   const project = new Project({});
@@ -82,6 +82,7 @@ const createCurriedVersionsOfArrowFunctions = async(file: string, funcs: Array<s
     const funcParamsAsStrings = map((x: ParameterDeclaration): string => x.getText())(funcParams)
     const curriedParams = pipe(funcParamsAsStrings, map((x: string) => `(${x})`), join(" => "))
     const curriedVersion = new CodeBlockWriter();
+    // EXTRACTME
     curriedVersion
       .write(`export const ${curriedVersionName} = `)
       .conditionalWrite(typeParams.length > 0, () => `<${join(", ", typeParams)}>`)
@@ -109,3 +110,58 @@ const FUNCS = [
 ];
 
 ///await createCurriedVersionsOfArrowFunctions("src/util/transformers.ts", FUNCS)
+
+
+const FUNCSTOCREATE = [
+"repeaterType",
+"repeaterValue",
+"repeaterUnit",
+"delayType",
+"delayValue",
+"delayUnit",
+]
+
+
+const createSettersForObject = async(keys: Array<string>, file: string): Promise<void> => {
+  const project = new Project({});
+  const sourceFile = project.addSourceFileAtPath(file);
+  const newSetters = map((key: string): string => {
+    const setter = new CodeBlockWriter();
+    return setter
+      .write(`export const ${key}Change = curriedSetRecord`)
+      .write(`<OrgTimestampPart, OrgTimestampPartRecord,`)
+      .space()
+      .quote(key)
+      .write(">")
+      .write("(")
+      .quote(key)
+      .write(")").toString()
+  })(keys)
+
+  sourceFile.addStatements(newSetters)
+  await sourceFile.save()
+}
+
+const createGettersForObject = async(keys: Array<string>, file: string): Promise<void> => {
+  const project = new Project({});
+  const sourceFile = project.addSourceFileAtPath(file);
+  const newSetters = map((key: string): string => {
+    const setter = new CodeBlockWriter();
+    return setter
+      .write(`export const get${capitalize(key)} = curriedGetFromRecord`)
+      .write(`<OrgTimestampPart,`)
+      .space()
+      .quote(key)
+      .write(">")
+      .write("(")
+      .quote(key)
+      .write(")")
+      .toString()
+  })(keys)
+
+  sourceFile.addStatements(newSetters)
+  await sourceFile.save()
+}
+
+
+await createGettersForObject(FUNCSTOCREATE, "src/lib/timestamps.ts")

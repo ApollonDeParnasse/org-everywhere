@@ -27,22 +27,35 @@ import {
   padCharsStart,
   property,
   map,
-  over,
   merge,
   reduce,
   pipe,
-  partialRight,
-  isString,
   zip,
-  startsWith,
+  split,
+  isString
 } from "lodash/fp";
-import { type MapOf, Map, get, setIn } from "immutable";
+import { pipe as fpipe } from "fp-ts/function"
+import { flap } from "fp-ts/Array"
+import {
+  curriedSetRecord,
+  curriedGetFromRecord,
+  setAllForRecord,
+  curriedUpdateAllForRecord,
+  curriedSetAllForRecord,
+  curriedUpdateRecord,
+  setRecord,
+  over
+} from "../util/transformers";
 import type {
   TimestampUnit,
   OrgTimestampPart,
+  OrgTimestampPartKey,
+  OrgTimestampPartRecord,
   RepeaterType,
   RepeaterUnit,
+  StartOrEnd,
 } from "../types";
+import { makeOrgTimestampPartRecord } from "../types"
 import {
   REPEATERTYPESSET,
   TIMESTAMPUNITSSET,
@@ -57,6 +70,8 @@ export const convertDayNumberIntoDayName = (
   abbrevs = DAYABBREVS,
 ): string => property(number, abbrevs);
 
+// JS Date Functions
+
 export const getYearFromDate = (date: Date): string =>
   date.getFullYear().toString();
 export const getMonthFromDate = (date: Date): string =>
@@ -65,149 +80,31 @@ export const getDayFromDate = (date: Date): string =>
   padTimePart(date.getDate().toString());
 export const getDayNameFromDate = (date: Date): string =>
   convertDayNumberIntoDayName(date.getDay());
-export const getStartHourFromDate = (date: Date): string =>
+export const getHourPartFromDate = (date: Date): string =>
   padTimePart(date.getHours().toString());
-export const getStartMinuteFromDate = (date: Date): string =>
+export const getMinutePartFromDate = (date: Date): string =>
   padTimePart(date.getMinutes().toString());
+
 export const getTimestampPartsFromDate = over([
   getYearFromDate,
   getMonthFromDate,
   getDayFromDate,
   getDayNameFromDate,
-  getStartHourFromDate,
-  getStartMinuteFromDate,
-]);
-export const getTimestampPartsFromDateWithKeyNames = pipe([
-  getTimestampPartsFromDate,
-  zip(ORGTIMESTAMPDATEKEYNAMES),
+  getHourPartFromDate,
+  getMinutePartFromDate,
 ]);
 
-export const isValidRepeaterUnit = (
-  value: unknown,
-  repeaterUnitsSet = TIMESTAMPUNITSSET,
-): value is RepeaterUnit => isString(value) && repeaterUnitsSet.has(value);
-export const isValidRepeaterType = (
-  value: unknown,
-  repeaterTypesSet = REPEATERTYPESSET,
-): value is RepeaterType => isString(value) && repeaterTypesSet.has(value);
+export const getCurrentDate = (): Date => new Date();
+const getXFromCurrentDate = (func: (date: Date) => string) => (): string => fpipe(getCurrentDate(), func)
+export const getYearFromCurrentDate = getXFromCurrentDate(getYearFromDate)
+export const getMonthFromCurrentDate = getXFromCurrentDate(getMonthFromDate)
+export const getDayFromCurrentDate = getXFromCurrentDate(getDayFromDate)
+export const getDayNameFromCurrentDate = getXFromCurrentDate(getDayNameFromDate)
+export const getHourPartFromCurrentDate = getXFromCurrentDate(getHourPartFromDate)
+export const getMinutePartFromCurrentDate = getXFromCurrentDate(getMinutePartFromDate)
 
-export const isValidDelayType = (
-  value: unknown,
-  delayTypesSet = DELAYTYPESSET,
-): value is RepeaterType => isString(value) && delayTypesSet.has(value);
 
-const renderAsTextReducer = (
-  currStr: string,
-  [bool, stringToAppend]: [boolean, string],
-): string => {
-  if (bool) {
-    return currStr + stringToAppend;
-  }
-  return currStr;
-};
-
-export const renderAsText = (timestamp: MapOf<OrgTimestampPart>): string => {
-  const {
-    isActive,
-    withStartTime,
-    year,
-    month,
-    day,
-    dayName,
-    startHour,
-    startMinute,
-    endHour,
-    endMinute,
-    repeaterType,
-    repeaterValue,
-    repeaterUnit,
-    repeaterDeadlineValue,
-    repeaterDeadlineUnit,
-    delayType,
-    delayValue,
-    delayUnit,
-  } = timestamp.toJS();
-
-  const [startBracket, endBracket]: string = isActive ? "<>" : "[]";
-  const boolFuncTuples: Array<[boolean, string]> = [
-    [true, startBracket],
-    [true, `${year}-${month}-${day} ${dayName}`],
-    [withStartTime, ` ${startHour}:${startMinute}`],
-    [withStartTime && !!endHour, `-${endHour}:${endMinute}`],
-    [!!repeaterType, ` ${repeaterType}${repeaterValue}${repeaterUnit}`],
-    [
-      !!repeaterType && !!repeaterDeadlineValue,
-      `/${repeaterDeadlineValue}${repeaterDeadlineUnit}`,
-    ],
-    [!!delayType, ` ${delayType}${delayValue}${delayUnit}`],
-    [true, endBracket],
-  ];
-
-  return reduce(renderAsTextReducer, "", boolFuncTuples);
-};
-
-export const getCurrentTimestamp = ({
-  isActive = true,
-  withStartTime = false,
-} = {}): OrgTimestampPart =>
-  timestampPartObjectForDate(new Date(), { isActive, withStartTime });
-
-export const timestampPartObjectForDate = (
-  time: Date,
-  { isActive = true, withStartTime = false } = {},
-): OrgTimestampPart => {
-  return {
-    isActive,
-    withStartTime,
-    year: time.getFullYear().toString(),
-    month: format("MM", time),
-    day: format("dd", time),
-    dayName: format("eee", time),
-    startHour: format("HH", time),
-    startMinute: format("mm", time),
-    endHour: undefined,
-    endMinute: undefined,
-    repeaterType: undefined,
-    repeaterValue: undefined,
-    repeaterUnit: undefined,
-    repeaterDeadlineValue: undefined,
-    repeaterDeadlineUnit: undefined,
-    delayType: undefined,
-    delayValue: undefined,
-    delayUnit: undefined,
-  };
-};
-
-export const timestampPartRecordForDate = (
-  { isActive = true, withStartTime = false } = {},
-  time: Date,
-): MapOf<OrgTimestampPart> => {
-  return Map(timestampPartObjectForDate(time, { isActive, withStartTime }));
-};
-
-export const getJSDateAsOrgTimestampString = (
-  time: Date,
-  { isActive = true, withStartTime = false } = {},
-): string => {
-  const bracketPair: string = isActive ? "<>" : "[]";
-  let formatString: string = "yyyy-MM-dd eee";
-  if (withStartTime) formatString += " HH:mm";
-  return `${bracketPair[0]}${format(formatString, time)}${bracketPair[1]}`;
-};
-
-// To get around the heavy-weight renderAsText(fromJS(getCurrentJSDateAsOrgTimestampString()))
-export const getCurrentJSDateAsOrgTimestampString = ({
-  isActive = true,
-  withStartTime = true,
-} = {}): string =>
-  getJSDateAsOrgTimestampString(new Date(), { isActive, withStartTime });
-
-export const dateForTimestamp = (timestamp: MapOf<OrgTimestampPart>): Date => {
-  // should not use toJS() here
-  const { year, month, day, startHour, startMinute } = timestamp.toJS();
-  let timestampString: string = `${year}-${month}-${day} ${startHour}:${startMinute}`;
-  return parse(new Date(), "yyyy-MM-dd HH:mm", timestampString);
-};
+// Date Arithmetic
 
 export const addTimestampUnitToDate = (
   timestampUnit: TimestampUnit,
@@ -251,6 +148,258 @@ export const subtractTimestampUnitFromDate = (
   }
 };
 
+export const getTimestampPartsFromDateWithKeyNames = pipe([
+  getTimestampPartsFromDate,
+  zip(ORGTIMESTAMPDATEKEYNAMES),
+]);
+
+// Validators
+export const isValidRepeaterUnit = (
+  value: unknown,
+  repeaterUnitsSet = TIMESTAMPUNITSSET,
+): value is RepeaterUnit => isString(value) && repeaterUnitsSet.has(value);
+export const isValidRepeaterType = (
+  value: unknown,
+  repeaterTypesSet = REPEATERTYPESSET,
+): value is RepeaterType => isString(value) && repeaterTypesSet.has(value);
+
+export const isValidDelayType = (
+  value: unknown,
+  delayTypesSet = DELAYTYPESSET,
+): value is RepeaterType => isString(value) && delayTypesSet.has(value);
+
+// Timestamp string constructors
+
+const renderAsTextReducer = (
+  currStr: string,
+  [bool, stringToAppend]: [boolean, string],
+): string => {
+  if (bool) {
+    return currStr + stringToAppend;
+  }
+  return currStr;
+};
+
+export const renderAsText = (timestamp: OrgTimestampPartRecord): string => {
+  const {
+    isActive,
+    withStartTime,
+    year,
+    month,
+    day,
+    dayName,
+    startHour,
+    startMinute,
+    endHour,
+    endMinute,
+    repeaterType,
+    repeaterValue,
+    repeaterUnit,
+    repeaterDeadlineValue,
+    repeaterDeadlineUnit,
+    delayType,
+    delayValue,
+    delayUnit,
+  } = timestamp.toJS();
+
+  const [startBracket, endBracket]: string = isActive ? "<>" : "[]";
+  const boolFuncTuples: Array<[boolean, string]> = [
+    [true, startBracket],
+    [true, `${year}-${month}-${day} ${dayName}`],
+    [withStartTime, ` ${startHour}:${startMinute}`],
+    [withStartTime && !!endHour, `-${endHour}:${endMinute}`],
+    [!!repeaterType, ` ${repeaterType}${repeaterValue}${repeaterUnit}`],
+    [
+      !!repeaterType && !!repeaterDeadlineValue,
+      `/${repeaterDeadlineValue}${repeaterDeadlineUnit}`,
+    ],
+    [!!delayType, ` ${delayType}${delayValue}${delayUnit}`],
+    [true, endBracket],
+  ];
+
+  return reduce(renderAsTextReducer, "", boolFuncTuples);
+};
+
+// Timestamp object constructors
+
+export const getCurrentTimestamp = ({
+  isActive = true,
+  withStartTime = false,
+} = {}): OrgTimestampPart =>
+  timestampPartObjectForDate(new Date(), { isActive, withStartTime });
+
+export const timestampPartObjectForDate = (
+  time: Date,
+  { isActive = true, withStartTime = false } = {},
+): OrgTimestampPart => {
+  return {
+    isActive,
+    withStartTime,
+    year: time.getFullYear().toString(),
+    month: format("MM", time),
+    day: format("dd", time),
+    dayName: format("eee", time),
+    startHour: format("HH", time),
+    startMinute: format("mm", time),
+    endHour: undefined,
+    endMinute: undefined,
+    repeaterType: undefined,
+    repeaterValue: undefined,
+    repeaterUnit: undefined,
+    repeaterDeadlineValue: undefined,
+    repeaterDeadlineUnit: undefined,
+    delayType: undefined,
+    delayValue: undefined,
+    delayUnit: undefined,
+  };
+};
+
+export const timestampPartRecordForDate = (
+  { isActive = true, withStartTime = false } = {},
+  time: Date,
+): OrgTimestampPartRecord => {
+  return makeOrgTimestampPartRecord(timestampPartObjectForDate(time, { isActive, withStartTime }));
+};
+
+export const getJSDateAsOrgTimestampString = (
+  time: Date,
+  { isActive = true, withStartTime = false } = {},
+): string => {
+  const bracketPair: string = isActive ? "<>" : "[]";
+  let formatString: string = "yyyy-MM-dd eee";
+  if (withStartTime) formatString += " HH:mm";
+  return `${bracketPair[0]}${format(formatString, time)}${bracketPair[1]}`;
+};
+
+// To get around the heavy-weight renderAsText(fromJS(getCurrentJSDateAsOrgTimestampString()))
+export const getCurrentJSDateAsOrgTimestampString = ({
+  isActive = true,
+  withStartTime = true,
+} = {}): string =>
+  getJSDateAsOrgTimestampString(new Date(), { isActive, withStartTime });
+
+export const dateForTimestamp = (timestamp: OrgTimestampPartRecord): Date => {
+  // should not use toJS() here
+  const { year, month, day, startHour, startMinute } = timestamp.toJS();
+  let timestampString: string = `${year}-${month}-${day} ${startHour}:${startMinute}`;
+  return parse(new Date(), "yyyy-MM-dd HH:mm", timestampString);
+};
+
+// timestamp getters
+
+export const getRepeaterType = curriedGetFromRecord<OrgTimestampPart, "repeaterType">("repeaterType")
+export const getRepeaterValue = curriedGetFromRecord<OrgTimestampPart, "repeaterValue">("repeaterValue")
+export const getRepeaterUnit = curriedGetFromRecord<OrgTimestampPart, "repeaterUnit">("repeaterUnit")
+export const getDelayType = curriedGetFromRecord<OrgTimestampPart, "delayType">("delayType")
+export const getDelayValue = curriedGetFromRecord<OrgTimestampPart, "delayValue">("delayValue")
+export const getDelayUnit = curriedGetFromRecord<OrgTimestampPart, "delayUnit">("delayUnit")
+
+
+// timestamp setters
+
+// add data
+export const addStartTime = curriedUpdateAllForRecord<OrgTimestampPart, OrgTimestampPartRecord, OrgTimestampPartKey>([
+  [
+    "startHour",
+    (_): string => getHourPartFromCurrentDate(),
+  ],
+  [
+    "startMinute",
+    (_): string => getMinutePartFromCurrentDate(),
+  ],
+]);
+export const addEndTime = curriedUpdateAllForRecord<OrgTimestampPart, OrgTimestampPartRecord, OrgTimestampPartKey>([
+  ["endHour", (_): string => getHourPartFromCurrentDate()],
+  [
+    "endMinute",
+    (_): string => getMinutePartFromCurrentDate(),
+  ],
+]);
+export const addTime = (
+  startOrEnd: StartOrEnd,
+  timestamp: OrgTimestampPartRecord,
+): OrgTimestampPartRecord => {
+  return startOrEnd === "start"
+    ? addStartTime(timestamp)
+    : addEndTime(timestamp);
+};
+
+export const addDelay = curriedSetAllForRecord<OrgTimestampPart, OrgTimestampPartRecord, OrgTimestampPartKey>([
+  ["delayType", "-"],
+  ["delayUnit", "h"],
+  ["delayValue", "1"],
+]);
+export const addRepeater = curriedSetAllForRecord<OrgTimestampPart, OrgTimestampPartRecord, OrgTimestampPartKey>([
+  ["repeaterType", "+"],
+  ["repeaterUnit", "h"],
+  ["repeaterValue", "1"],
+]);
+
+// update data
+const updateTime =
+  <K extends OrgTimestampPartKey>([argOne, argTwo]: [K, K]) =>
+  (
+    timeString: string,
+    timestamp: OrgTimestampPartRecord,
+  ): OrgTimestampPartRecord => {
+    const [hourPart, minutePart] = split(":", timeString);
+    return setAllForRecord<OrgTimestampPart, OrgTimestampPartRecord, OrgTimestampPartKey>(
+      [
+        [argOne, hourPart],
+        [argTwo, minutePart],
+      ],
+      timestamp,
+    );
+  };
+
+export const startTimeChange = updateTime(["startHour", "startMinute"]);
+export const endTimeChange = updateTime(["endHour", "endMinute"]);
+
+export const timeChange = (
+  startOrEnd: StartOrEnd,
+  timestamp: OrgTimestampPartRecord,
+  timeString: string,
+): OrgTimestampPartRecord => {
+  return startOrEnd === "start"
+    ? startTimeChange(timeString, timestamp)
+    : endTimeChange(timeString, timestamp);
+};
+
+
+export const repeaterTypeChange = curriedSetRecord<OrgTimestampPart, OrgTimestampPartRecord, "repeaterType">("repeaterType")
+export const repeaterValueChange = curriedSetRecord<OrgTimestampPart, OrgTimestampPartRecord, "repeaterValue">("repeaterValue")
+export const repeaterUnitChange = curriedSetRecord<OrgTimestampPart, OrgTimestampPartRecord, "repeaterUnit">("repeaterUnit")
+export const delayTypeChange = curriedSetRecord<OrgTimestampPart, OrgTimestampPartRecord, "delayType">("delayType")
+export const delayValueChange = curriedSetRecord<OrgTimestampPart, OrgTimestampPartRecord, "delayValue">("delayValue")
+export const delayUnitChange = curriedSetRecord<OrgTimestampPart, OrgTimestampPartRecord, "delayUnit">("delayUnit")
+
+export const activeToggle = curriedUpdateRecord<OrgTimestampPart, OrgTimestampPartRecord, "isActive">((isActive: boolean) => !isActive)("isActive");
+
+// remove data
+export const removeStartTime = curriedSetAllForRecord<OrgTimestampPart, OrgTimestampPartRecord, OrgTimestampPartKey>([["startHour", undefined], ["startMinute", undefined], ["withStartTime", false]]);
+export const removeEndTime = curriedSetAllForRecord<OrgTimestampPart, OrgTimestampPartRecord, OrgTimestampPartKey>([["endHour", undefined], ["endMinute", undefined]]);
+export const removeTime = (
+  startOrEnd: StartOrEnd,
+  timestamp: OrgTimestampPartRecord,
+): OrgTimestampPartRecord => {
+  return startOrEnd === "start"
+    ? removeStartTime(timestamp)
+    : removeEndTime(timestamp);
+};
+
+export const removeDelay = curriedSetAllForRecord<OrgTimestampPart, OrgTimestampPartRecord, OrgTimestampPartKey>([
+  ["delayType", undefined],
+  ["delayUnit", undefined],
+  ["delayValue", undefined],
+]);
+export const removeRepeater = curriedSetAllForRecord<OrgTimestampPart, OrgTimestampPartRecord, OrgTimestampPartKey>([
+  ["repeaterType", undefined],
+  ["repeaterUnit", undefined],
+  ["repeaterValue", undefined],
+]);
+
+// Repeaters
+
 export const createNextRepeatTimestampPartObject = (
   timestampWithRepeater: OrgTimestampPart,
   nextRepeatDate: Date,
@@ -270,8 +419,8 @@ export const createNextRepeatTimestampPartObject = (
 export const createNextRepeatTimestampPartRecord = (
   previousTimestamp: OrgTimestampPart,
   nextRepeatDate: Date,
-): MapOf<OrgTimestampPart> => {
-  return Map(
+): OrgTimestampPartRecord => {
+  return makeOrgTimestampPartRecord(
     createNextRepeatTimestampPartObject(previousTimestamp, nextRepeatDate),
   );
 };
@@ -320,32 +469,34 @@ export const getNextRepeatDate = (
         return newDate;
       }
 
-      const [newHours, newMinutes] = over([getHours, getMinutes])(currentDate);
-      return pipe([setHours(newHours), setMinutes(newMinutes)])(newDate);
+    const [newHours, newMinutes] = flap(currentDate)([getHours, getMinutes])
+    return fpipe(newDate, setHours(newHours), setMinutes(newMinutes))
     })
     .exhaustive();
 };
 
 const applyRepeaterReducer = (
-  currTimestamp: MapOf<OrgTimestampPart>,
-  [key, value]: [string, string],
-): MapOf<OrgTimestampPart> => {
-  return setIn(currTimestamp, [key], value);
+  currTimestamp: OrgTimestampPartRecord,
+  [key, value]: [OrgTimestampPartKey, OrgTimestampPart[OrgTimestampPartKey]],
+): OrgTimestampPartRecord => {
+  return setRecord<OrgTimestampPart, OrgTimestampPartRecord, OrgTimestampPartKey>(key, value, currTimestamp);
 };
 
 export const applyRepeater = (
-  timestamp: MapOf<OrgTimestampPart>,
+  timestamp: OrgTimestampPartRecord,
   currentDate: Date,
-): MapOf<OrgTimestampPart> => {
-  const [repeaterType, repeaterValue, repeaterUnit] = over([
-    partialRight(get, ["repeaterType"]),
-    pipe([partialRight(get, ["repeaterValue"]), parseInt]),
-    partialRight(get, ["repeaterUnit"]),
-  ])(timestamp);
+): OrgTimestampPartRecord => {
+  const [repeaterType, repeaterValueAsString, repeaterUnit] = flap(timestamp)([
+    getRepeaterType,
+    getRepeaterValue,
+    getRepeaterUnit,
+  ])
 
-  if (!repeaterType || !repeaterValue || !repeaterUnit) {
+  if (!repeaterType || !repeaterValueAsString || !repeaterUnit) {
     return timestamp;
   }
+
+  const repeaterValue = parseInt(repeaterValueAsString);
 
   if (!isValidRepeaterType(repeaterType)) {
     console.error(`Unrecognized timestamp repeater type: ${repeaterType}`);
@@ -369,6 +520,8 @@ export const applyRepeater = (
   return reduce(applyRepeaterReducer, timestamp, timestampPartsFromDate);
 };
 
+// Durations
+
 export const dateDuration = (
   intervalStart: Date,
   intervalEnd: Date,
@@ -388,8 +541,8 @@ export const dateDurationForClockString = pipe([
 export const createTimestampDuration =
   (func: (intervalStart: Date, intervalEnd: Date) => string) =>
   (
-    startTimestamp: MapOf<OrgTimestampPart>,
-    endTimestamp: MapOf<OrgTimestampPart>,
+    startTimestamp: OrgTimestampPartRecord,
+    endTimestamp: OrgTimestampPartRecord,
   ): string => {
     let [start, end] = map(dateForTimestamp)([startTimestamp, endTimestamp]);
     return func(start, end);
