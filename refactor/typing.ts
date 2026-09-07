@@ -28,16 +28,20 @@ import {
   size,
   partition,
   flatten,
-  curry,
+  some,
   uniq,
+  isString,
 } from "lodash/fp";
 import { pipe as fpipe } from "fp-ts/function";
 import { match, P } from "ts-pattern";
+import { UnionType } from "typescript";
 import {
   Project,
   SyntaxKind,
   SourceFile,
   Node,
+  TypeFormatFlags,
+  TypeReferenceNode,
   PropertySignatureStructure,
   WriterFunction,
   Writers,
@@ -63,16 +67,18 @@ import {
   PropertySignature,
   TypeAliasDeclaration,
   PropertyAssignmentStructure,
-  printStructure,
   TypeLiteralNode,
 } from "ts-morph";
 import {
   arrayToSet,
   includesAny,
-  curriedFilterMap,
-  reduceReplace,
   reduceReplaceAll,
-  capitalize
+  capitalize,
+  createNewObjectLiteralExpression,
+  curriedSetDifference,
+  setToArray,
+  replaceSourceFileText,
+  curriedFilterMap,
 } from "./Utilities";
 
 const STATETYPENAME: string = "State";
@@ -279,7 +285,6 @@ const getAllActionValues = (
 };
 
 const REPLACERS = [replace("\n", " "), replace("/\s+/g", " ")];
-
 
 const runReplacers = (string: string): string => {
   return reduce(
@@ -599,7 +604,6 @@ const createTypeForValue = (type: Type): string => {
     ...importTypeReplacers,
   ]);
   if (replacers.length === 0) return typeAsText;
-  console.log(replacers);
 
   return reduceReplaceAll(replacers, typeAsText);
 };
@@ -686,7 +690,7 @@ const annotateAllDeclarations = async (
 
       // skip arrow functions
       if (descendant.getFirstChildByKind(SyntaxKind.ArrowFunction)) return;
-x      // skip curried functions
+      x; // skip curried functions
       if (
         descendant
           .getFirstChildByKind(SyntaxKind.CallExpression)
@@ -1107,7 +1111,6 @@ const fixMapOfTypes = async (path: string): Promise<void> => {
       const typeNode = param.getTypeNode()?.getText();
       if (!typeNode) return;
       if (!MAPOFTYPESSET.has(typeNode)) return;
-      console.log(typeNode);
       param.setType(`MapOf<${typeNode}>`);
     })(params);
   })(sourceFiles);
@@ -1142,57 +1145,110 @@ const annotateAllReturnTypesInFiles = async (
 //await annotateAllReturnTypesInFiles(["./src/lib/org_utils.ts"]);
 
 const TYPESSET = new Set([
-  "BaseState",
+  "OrgTimestampPart",
+  "OrgLinkToken",
+  "OrgTodoKeywordSet",
+  "OrgFileConfig",
+  "OrgText",
+  "OrgLinkContents",
+  "OrgLink",
+  "OrgLink2",
+  "OrgPercentageCookie",
+  "OrgFractionCookie",
+  "OrgInlineMarkup",
+  "OrgClockString",
+  "OrgTimestamp",
+  "OrgPlanningItem",
+  "OrgPropertyListItem",
+  "OrgListItem",
+  "OrgList",
+  "OrgTableCell",
+  "OrgTableRow",
+  "OrgTable",
+  "OrgTitleLine",
+  "OrgHeadline",
+  "OrgFile",
+  "DirectoryListingEntry",
+  "AdditionalSyncBackendState",
+  "DirectoryListing",
+  "SyncOptions",
+  "Search",
+  "Bookmark",
+  "FileSetting",
+  "PendingCapture",
+  "OrgCaptureTemplate",
   "SyncBackendState",
   "OrgCaptureState",
-  "Search",
-  "OrgFile",
-  "FinderTab",
-  "AgendaTimeframe",
-  "OrgTodoKeywordSet",
-  "PendingCapture",
-  "FileSetting",
-  "DirectoryListingEntry",
-  "DirectoryListing",
-  "OrgTimestampPart",
-  "OrgTitleLine",
-  "AdditionalSyncBackendState",
+  "Popup",
+  "BaseState",
+  "OrgState",
+  "State",
 ]);
 
 const isSubRecordType = (typeName: string, typesSets = TYPESSET): boolean => {
   return typesSets.has(typeName);
 };
 
-const handleMapOfProp = (typeName: string): string => {
-  const replacementTuples: Array<[string, string]> = [
-    ["MapOf<", ""],
-    [">", ""],
-  ];
-  const subTypeName = reduceReplace(replacementTuples, typeName);
-  return convertPropTypeIntoValue(subTypeName)
+const handleUnionType = (propType: Type): string => {
+  const subTypes: Array<Type> = propType.getUnionTypes();
+  const [firstSubType] = subTypes;
+  if (firstSubType.isStringLiteral()) {
+    return firstSubType.getText();
+  }
+
+  const includesUndefined = some((subType: Type): boolean => {
+    return subType.isUndefined();
+  })(subTypes);
+
+  if (includesUndefined) {
+    return "undefined";
+  }
+
+  return handleTypeReference(propType);
 };
 
-const convertPropTypeIntoValue = (typeName: string): string => {
+const createMakeRecordTypeName = (text: string) => `make${text}Record()`;
+
+const handleMapOf = (propType: Type): string => {
+  const arg = propType
+    .getTypeArguments()[0]
+    .getText(undefined, TypeFormatFlags.None);
+  if (isSubRecordType(arg)) {
+    return createMakeRecordTypeName(arg);
+  }
+  return "";
+};
+
+const handleTypeReference = (propType: Type): string => {
+  const propTypeText: string = propType.getText(
+    undefined,
+    TypeFormatFlags.None,
+  );
+  if (isSubRecordType(propTypeText)) {
+    return createMakeRecordTypeName(propTypeText);
+  }
+  const typeName = propType.getSymbol()?.getName();
   return match(typeName)
-    .returnType<string>()
-    .with(P.when(isSubRecordType), (): string => `make${typeName}()`)
-    .with(P.string.includes("undefined"), (): string => "undefined")
-    .with(P.string.startsWith("List<"), (): string => "List([])")
-    .with(P.string.startsWith("Set<"), (): string => "Set([])")
-    .with("Map<string,string>", (): string => "Map({})")
-    .with(P.string.startsWith("MapOf<"), (): string =>
-      handleMapOfProp(typeName),
-    )
-    .with("BulletStyle", (): string => "-")
-    .with("DelayUnit", (): string => "h")
-    .with("RepeaterUnit", (): string => "h")
-    .with("string", (): string => '""')
-    .with("number", (): string => "0")
-    .with("boolean", (): string => "false")
-    .with("Date", (): string => "new Date()")
-    .with("any", (): string => "undefined")
+    .with("List", (): string => "List()")
+    .with("Set", (): string => "Set()")
+    .with("Map", (): string => "Map()")
+    .with("MapOf", (): string => handleMapOf(propType))
     .with(P._, (): string => "")
     .run();
+};
+
+const convertPropTypeIntoValue = (prop: PropertySignature): string => {
+  const propType = prop.getType();
+
+  return cond<Type, string>([
+    [(propType) => propType.isStringLiteral(), constant(propType.getText())],
+    [(propType) => propType.isString(), constant('""')],
+    [(propType) => propType.isNumber(), constant("0")],
+    [(propType) => propType.isBoolean(), constant("false")],
+    [(propType) => propType.isAny(), constant("undefined")],
+    [(propType) => propType.isUnion(), (): string => handleUnionType(propType)],
+    [stubTrue, (): string => handleTypeReference(propType)],
+  ])(propType);
 };
 
 const createDefaultRecordString = (
@@ -1205,18 +1261,10 @@ const createDefaultRecordString = (
   const propertyAssignments = map(
     (prop: PropertySignature): PropertyAssignmentStructure => {
       const name = prop.getName();
-      const typeName = prop.getType().getText();
-      if (name === "type") {
-        return {
-          kind: StructureKind.PropertyAssignment,
-          name,
-          initializer: prop.getInitializerOrThrow().getText(),
-        };
-      }
       return {
         kind: StructureKind.PropertyAssignment,
         name,
-        initializer: convertPropTypeIntoValue(typeName),
+        initializer: convertPropTypeIntoValue(prop),
       };
     },
   )(typeLiteral.getProperties());
@@ -1259,33 +1307,27 @@ const addRecordTypeForTypeToFile =
       createRecordTypeStatement(recordTypeName, aliasName),
     ];
 
-    file.insertStatements(aliasIndex, recordStatements);
+    file.insertStatements(aliasIndex + 1, recordStatements);
   };
 
-const createRecordTypesForTypesInFile = async (
-  file: string,
-  typesToIgnore: Set<string>,
-): Promise<void> => {
-  const project = new Project({});
-  const typesFile = project.addSourceFileAtPath(file);
-  const validTypeAliasDeclarations: Set<string> = fpipe(
-    typesFile.getTypeAliases(),
-    curriedFilterMap((alias: TypeAliasDeclaration): string | undefined => {
-      if (!alias.getFirstChildByKind(SyntaxKind.TypeLiteral)) undefined;
-      return alias.getName();
-    }),
-    arrayToSet,
-  );
+// const project = new Project({});
+// const sourceFile = project.addSourceFileAtPath("src/types.ts")
+// const typeAliasDecls: Array<TypeAliasDeclaration> = sourceFile.getDescendantsOfKind(SyntaxKind.TypeAliasDeclaration)
+// const x = fpipe(
+//   typeAliasDecls,
+//   curriedFilterMap((typeAlias: TypeAliasDeclaration): string | undefined => {
+//     const name = typeAlias.getName()
+//     if (sourceFile.getTypeAlias(`${name}Record`)) {
+//       return name
+//     }
+//   }),
+//   arrayToSet
+// )
 
-  const filteredTypes: Array<string> =
-    validTypeAliasDeclarations.difference(typesToIgnore);
-  forEach(addRecordTypeForTypeToFile(typesFile))(filteredTypes);
-  await typesFile.save();
-};
+// console.log(x)
 
 const IGNORE = new Set([
   "OrgTimestampPart",
-  "OrgLinkToken",
   "OrgSimpleToken",
   "OrgRawListContentToken",
   "OrgRawListHeaderToken",
@@ -1300,7 +1342,38 @@ const IGNORE = new Set([
   "OrgCaptureAction",
 ]);
 
-const project = new Project({});
+const createRecordTypesForTypesInFile = async (
+  file: string,
+  typesToIgnore: Set<string> = IGNORE,
+): Promise<void> => {
+  const project = new Project({});
+  const typesFile = project.addSourceFileAtPath(file);
+  forEach((alias: TypeAliasDeclaration): void => {
+    const name = alias.getName();
+    if (typesFile.getTypeAlias(`${name}Record`)) {
+      typesToIgnore.add(name);
+    }
+  })(typesFile.getTypeAliases());
+
+  const validTypeAliasDeclarations: Array<string> = fpipe(
+    typesFile.getTypeAliases(),
+    curriedFilterMap((alias: TypeAliasDeclaration): string | undefined => {
+      return alias.getFirstChildByKind(SyntaxKind.TypeLiteral)
+        ? alias.getName()
+        : undefined;
+    }),
+    arrayToSet,
+    curriedSetDifference(typesToIgnore),
+    setToArray,
+  );
+
+  forEach(addRecordTypeForTypeToFile(typesFile))(validTypeAliasDeclarations);
+  await typesFile.save();
+};
+
+//await createRecordTypesForTypesInFile("src/types.ts", IGNORE)
+
+// const project = new Project({});
 
 // const typesFile = project.addSourceFileAtPath("src/types.ts");
 // const maybeGetProps = (node: TypeAliasDeclaration): Array<string> => {
@@ -1317,10 +1390,7 @@ const project = new Project({});
 //   typesFile.getDescendantsOfKind(SyntaxKind.TypeAliasDeclaration),
 //   flatMap(maybeGetProps),
 //   arrayToSet,
-//   console.log
 // )
-
-//await createRecordTypesForTypesInFile("src/types.ts", IGNORE)
 
 //await fixMapOfTypes("./src/reducers/*")
 
@@ -1333,3 +1403,152 @@ const project = new Project({});
 // await annotateReduxReducerFiles([
 //   ["./src/reducers/org.ts", "OrgAction", "MapOf<OrgState>"],
 // ]);
+
+// propType.getSymbol()?.getName()
+//   return match(typeName)
+//     .with("List", (): string => "List()")
+//     .with("Set", (): string => "Set()")
+//     .with("Map", (): string => "Map()")
+//     .with("MapOf", (): string => handleMapOf(propType))
+//     .with(P._, (): string => "")
+//     .run()
+
+const typeNodeIsSubRecordType = (node: TypeNode): boolean => {
+  return fpipe(node, (node: Node) => node.getText(), isSubRecordType);
+};
+
+const getReplacementForTypeNode = (typeNode: TypeNode): string => {
+  if (Node.isUnionTypeNode(typeNode)) {
+    return fpipe(
+      typeNode.getTypeNodes(),
+      map(getReplacementForTypeNode),
+      join(" | "),
+    );
+  }
+
+  const typeNodeText = typeNode.getText();
+  if (!Node.isTypeReference(typeNode)) {
+    return typeNodeText;
+  }
+
+  const typeName: string = typeNode.getTypeName().getText();
+  const typeArgs: Array<TypeNode> = typeNode.getTypeArguments();
+
+  // OrgLinkContents -> OrgLinkContentsRecord
+  if (isSubRecordType(typeNodeText)) {
+    return `${typeNodeText}Record`;
+  }
+
+  // MapOf<OrgLinkContents> -> OrgLinkContentsRecord}
+  if (typeName === "MapOf" && typeArgs.length > 0) {
+    const arg = typeArgs[0].getText();
+    return `${arg}Record`;
+  }
+
+  // List<MapOf<Search>>  -> List<SearchRecord>
+  if (overSome([eq("Map"), eq("List")])(typeName) && typeArgs.length > 0) {
+    const newTypeArgs: string = fpipe(
+      typeArgs,
+      map(getReplacementForTypeNode),
+      join(", "),
+    );
+    return `${typeName}<${newTypeArgs}>`;
+  }
+
+  // List<MapOf<OrgText> | MapOf<OrgTimestamp> | undefined> -> List<OrgTextRecord> | OrgTimestampRecord | undefined>
+
+  return typeNodeText;
+};
+
+const replaceMapOfTypesWithRecords = async (
+  fileName: string,
+): Promise<void> => {
+  const project = new Project({});
+  const sourceFile = project.addSourceFileAtPath(fileName);
+  const typeRefs: Array<TypeReferenceNode> = sourceFile.getDescendantsOfKind(
+    SyntaxKind.TypeReference,
+  );
+  const reducer = (
+    prev: Set<[string, string]>,
+    currTypeNode: TypeReferenceNode,
+  ): Set<[string, string]> => {
+    const typeName: string = currTypeNode.getTypeName().getText();
+    const typeArgs: Array<TypeNode> = currTypeNode.getTypeArguments();
+    if (includes("Immutable", typeName)) {
+      return prev;
+    }
+
+    // List<string>
+    if (
+      !isSubRecordType(typeName) &&
+      !some(typeNodeIsSubRecordType)(typeArgs)
+    ) {
+      return prev;
+    }
+
+    // OrgPlanningItemType -> OrgPlanningItemType
+    if (!isSubRecordType(typeName) && typeArgs.length === 0) {
+      return prev;
+    }
+
+    const replacement: string = getReplacementForTypeNode(currTypeNode);
+    return prev.add([currTypeNode.getText(), replacement]);
+  };
+
+  const replacements: Set<[string, string]> = reduce(
+    reducer,
+    new Set<[string, string]>(),
+    typeRefs,
+  );
+
+  const newCode: string = reduceReplaceAll(
+    setToArray(replacements),
+    sourceFile.getFullText(),
+  );
+  //const newSourceFile = replaceSourceFileText(newCode, sourceFile)
+  //await newSourceFile.save();
+};
+
+const replaceMapOfTypesInPropertySignaturesWithRecords = async (
+  fileName: string,
+): Promise<void> => {
+  const project = new Project({});
+  const sourceFile = project.addSourceFileAtPath(fileName);
+  const propSigs: Array<PropertySignature> = sourceFile.getDescendantsOfKind(
+    SyntaxKind.PropertySignature,
+  );
+
+  forEach((propSig: PropertySignature): void => {
+    const propType = propSig.getTypeNode();
+    if (!propType) {
+      return;
+    }
+
+    if (Node.isTypeReference(propType)) {
+      const typeName: string = propType.getTypeName().getText();
+      const typeArgs: Array<TypeNode> = propType.getTypeArguments();
+      if (includes("Immutable", typeName)) {
+        return;
+      }
+
+      // OrgPlanningItemType -> OrgPlanningItemType
+      if (!isSubRecordType(typeName) && typeArgs.length === 0) {
+        return;
+      }
+    }
+
+    if (Node.isTypeReference(propType) || Node.isUnionTypeNode(propType)) {
+      const replacement: string = getReplacementForTypeNode(propType);
+      console.log(propSig.getText(), replacement);
+      const newStruct = {
+        ...propSig.getStructure(),
+        type: replacement,
+      };
+      propSig.set(newStruct);
+    }
+  })(propSigs);
+
+  await sourceFile.save();
+};
+
+await replaceMapOfTypesInPropertySignaturesWithRecords("src/types.ts");

@@ -1,4 +1,4 @@
-import { List, Set } from "immutable";
+import { List, Set, Map } from "immutable";
 import { Record as ImmutableRecord, type MapOf } from "immutable";
 import type { ActionTypes } from "redux-undo";
 
@@ -116,6 +116,17 @@ export type OrgLinkToken = {
   title?: string;
   index: number;
 };
+const defaultOrgLinkToken: OrgLinkToken = {
+  type: "link",
+  rawText: "",
+  uri: "",
+  title: undefined,
+  index: 0,
+};
+
+export const makeOrgLinkTokenRecord: ImmutableRecord.Factory<OrgLinkToken> =
+  ImmutableRecord(defaultOrgLinkToken);
+export type OrgLinkTokenRecord = ImmutableRecord<OrgLinkToken>;
 
 export type OrgSimpleToken =
   | OrgLinkToken
@@ -193,25 +204,70 @@ export type OrgTodoKeywordSet = {
   configLine?: string;
   default: boolean;
 };
+const defaultOrgTodoKeywordSet: OrgTodoKeywordSet = {
+  keywords: List(),
+  completedKeywords: List(),
+  configLine: undefined,
+  default: false,
+};
+
+export const makeOrgTodoKeywordSetRecord: ImmutableRecord.Factory<OrgTodoKeywordSet> =
+  ImmutableRecord(defaultOrgTodoKeywordSet);
+export type OrgTodoKeywordSetRecord = ImmutableRecord<OrgTodoKeywordSet>;
 
 export type OrgFileConfig = {
-  todoKeywordSets: List<MapOf<OrgTodoKeywordSet>>;
+  todoKeywordSets: List<OrgTodoKeywordSetRecord>;
   fileConfigLines: List<string>;
 };
+const defaultOrgFileConfig: OrgFileConfig = {
+  todoKeywordSets: List(),
+  fileConfigLines: List(),
+};
+
+export const makeOrgFileConfigRecord: ImmutableRecord.Factory<OrgFileConfig> =
+  ImmutableRecord(defaultOrgFileConfig);
+export type OrgFileConfigRecord = ImmutableRecord<OrgFileConfig>;
 
 export type OrgText = {
   type: "text";
   contents: string;
 };
+const defaultOrgText: OrgText = {
+  type: "text",
+  contents: "",
+};
+
+export const makeOrgTextRecord: ImmutableRecord.Factory<OrgText> =
+  ImmutableRecord(defaultOrgText);
+export type OrgTextRecord = ImmutableRecord<OrgText>;
+
+export type OrgLinkContents = {
+  uri: string;
+  title?: string;
+};
+const defaultOrgLinkContents: OrgLinkContents = {
+  uri: "",
+  title: undefined,
+};
+
+export const makeOrgLinkContentsRecord: ImmutableRecord.Factory<OrgLinkContents> =
+  ImmutableRecord(defaultOrgLinkContents);
+export type OrgLinkContentsRecord = ImmutableRecord<OrgLinkContents>;
 
 export type OrgLink = {
   id: number;
   type: "link";
-  contents: {
-    uri: string;
-    title?: string;
-  };
+  contents: OrgLinkContentsRecord;
 };
+const defaultOrgLink: OrgLink = {
+  id: 0,
+  type: "link",
+  contents: makeOrgLinkContentsRecord(),
+};
+
+export const makeOrgLinkRecord: ImmutableRecord.Factory<OrgLink> =
+  ImmutableRecord(defaultOrgLink);
+export type OrgLinkRecord = ImmutableRecord<OrgLink>;
 
 // name is temporary
 export type OrgLink2 = {
@@ -219,20 +275,47 @@ export type OrgLink2 = {
   type: "url" | "phone-number" | "e-mail" | "www-url";
   content: string;
 };
+const defaultOrgLink2: OrgLink2 = {
+  id: 0,
+  type: "url",
+  content: "",
+};
+
+export const makeOrgLink2Record: ImmutableRecord.Factory<OrgLink2> =
+  ImmutableRecord(defaultOrgLink2);
+export type OrgLink2Record = ImmutableRecord<OrgLink2>;
 
 export type OrgPercentageCookie = {
   id: number;
   type: "percentage-cookie";
   percentage: string | undefined;
 };
+const defaultOrgPercentageCookie: OrgPercentageCookie = {
+  id: 0,
+  type: "percentage-cookie",
+  percentage: undefined,
+};
+
+export const makeOrgPercentageCookieRecord: ImmutableRecord.Factory<OrgPercentageCookie> =
+  ImmutableRecord(defaultOrgPercentageCookie);
+export type OrgPercentageCookieRecord = ImmutableRecord<OrgPercentageCookie>;
 
 export type OrgFractionCookie = {
   id: number;
   type: "fraction-cookie";
   fraction: List<string | undefined>;
 };
+const defaultOrgFractionCookie: OrgFractionCookie = {
+  id: 0,
+  type: "fraction-cookie",
+  fraction: List(),
+};
 
-export type OrgCookie = OrgPercentageCookie | OrgFractionCookie;
+export const makeOrgFractionCookieRecord: ImmutableRecord.Factory<OrgFractionCookie> =
+  ImmutableRecord(defaultOrgFractionCookie);
+export type OrgFractionCookieRecord = ImmutableRecord<OrgFractionCookie>;
+
+export type OrgCookie = OrgPercentageCookieRecord | OrgFractionCookieRecord;
 
 export type OrgInlineMarkup = {
   id: number;
@@ -240,6 +323,16 @@ export type OrgInlineMarkup = {
   content: string;
   markupType: OrgMarkupType | undefined;
 };
+const defaultOrgInlineMarkup: OrgInlineMarkup = {
+  id: 0,
+  type: "inline-markup",
+  content: "",
+  markupType: undefined,
+};
+
+export const makeOrgInlineMarkupRecord: ImmutableRecord.Factory<OrgInlineMarkup> =
+  ImmutableRecord(defaultOrgInlineMarkup);
+export type OrgInlineMarkupRecord = ImmutableRecord<OrgInlineMarkup>;
 
 export type OrgClockString = {
   id: number;
@@ -247,6 +340,16 @@ export type OrgClockString = {
   firstTimestamp: OrgTimestampPart | undefined;
   secondTimestamp: OrgTimestampPart | undefined;
 };
+const defaultOrgClockString: OrgClockString = {
+  id: 0,
+  type: "timestamp",
+  firstTimestamp: undefined,
+  secondTimestamp: undefined,
+};
+
+export const makeOrgClockStringRecord: ImmutableRecord.Factory<OrgClockString> =
+  ImmutableRecord(defaultOrgClockString);
+export type OrgClockStringRecord = ImmutableRecord<OrgClockString>;
 
 export type OrgTimestampType =
   | "TIMESTAMP_TITLE"
@@ -256,115 +359,224 @@ export type OrgTimestampType =
 export type OrgTimestamp = {
   id: number;
   type: OrgTimestampType;
-  timestamp: MapOf<OrgTimestampPart>;
+  timestamp: OrgTimestampPartRecord;
 };
+const defaultOrgTimestamp: OrgTimestamp = {
+  id: 0,
+  type: "TIMESTAMP_TITLE",
+  timestamp: makeOrgTimestampPartRecord(),
+};
+
+export const makeOrgTimestampRecord: ImmutableRecord.Factory<OrgTimestamp> =
+  ImmutableRecord(defaultOrgTimestamp);
+export type OrgTimestampRecord = ImmutableRecord<OrgTimestamp>;
 
 export type OrgPlanningItemType = "SCHEDULED" | "DEADLINE";
 
 export type OrgPlanningItem = {
   type: OrgPlanningItemType;
-  timestamp: MapOf<OrgTimestampPart>;
+  timestamp: OrgTimestampPartRecord;
 };
+const defaultOrgPlanningItem: OrgPlanningItem = {
+  type: "SCHEDULED",
+  timestamp: makeOrgTimestampPartRecord(),
+};
+
+export const makeOrgPlanningItemRecord: ImmutableRecord.Factory<OrgPlanningItem> =
+  ImmutableRecord(defaultOrgPlanningItem);
+export type OrgPlanningItemRecord = ImmutableRecord<OrgPlanningItem>;
 
 export type OrgPropertyListItem = {
   type: "property-list-item";
   property: string;
-  value: List<MapOf<OrgText> | MapOf<OrgTimestamp> | null>;
+  value: List<OrgTextRecord | OrgTimestampRecord | undefined>;
   id: number;
 };
+const defaultOrgPropertyListItem: OrgPropertyListItem = {
+  type: "property-list-item",
+  property: "",
+  value: List(),
+  id: 0,
+};
+
+export const makeOrgPropertyListItemRecord: ImmutableRecord.Factory<OrgPropertyListItem> =
+  ImmutableRecord(defaultOrgPropertyListItem);
+export type OrgPropertyListItemRecord = ImmutableRecord<OrgPropertyListItem>;
 
 export type OrgListItem = {
   type: "list-item";
   id: number;
-  titleLine: List<MapOf<OrgTitleElement>>;
+  titleLine: List<OrgTitleElement>;
   contents: any;
   forceNumber: string | undefined;
   isCheckbox: boolean;
   checkboxState: OrgCheckboxState | undefined;
 };
+const defaultOrgListItem: OrgListItem = {
+  type: "list-item",
+  id: 0,
+  titleLine: List(),
+  contents: undefined,
+  forceNumber: undefined,
+  isCheckbox: false,
+  checkboxState: undefined,
+};
+
+export const makeOrgListItemRecord: ImmutableRecord.Factory<OrgListItem> =
+  ImmutableRecord(defaultOrgListItem);
+export type OrgListItemRecord = ImmutableRecord<OrgListItem>;
 
 export type OrgList = {
   type: "list";
   id: number;
-  items: List<MapOf<OrgListItem>>;
+  items: List<OrgListItemRecord>;
   bulletCharacter: string;
   numberTerminatorCharacter: string | undefined;
   isOrdered: boolean;
 };
+const defaultOrgList: OrgList = {
+  type: "list",
+  id: 0,
+  items: List(),
+  bulletCharacter: "",
+  numberTerminatorCharacter: undefined,
+  isOrdered: false,
+};
+
+export const makeOrgListRecord: ImmutableRecord.Factory<OrgList> =
+  ImmutableRecord(defaultOrgList);
+export type OrgListRecord = ImmutableRecord<OrgList>;
 
 export type OrgTableCell = {
   id: number;
   type: "table-cell";
-  contents: List<string | MapOf<OrgInlineMarkup>>;
+  contents: List<string | OrgInlineMarkupRecord>;
   rawContents: string;
 };
+const defaultOrgTableCell: OrgTableCell = {
+  id: 0,
+  type: "table-cell",
+  contents: List(),
+  rawContents: "",
+};
+
+export const makeOrgTableCellRecord: ImmutableRecord.Factory<OrgTableCell> =
+  ImmutableRecord(defaultOrgTableCell);
+export type OrgTableCellRecord = ImmutableRecord<OrgTableCell>;
 
 export type OrgTableRow = {
   id: number;
   type: "table-row";
-  contents: List<MapOf<OrgTableCell>>;
+  contents: List<OrgTableCellRecord>;
 };
+const defaultOrgTableRow: OrgTableRow = {
+  id: 0,
+  type: "table-row",
+  contents: List(),
+};
+
+export const makeOrgTableRowRecord: ImmutableRecord.Factory<OrgTableRow> =
+  ImmutableRecord(defaultOrgTableRow);
+export type OrgTableRowRecord = ImmutableRecord<OrgTableRow>;
 
 export type OrgTable = {
   id: number;
   type: "table";
-  contents: List<MapOf<OrgTableRow>>;
+  contents: List<OrgTableRowRecord>;
   columnProperties: List<any>;
 };
+const defaultOrgTable: OrgTable = {
+  id: 0,
+  type: "table",
+  contents: List(),
+  columnProperties: List(),
+};
+
+export const makeOrgTableRecord: ImmutableRecord.Factory<OrgTable> =
+  ImmutableRecord(defaultOrgTable);
+export type OrgTableRecord = ImmutableRecord<OrgTable>;
 
 export type OrgTitleElement =
-  | OrgText
-  | OrgPlanningItem
-  | OrgTimestamp
-  | OrgInlineMarkup
+  | OrgTextRecord
+  | OrgPlanningItemRecord
+  | OrgTimestampRecord
+  | OrgInlineMarkupRecord
   | OrgCookie;
 
 export type OrgTitleLine = {
   type: "title-line";
-  title: List<MapOf<OrgTitleElement>>;
+  title: List<OrgTitleElement>;
   rawTitle: string;
   todoKeyword: string;
   tags: List<string>;
 };
+const defaultOrgTitleLine: OrgTitleLine = {
+  type: "title-line",
+  title: List(),
+  rawTitle: "",
+  todoKeyword: "",
+  tags: List(),
+};
+
+export const makeOrgTitleLineRecord: ImmutableRecord.Factory<OrgTitleLine> =
+  ImmutableRecord(defaultOrgTitleLine);
+export type OrgTitleLineRecord = ImmutableRecord<OrgTitleLine>;
 
 export type OrgHeadline = {
   type: "headline";
-  titleLine: MapOf<OrgTitleLine>;
+  titleLine: OrgTitleLineRecord;
   rawDescription: string;
   description: List<any>;
   opened: boolean;
   id: number;
   nestingLevel: number;
   planningItems: List<any>;
-  propertyListItems: List<MapOf<OrgPropertyListItem>>;
+  propertyListItems: List<OrgPropertyListItemRecord>;
   logNotes: List<any>;
   logBookEntries: List<any>;
 };
+const defaultOrgHeadline: OrgHeadline = {
+  type: "headline",
+  titleLine: makeOrgTitleLineRecord(),
+  rawDescription: "",
+  description: List(),
+  opened: false,
+  id: 0,
+  nestingLevel: 0,
+  planningItems: List(),
+  propertyListItems: List(),
+  logNotes: List(),
+  logBookEntries: List(),
+};
+
+export const makeOrgHeadlineRecord: ImmutableRecord.Factory<OrgHeadline> =
+  ImmutableRecord(defaultOrgHeadline);
+export type OrgHeadlineRecord = ImmutableRecord<OrgHeadline>;
 
 export type OrgElement =
-  | OrgLink
-  | OrgLink2
-  | OrgPercentageCookie
-  | OrgFractionCookie
+  | OrgLinkRecord
+  | OrgLink2Record
+  | OrgPercentageCookieRecord
+  | OrgFractionCookieRecord
   | OrgCookie
-  | OrgInlineMarkup
-  | OrgTimestamp
-  | OrgPlanningItem
-  | OrgClockString
-  | OrgPropertyListItem
-  | OrgListItem
-  | OrgList
-  | OrgTableCell
-  | OrgTableRow
-  | OrgTable
-  | OrgTitleLine
-  | OrgHeadline
-  | OrgText;
+  | OrgInlineMarkupRecord
+  | OrgTimestampRecord
+  | OrgPlanningItemRecord
+  | OrgClockStringRecord
+  | OrgPropertyListItemRecord
+  | OrgListItemRecord
+  | OrgListItemRecord
+  | OrgTableCellRecord
+  | OrgTableRowRecord
+  | OrgTableRowRecord
+  | OrgTitleLineRecord
+  | OrgHeadlineRecord
+  | OrgTextRecord;
 
 export type OrgFile = {
-  headers: List<MapOf<OrgHeadline>>;
+  headers: List<OrgHeadlineRecord>;
   activeClocks: number;
-  todoKeywordSets: List<MapOf<OrgTodoKeywordSet>>;
+  todoKeywordSets: List<OrgTodoKeywordSetRecord>;
   isDirty: boolean;
   lastSyncAt: Date;
   fileConfigLines: List<string>;
@@ -378,6 +590,27 @@ export type OrgFile = {
   selectedTableCellId: number | undefined;
   selectedListItemId: number | undefined;
 };
+const defaultOrgFile: OrgFile = {
+  headers: List(),
+  activeClocks: 0,
+  todoKeywordSets: List(),
+  isDirty: false,
+  lastSyncAt: new Date(),
+  fileConfigLines: List(),
+  linesBeforeHeadings: List(),
+  narrowedHeaderId: undefined,
+  selectedHeaderId: 0,
+  selectedHeaderIndex: 0,
+  editMode: undefined,
+  selectedTableId: 0,
+  selectedDescriptionItemIndex: 0,
+  selectedTableCellId: undefined,
+  selectedListItemId: undefined,
+};
+
+export const makeOrgFileRecord: ImmutableRecord.Factory<OrgFile> =
+  ImmutableRecord(defaultOrgFile);
+export type OrgFileRecord = ImmutableRecord<OrgFile>;
 
 export type DirectoryListingEntry = {
   id: string;
@@ -385,19 +618,48 @@ export type DirectoryListingEntry = {
   isDirectory: boolean;
   path: string | undefined;
 };
+const defaultDirectoryListingEntry: DirectoryListingEntry = {
+  id: "",
+  name: "",
+  isDirectory: false,
+  path: undefined,
+};
+
+export const makeDirectoryListingEntryRecord: ImmutableRecord.Factory<DirectoryListingEntry> =
+  ImmutableRecord(defaultDirectoryListingEntry);
+export type DirectoryListingEntryRecord =
+  ImmutableRecord<DirectoryListingEntry>;
 
 export type AdditionalSyncBackendState = {
   cursor: string;
 };
-
-export type DirectoryListing = {
-  listing: List<MapOf<DirectoryListingEntry>>;
-  hasMore: boolean;
-  isLoadingMore?: boolean;
-  additionalSyncBackendState: MapOf<AdditionalSyncBackendState>;
+const defaultAdditionalSyncBackendState: AdditionalSyncBackendState = {
+  cursor: "",
 };
 
-export interface Client {
+export const makeAdditionalSyncBackendStateRecord: ImmutableRecord.Factory<AdditionalSyncBackendState> =
+  ImmutableRecord(defaultAdditionalSyncBackendState);
+export type AdditionalSyncBackendStateRecord =
+  ImmutableRecord<AdditionalSyncBackendState>;
+
+export type DirectoryListing = {
+  listing: List<DirectoryListingEntryRecord>;
+  hasMore: boolean;
+  isLoadingMore?: boolean;
+  additionalSyncBackendState: AdditionalSyncBackendStateRecord;
+};
+const defaultDirectoryListing: DirectoryListing = {
+  listing: List(),
+  hasMore: false,
+  isLoadingMore: undefined,
+  additionalSyncBackendState: makeAdditionalSyncBackendStateRecord(),
+};
+
+export const makeDirectoryListingRecord: ImmutableRecord.Factory<DirectoryListing> =
+  ImmutableRecord(defaultDirectoryListing);
+export type DirectoryListingRecord = ImmutableRecord<DirectoryListing>;
+
+export type Client = {
   type: ClientType;
   isSignedIn: () => Promise<boolean>;
   getDirectoryListing: (path: string) => Promise<DirectoryListing>;
@@ -411,25 +673,66 @@ export interface Client {
   ) => Promise<{ contents: string; lastModifiedAt: string }>;
   getFileContents: (path: string) => Promise<string>;
   deleteFile: (path: string) => Promise<any>;
-}
+};
+// const defaultClient: Client = {
+//     type: "WebDAV",
+//     isSignedIn: ,
+//     getDirectoryListing:,
+//     getMoreDirectoryListing:,
+//     updateFile:,
+//     createFile:,
+//     getFileContentsAndMetadata:,
+//     getFileContents:,
+//     deleteFile:
+// }
 
-export interface SyncOptions {
+// export const makeClientRecord: ImmutableRecord.Factory<Client> = ImmutableRecord(defaultClient);
+// export type ClientRecord = ImmutableRecord<Client>
+
+export type SyncOptions = {
   forceAction: ForceAction;
   successMessage: string;
   shouldSuppressMessages: boolean;
   path: string;
-}
+};
+const defaultSyncOptions: SyncOptions = {
+  forceAction: undefined,
+  successMessage: "",
+  shouldSuppressMessages: false,
+  path: "",
+};
+
+export const makeSyncOptionsRecord: ImmutableRecord.Factory<SyncOptions> =
+  ImmutableRecord(defaultSyncOptions);
+export type SyncOptionsRecord = ImmutableRecord<SyncOptions>;
 
 export type Search = {
   searchFilter: string;
   searchFilterExpr: List<string>;
 };
+const defaultSearch: Search = {
+  searchFilter: "",
+  searchFilterExpr: List(),
+};
+
+export const makeSearchRecord: ImmutableRecord.Factory<Search> =
+  ImmutableRecord(defaultSearch);
+export type SearchRecord = ImmutableRecord<Search>;
 
 export type Bookmark = {
-  search: List<MapOf<Search>>;
+  search: List<SearchRecord>;
   "task-list": List<string>;
   refile: List<string>;
 };
+const defaultBookmark: Bookmark = {
+  search: List(),
+  "task-list": List(),
+  refile: List(),
+};
+
+export const makeBookmarkRecord: ImmutableRecord.Factory<Bookmark> =
+  ImmutableRecord(defaultBookmark);
+export type BookmarkRecord = ImmutableRecord<Bookmark>;
 
 export type FileSetting = {
   id: number;
@@ -440,6 +743,19 @@ export type FileSetting = {
   includeInRefile: boolean;
   includeInTasklist: boolean;
 };
+const defaultFileSetting: FileSetting = {
+  id: 0,
+  path: "",
+  loadOnStartup: false,
+  includeInAgenda: false,
+  includeInSearch: false,
+  includeInRefile: false,
+  includeInTasklist: false,
+};
+
+export const makeFileSettingRecord: ImmutableRecord.Factory<FileSetting> =
+  ImmutableRecord(defaultFileSetting);
+export type FileSettingRecord = ImmutableRecord<FileSetting>;
 
 export type PendingCapture = {
   capturePath: string;
@@ -447,14 +763,24 @@ export type PendingCapture = {
   captureContent: string;
   customCaptureVariables: Map<string, string>;
 };
+const defaultPendingCapture: PendingCapture = {
+  capturePath: "",
+  captureTemplateName: "",
+  captureContent: "",
+  customCaptureVariables: Map(),
+};
+
+export const makePendingCaptureRecord: ImmutableRecord.Factory<PendingCapture> =
+  ImmutableRecord(defaultPendingCapture);
+export type PendingCaptureRecord = ImmutableRecord<PendingCapture>;
 
 export type SyncBackendAction =
   | { type: "SIGN_OUT" }
   | {
       type: "SET_CURRENT_FILE_BROWSER_DIRECTORY_LISTING";
-      directoryListing: DirectoryListing;
+      directoryListing: DirectoryListingRecord;
       hasMore: boolean;
-      additionalSyncBackendState: AdditionalSyncBackendState;
+      additionalSyncBackendState: AdditionalSyncBackendStateRecord;
       path: string;
     }
   | { type: "SET_IS_LOADING_MORE_DIRECTORY_LISTING"; isLoadingMore: boolean };
@@ -769,14 +1095,14 @@ export type OrgAction =
   | {
       type: "UPDATE_TIMESTAMP_WITH_ID";
       timestampId: number;
-      newTimestamp: OrgTimestampPart;
+      newTimestamp: OrgTimestampPartRecord;
       dirtying: boolean;
     }
   | {
       type: "UPDATE_PLANNING_ITEM_TIMESTAMP";
       headerId: number;
       planningItemIndex: number;
-      newTimestamp: OrgTimestampPart;
+      newTimestamp: OrgTimestampPartRecord;
       dirtying: boolean;
     }
   | {
@@ -1094,19 +1420,60 @@ export type OrgCaptureTemplate = {
   shouldPrepend: boolean;
   template: string;
 };
+const defaultOrgCaptureTemplate: OrgCaptureTemplate = {
+  id: 0,
+  description: "",
+  letter: "",
+  iconName: "",
+  isAvailableInAllOrgFiles: false,
+  file: "",
+  orgFilesWhereAvailable: List(),
+  headerPaths: List(),
+  shouldPrepend: false,
+  template: "",
+};
+
+export const makeOrgCaptureTemplateRecord: ImmutableRecord.Factory<OrgCaptureTemplate> =
+  ImmutableRecord(defaultOrgCaptureTemplate);
+export type OrgCaptureTemplateRecord = ImmutableRecord<OrgCaptureTemplate>;
 
 export type SyncBackendState = {
   isAuthenticated: boolean;
   client: Client | undefined;
-  currentFileBrowserDirectoryListing: MapOf<DirectoryListing>;
+  currentFileBrowserDirectoryListing: DirectoryListingRecord;
   currentPath: string;
 };
-
-export type OrgCaptureState = {
-  captureTemplates: List<MapOf<OrgCaptureTemplate>>;
+const defaultSyncBackendState: SyncBackendState = {
+  isAuthenticated: false,
+  client: undefined,
+  currentFileBrowserDirectoryListing: makeDirectoryListingRecord(),
+  currentPath: "",
 };
 
+export const makeSyncBackendStateRecord: ImmutableRecord.Factory<SyncBackendState> =
+  ImmutableRecord(defaultSyncBackendState);
+export type SyncBackendStateRecord = ImmutableRecord<SyncBackendState>;
+
+export type OrgCaptureState = {
+  captureTemplates: List<OrgCaptureTemplateRecord>;
+};
+const defaultOrgCaptureState: OrgCaptureState = {
+  captureTemplates: List(),
+};
+
+export const makeOrgCaptureStateRecord: ImmutableRecord.Factory<OrgCaptureState> =
+  ImmutableRecord(defaultOrgCaptureState);
+export type OrgCaptureStateRecord = ImmutableRecord<OrgCaptureState>;
+
 export type Popup = { type: PopupType; data: Map<string, string> };
+const defaultPopup: Popup = {
+  type: "deadline-editor",
+  data: Map(),
+};
+
+export const makePopupRecord: ImmutableRecord.Factory<Popup> =
+  ImmutableRecord(defaultPopup);
+export type PopupRecord = ImmutableRecord<Popup>;
 
 export type BaseState = {
   loadingMessage: string | undefined;
@@ -1130,7 +1497,7 @@ export type BaseState = {
   lastViewedPath: string;
   customKeybindings: Map<string, string>;
   modalPageStack: List<ModalPage>;
-  activePopup: MapOf<Popup> | undefined;
+  activePopup: PopupRecord | undefined;
   isLoading: Set<string>;
   online: boolean;
   agendaTimeframe: AgendaTimeframe;
@@ -1139,27 +1506,92 @@ export type BaseState = {
   colorScheme: string;
   theme: string;
 };
+const defaultBaseState: BaseState = {
+  loadingMessage: undefined,
+  fontSize: 0,
+  bulletStyle: "Fancy",
+  shouldTapTodoToAdvance: false,
+  agendaDefaultDeadlineDelayUnit: "h",
+  agendaDefaultDeadlineDelayValue: 0,
+  editorDescriptionHeightValue: 0,
+  agendaStartOnWeekday: false,
+  shouldStoreSettingsInSyncBackend: false,
+  shouldLiveSync: false,
+  showDeadlineDisplay: false,
+  shouldSyncOnBecomingVisibile: false,
+  shouldShowTitleInOrgFile: false,
+  shouldLogIntoDrawer: false,
+  closeSubheadersRecursively: false,
+  shouldNotIndentOnExport: false,
+  hasUnseenChangelog: false,
+  lastSeenChangelogHash: "",
+  lastViewedPath: "",
+  customKeybindings: Map(),
+  modalPageStack: List(),
+  activePopup: undefined,
+  isLoading: Set(),
+  online: false,
+  agendaTimeframe: "Week",
+  finderTab: "Search",
+  preferEditRawValues: false,
+  colorScheme: "",
+  theme: "",
+};
+
+export const makeBaseStateRecord: ImmutableRecord.Factory<BaseState> =
+  ImmutableRecord(defaultBaseState);
+export type BaseStateRecord = ImmutableRecord<BaseState>;
 
 export type OrgState = {
   path: string;
-  files: List<MapOf<OrgFile>>;
-  search: Search;
+  files: List<OrgFileRecord>;
+  search: SearchRecord;
   opennessState: boolean;
-  pendingCapture: MapOf<PendingCapture>;
-  fileSettings: List<MapOf<FileSetting>>;
+  pendingCapture: PendingCaptureRecord;
+  fileSettings: List<FileSettingRecord>;
   bookmarks: List<string>;
   orgFileErrorMessage: string;
   showClockDisplay: boolean;
   fileConfigLines: List<string>;
 };
+const defaultOrgState: OrgState = {
+  path: "",
+  files: List(),
+  search: makeSearchRecord(),
+  opennessState: false,
+  pendingCapture: makePendingCaptureRecord(),
+  fileSettings: List(),
+  bookmarks: List(),
+  orgFileErrorMessage: "",
+  showClockDisplay: false,
+  fileConfigLines: List(),
+};
+
+export const makeOrgStateRecord: ImmutableRecord.Factory<OrgState> =
+  ImmutableRecord(defaultOrgState);
+export type OrgStateRecord = ImmutableRecord<OrgState>;
 
 export type State = {
-  base: BaseState;
-  syncBackend: SyncBackendState;
+  base: BaseStateRecord;
+  syncBackend: SyncBackendStateRecord;
   org: {
-    past: List<MapOf<OrgState>>;
-    present: MapOf<OrgState>;
-    future: List<MapOf<OrgState>>;
+    past: List<OrgStateRecord>;
+    present: OrgStateRecord;
+    future: List<OrgStateRecord>;
   };
-  capture: OrgCaptureState;
+  capture: OrgCaptureStateRecord;
 };
+const defaultState: State = {
+  base: makeBaseStateRecord(),
+  syncBackend: makeSyncBackendStateRecord(),
+  org: {
+    past: List(),
+    present: makeOrgStateRecord(),
+    future: List(),
+  },
+  capture: makeOrgCaptureStateRecord(),
+};
+
+export const makeStateRecord: ImmutableRecord.Factory<State> =
+  ImmutableRecord(defaultState);
+export type StateRecord = ImmutableRecord<State>;

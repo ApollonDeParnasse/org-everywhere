@@ -1,11 +1,4 @@
-import {
-  map,
-  includes,
-  reduce,
-  isString,
-  compact,
-  curry,
-} from "lodash/fp";
+import { map, includes, reduce, isString, compact, curry } from "lodash/fp";
 import CodeBlockWriter from "code-block-writer";
 import { format } from "prettier";
 import {
@@ -20,7 +13,6 @@ import {
   FunctionDeclarationStructure,
   KindToNodeMappings,
 } from "ts-morph";
-
 
 export const capitalize = (x: string) => x[0].toUpperCase() + x.slice(1);
 
@@ -42,6 +34,12 @@ export const curriedFilterMap =
 export const includesAny = includes("any");
 
 export const arrayToSet = <T>(x: Array<T>): Set<T> => new Set(x);
+export const setToArray = <T>(x: Set<T>): Array<T> => Array.from(x.values());
+export const curriedSetDifference =
+  <T>(setB: Set<T>) =>
+  (setA: Set<T>): Set<T> => {
+    return setA.difference(setB);
+  };
 
 export const reduceReplace = (
   replacementTuples: Array<[string, string]>,
@@ -60,12 +58,15 @@ export const reduceReplace = (
 };
 
 export const reduceReplaceAll = (
-  valuesToReplace: Array<string>,
+  valuesToReplace: Array<[string, string]>,
   strToEdit: string,
 ): string => {
   return reduce(
-    (currStrToEdit: string, valueToReplace: string): string => {
-      return currStrToEdit.replaceAll(valueToReplace, "");
+    (
+      currStrToEdit: string,
+      [valueToReplace, replacement]: [string, string],
+    ): string => {
+      return currStrToEdit.replaceAll(valueToReplace, replacement);
     },
     strToEdit,
     valuesToReplace,
@@ -134,11 +135,8 @@ export const formatSourceFileText = async (
 
 const baseCopyNode = () => {
   const tempProject = new Project({ useInMemoryFileSystem: true });
-  return curry(
-    <TKind extends SyntaxKind>(
-      kind: TKind,
-      node: Node,
-    ): KindToNodeMappings[TKind] => {
+  return <TKind extends SyntaxKind>(kind: TKind) =>
+    (node: Node): KindToNodeMappings[TKind] => {
       const tempFileWithNode = tempProject.createSourceFile(
         "temp",
         node.getText(),
@@ -148,9 +146,26 @@ const baseCopyNode = () => {
       );
       const copiedNode = tempFileWithNode.getFirstDescendantByKindOrThrow(kind);
       return copiedNode.asKindOrThrow(kind);
-    },
-  );
+    };
 };
 
 export const copyNode = baseCopyNode();
 export const copyArrowFunction = copyNode(SyntaxKind.ArrowFunction);
+
+const baseCreateNewXExpression = () => {
+  const tempProject = new Project({ useInMemoryFileSystem: true });
+  return <TKind extends SyntaxKind>(nodeText: string, kind: TKind) =>
+    (): KindToNodeMappings[TKind] => {
+      const tempFileWithNode = tempProject.createSourceFile("temp", nodeText, {
+        overwrite: true,
+      });
+      const copiedNode = tempFileWithNode.getFirstDescendantByKindOrThrow(kind);
+      return copiedNode.asKindOrThrow(kind);
+    };
+};
+
+const createNewXExpression = baseCreateNewXExpression();
+export const createNewObjectLiteralExpression = createNewXExpression(
+  "const x = {}",
+  SyntaxKind.ObjectLiteralExpression,
+);
