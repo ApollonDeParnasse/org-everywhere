@@ -180,8 +180,6 @@ export const unfoldAndTransformRangeChunkN = curry(
   },
 );
 
-
-
 export const spreadZipObject = spread(zipObject);
 export const zipAdd = zipWith<number, number, number>(add);
 
@@ -518,9 +516,11 @@ export const getFromRecord = <TProps extends object, K extends keyof TProps>(
 ): TProps[K] | undefined => {
   return get(record, key, undefined);
 };
-export const curriedGetFromRecord = <TProps extends object, K extends keyof TProps>(key: K) => (record: ImmutableRecord<TProps>): TProps[K] | undefined => {
-    return getFromRecord(key, record)
-}
+export const curriedGetFromRecord =
+  <TProps extends object, K extends keyof TProps>(key: K) =>
+  (record: ImmutableRecord<TProps>): TProps[K] | undefined => {
+    return getFromRecord(key, record);
+  };
 
 export const setRecord = <
   TProps extends object,
@@ -533,9 +533,18 @@ export const setRecord = <
 ): C => {
   return set<TProps, C, K>(record, key, value);
 };
-export const curriedSetRecord = <TProps extends object, C extends ImmutableRecord<TProps>, K extends keyof TProps>(key: K) => (value: TProps[K]) => (record: C): C => {
-    return setRecord(key, value, record)}
-
+export const curriedSetRecord =
+  <
+    TProps extends object,
+    C extends ImmutableRecord<TProps>,
+    K extends keyof TProps,
+  >(
+    key: K,
+  ) =>
+  (value: TProps[K]) =>
+  (record: C): C => {
+    return setRecord(key, value, record);
+  };
 
 export const updateRecord = <
   TProps extends object,
@@ -548,9 +557,18 @@ export const updateRecord = <
 ): C => {
   return update(record, key, updater);
 };
-export const curriedUpdateRecord = <TProps extends object, C extends ImmutableRecord<TProps>, K extends keyof TProps>(updater: (value: TProps[K]) => TProps[K]) => (key: K) => (record: C): C => {
-    return updateRecord(updater, key, record)
-}
+export const curriedUpdateRecord =
+  <
+    TProps extends object,
+    C extends ImmutableRecord<TProps>,
+    K extends keyof TProps,
+  >(
+    updater: (value: TProps[K]) => TProps[K],
+  ) =>
+  (key: K) =>
+  (record: C): C => {
+    return updateRecord(updater, key, record);
+  };
 
 export const updateInRecord = <
   TProps extends object,
@@ -563,9 +581,18 @@ export const updateInRecord = <
 ): C => {
   return updateIn(record, keyPath, updater);
 };
-export const curriedUpdateInRecord = <TProps extends object, C extends ImmutableRecord<TProps>, K extends keyof TProps>(updater: (value: RetrievePath<C, Array<K>>) => unknown) => (keyPath: KeyPath<K>) => (record: C): C => {
+export const curriedUpdateInRecord =
+  <
+    TProps extends object,
+    C extends ImmutableRecord<TProps>,
+    K extends keyof TProps,
+  >(
+    updater: (value: RetrievePath<C, Array<K>>) => unknown,
+  ) =>
+  (keyPath: KeyPath<K>) =>
+  (record: C): C => {
     return updateIn(record, keyPath, updater);
-}
+  };
 
 // immutable extensions - types are a nightmare
 
@@ -573,12 +600,15 @@ export const getAllForRecord = <TProps extends object, K extends keyof TProps>(
   keys: Array<K>,
   record: ImmutableRecord<TProps>,
 ): Array<TProps[K] | undefined> => {
-  return map((key: K): TProps[K] | undefined => getFromRecord(key, record))(keys);
-}
-export const curriedGetAllForRecord = <TProps extends object, K extends keyof TProps>(keys: Array<K>) => (record: ImmutableRecord<TProps>): Array<TProps[K] | undefined> => {
-  return getAllForRecord(keys, record)
-}
-
+  return map((key: K): TProps[K] | undefined => getFromRecord(key, record))(
+    keys,
+  );
+};
+export const curriedGetAllForRecord =
+  <TProps extends object, K extends keyof TProps>(keys: Array<K>) =>
+  (record: ImmutableRecord<TProps>): Array<TProps[K] | undefined> => {
+    return getAllForRecord(keys, record);
+  };
 
 export const setAllForRecord = <
   TProps extends object,
@@ -590,35 +620,51 @@ export const setAllForRecord = <
 ): C => {
   const traversalFunc =
     ([key, value]: [K, TProps[K]]) =>
-      (rec: C): [K, C] => {
-        return [key, setRecord(key, value, rec)];
-      };
+    (rec: C): [K, C] => {
+      return [key, setRecord(key, value, rec)];
+    };
 
   const traversal = traverseArray(traversalFunc)(keyValuePairs);
   return execute(record)(traversal);
-}
-export const curriedSetAllForRecord = <TProps extends object, C extends ImmutableRecord<TProps>, K extends keyof TProps>(keyValuePairs: Array<[K, TProps[K]]>) => (record: C): C => {
-    return setAllForRecord(keyValuePairs, record)
-}
+};
+export const curriedSetAllForRecord =
+  <
+    TProps extends object,
+    C extends ImmutableRecord<TProps>,
+    K extends keyof TProps,
+  >(
+    keyValuePairs: Array<[K, TProps[K]]>,
+  ) =>
+  (record: C): C => {
+    return setAllForRecord(keyValuePairs, record);
+  };
 
 export const updateAllForRecord = <
   TProps extends object,
   C extends ImmutableRecord<TProps>,
-  K extends keyof TProps
+  K extends keyof TProps,
 >(
   keyUpdaterPairs: Array<[K, (value: TProps[K]) => TProps[K]]>,
   record: C,
 ): C => {
   const traversalFunc =
     ([key, updater]: [K, updater: (value: TProps[K]) => TProps[K]]) =>
-      (rec: C): [K, C] => {
-        return [key, updateRecord(updater, key, rec)];
-      };
+    (rec: C): [K, C] => {
+      return [key, updateRecord(updater, key, rec)];
+    };
   const traversal = traverseArray(traversalFunc)(keyUpdaterPairs);
   return execute(record)(traversal);
-}
-export const curriedUpdateAllForRecord = <TProps extends object, C extends ImmutableRecord<TProps>, K extends keyof TProps>(keyUpdaterPairs: Array<[K, (value: TProps[K]) => TProps[K]]>) => (record: C): C => {
-    return updateAllForRecord(keyUpdaterPairs, record)
-}
+};
+export const curriedUpdateAllForRecord =
+  <
+    TProps extends object,
+    C extends ImmutableRecord<TProps>,
+    K extends keyof TProps,
+  >(
+    keyUpdaterPairs: Array<[K, (value: TProps[K]) => TProps[K]]>,
+  ) =>
+  (record: C): C => {
+    return updateAllForRecord(keyUpdaterPairs, record);
+  };
 
-export const over = flip(flap)
+export const over = flip(flap);

@@ -16,7 +16,7 @@ import {
   localStorageAvailable,
   persistField,
 } from "../util/settings_persister";
-import { pathParse } from "../util/transformers"
+import { pathParse } from "../util/transformers";
 import {
   clearModalStack,
   hideLoadingMessage,

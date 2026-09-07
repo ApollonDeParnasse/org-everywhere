@@ -28,7 +28,10 @@ import {
   getTableTotalRowsCount,
 } from "../../../../../lib/org_utils";
 import multipleTables from "../../../../../../test_helpers/fixtures/multiple_tables.org?raw";
-import { setup, sleep } from "../../../../../../test_helpers/NodeTestingHelpers";
+import {
+  setup,
+  sleep,
+} from "../../../../../../test_helpers/NodeTestingHelpers";
 import {
   TESTBASESTATE,
   TESTFILEPATH,

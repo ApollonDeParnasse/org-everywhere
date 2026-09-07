@@ -74,7 +74,7 @@ const ActionDrawer = ({ org, files, syncBackend, path }: ActionDrawerProps) => {
   );
 };
 
-const mapStateToProps = (state): {path: string, files: Array<string>} => {
+const mapStateToProps = (state): { path: string; files: Array<string> } => {
   const path: string = state.syncBackend.get("currentPath");
   let files: List<MapOf<DirectoryListingEntry>> = state.syncBackend.getIn([
     "currentFileBrowserDirectoryListing",

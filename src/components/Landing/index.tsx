@@ -24,9 +24,7 @@ export default () => {
 
       <div className="row gx-5 align-items-center">
         <div className="col-lg-6" data-aos="fade-up">
-          <h1 className="page-header-ui-title">
-            org-everywhere
-          </h1>
+          <h1 className="page-header-ui-title">org-everywhere</h1>
           <p>You get the point</p>
 
           <a className="btn btn-teal fw-500 me-2" href="/org-everywhere/sample">

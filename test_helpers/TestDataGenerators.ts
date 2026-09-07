@@ -34,11 +34,7 @@ import {
   addHours,
   type Duration,
 } from "date-fns/fp";
-import {
-  type MapOf,
-  Map,
-  Record as ImmutableRecord
-} from "immutable";
+import { type MapOf, Map, Record as ImmutableRecord } from "immutable";
 import type { ColorObject } from "color";
 import type {
   OrgTimestampPart,
@@ -81,7 +77,7 @@ import {
   TESTREPEATERUNITSWITHOUTHOURS,
   TESTDELAYTYPES,
   TESTMINHOURSDIFF,
-  TESTMINDAYSDIFF
+  TESTMINDAYSDIFF,
 } from "./Constants";
 
 export const randomArrayValue = pipe([shuffle, first]);
@@ -268,7 +264,7 @@ export const defaultConvertFCGenIntoRandomGenBasedOnArgLength =
   <A extends object, B>(
     generator: (randomNumber: number, fcGen: fc.GeneratorValue, arg: A) => B,
   ) =>
-    (fcGen: fc.GeneratorValue, arg: A): B => {
+  (fcGen: fc.GeneratorValue, arg: A): B => {
     const randomNumber = fcGenRandomIntegerBetweenOneAnd(
       fcGen,
       Object.keys(arg).length,
@@ -713,22 +709,38 @@ export const fcGenObject = (
 };
 
 export const fcGenRandomObject = defaultConvertFCGenIntoRandomGen(fcGenObject);
-export const fcGenRandomImmutableMap = (fcGen: fc.GeneratorValue): [MapOf<Record<string, any>>, Record<string, any>] => {
-  return fpipe(fcGenRandomObject(fcGen),
-    (x: Record<string, any>): [Record<string, any>, Record<string, any>] => [identity(x), identity(x)],
-    mapFst((x: Record<string, any>): MapOf<Record<string, any>> => Map(x)))
-}
+export const fcGenRandomImmutableMap = (
+  fcGen: fc.GeneratorValue,
+): [MapOf<Record<string, any>>, Record<string, any>] => {
+  return fpipe(
+    fcGenRandomObject(fcGen),
+    (x: Record<string, any>): [Record<string, any>, Record<string, any>] => [
+      identity(x),
+      identity(x),
+    ],
+    mapFst((x: Record<string, any>): MapOf<Record<string, any>> => Map(x)),
+  );
+};
 
-export const fcGenRandomImmutableRecord = (fcGen: fc.GeneratorValue): [ImmutableRecord<Record<string, any>>, Record<string, any>] => {
+export const fcGenRandomImmutableRecord = (
+  fcGen: fc.GeneratorValue,
+): [ImmutableRecord<Record<string, any>>, Record<string, any>] => {
   // is there a better way to do this?
-  const recordMaker = (object: Record<string, any>): ImmutableRecord<Record<string, any>> => {
-    const defaultMaker = ImmutableRecord(object)
-    return defaultMaker(object)
-  }
-  return fpipe(fcGenRandomObject(fcGen),
-    (x: Record<string, any>): [Record<string, any>, Record<string, any>] => [identity(x), identity(x)],
-    mapFst(recordMaker))
-}
+  const recordMaker = (
+    object: Record<string, any>,
+  ): ImmutableRecord<Record<string, any>> => {
+    const defaultMaker = ImmutableRecord(object);
+    return defaultMaker(object);
+  };
+  return fpipe(
+    fcGenRandomObject(fcGen),
+    (x: Record<string, any>): [Record<string, any>, Record<string, any>] => [
+      identity(x),
+      identity(x),
+    ],
+    mapFst(recordMaker),
+  );
+};
 
 export const fcShuffledSubArrayOfTemplateVariables = fcShuffledSubarray(
   TESTORGCAPTURETEMPLATES,
@@ -1182,7 +1194,11 @@ export const fcGenOrgTimestampPartRecordWithCumulateRepeater = (
       expectedRepeatDate,
     );
 
-  return [makeOrgTimestampPartRecord(timestampWithRepeater), currentDate, nextRepeatTimestamp];
+  return [
+    makeOrgTimestampPartRecord(timestampWithRepeater),
+    currentDate,
+    nextRepeatTimestamp,
+  ];
 };
 
 // adding (repeaterValue * periodsElapsed) to a date is not
@@ -1237,7 +1253,11 @@ export const fcGenOrgTimestampPartRecordWithCatchupRepeater = (
   const nextRepeatTimestamp: OrgTimestampPart =
     createNextRepeatTimestampPartObject(timestampWithRepeater, nextRepeatDate);
 
-  return [makeOrgTimestampPartRecord(timestampWithRepeater), currentDate, nextRepeatTimestamp];
+  return [
+    makeOrgTimestampPartRecord(timestampWithRepeater),
+    currentDate,
+    nextRepeatTimestamp,
+  ];
 };
 
 // .+
@@ -1275,7 +1295,11 @@ export const fcGenOrgTimestampPartRecordWithRestartRepeater = (
   const nextRepeatTimestamp: OrgTimestampPart =
     createNextRepeatTimestampPartObject(timestampWithRepeater, nextRepeatDate);
 
-  return [makeOrgTimestampPartRecord(timestampWithRepeater), currentDate, nextRepeatTimestamp];
+  return [
+    makeOrgTimestampPartRecord(timestampWithRepeater),
+    currentDate,
+    nextRepeatTimestamp,
+  ];
 };
 
 export const fcGenOrgTimestampPartRecordWithRepeater = (

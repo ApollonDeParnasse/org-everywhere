@@ -75,7 +75,7 @@ import {
   fcGenRandomListOfObjectKeyValuePairs,
   fcGenRandomRepeaterValue,
   fcGenRandomTimeString,
-  fcGenRandomImmutableRecord
+  fcGenRandomImmutableRecord,
 } from "../TestDataGenerators.ts";
 
 const isRepeaterType = (
@@ -379,23 +379,20 @@ describe("TestDataGenerators test suite", () => {
         },
       );
 
-      test.prop([fc.gen()])(
-        "fcGenRandomListOfObjectKeyValuePairs",
-        (fcGen) => {
-          const testObj = fcGenRandomObject(fcGen);
-          const actualPairs = fcGenRandomListOfObjectKeyValuePairs(
-            fcGen,
-            testObj,
-          );
+      test.prop([fc.gen()])("fcGenRandomListOfObjectKeyValuePairs", (fcGen) => {
+        const testObj = fcGenRandomObject(fcGen);
+        const actualPairs = fcGenRandomListOfObjectKeyValuePairs(
+          fcGen,
+          testObj,
+        );
 
-          const [actualKey, actualValue] = fcGenRandomItemFromArray(
-            fcGen,
-            actualPairs,
-          );
+        const [actualKey, actualValue] = fcGenRandomItemFromArray(
+          fcGen,
+          actualPairs,
+        );
 
-          expect(testObj[actualKey]).toBe(actualValue);
-        },
-      );
+        expect(testObj[actualKey]).toBe(actualValue);
+      });
     });
 
     describe("Immutable Object generators suite", () => {
@@ -404,8 +401,7 @@ describe("TestDataGenerators test suite", () => {
         expect(isMap(actualMap)).toBeTruthy();
         expect(actualMap.isEmpty()).toBe(false);
         expect(isObject(actualObj)).toBeTruthy();
-	expect(isEmpty(actualObj)).toBe(false);
-
+        expect(isEmpty(actualObj)).toBe(false);
       });
       test.prop([fc.gen()])("fcGenRandomImmutableRecord", (fcGen) => {
         const [actualRecord, actualObj] = fcGenRandomImmutableRecord(fcGen);
@@ -949,24 +945,21 @@ describe("TestDataGenerators test suite", () => {
         });
       });
 
-      test.prop([fc.gen()])(
-        "fcGenRandomOrgTimestampPartRecord",
-        (fcGen) => {
-          const [actualTimestamp, actualDate, actualText] =
-            fcGenRandomOrgTimestampPartRecord(fcGen);
-          expect(actualDate).toEqual(expect.any(Date));
-          assert.isString(actualText);
+      test.prop([fc.gen()])("fcGenRandomOrgTimestampPartRecord", (fcGen) => {
+        const [actualTimestamp, actualDate, actualText] =
+          fcGenRandomOrgTimestampPartRecord(fcGen);
+        expect(actualDate).toEqual(expect.any(Date));
+        assert.isString(actualText);
 
-          expect(actualTimestamp.toJS()).toMatchObject({
-            isActive: expect.any(Boolean),
-            withStartTime: expect.any(Boolean),
-            year: expect.any(String),
-            month: expect.any(String),
-            day: expect.any(String),
-            dayName: expect.any(String),
-          });
-        },
-      );
+        expect(actualTimestamp.toJS()).toMatchObject({
+          isActive: expect.any(Boolean),
+          withStartTime: expect.any(Boolean),
+          year: expect.any(String),
+          month: expect.any(String),
+          day: expect.any(String),
+          dayName: expect.any(String),
+        });
+      });
 
       describe("fcGenOrgTimestampPartRecordWithRepeater", () => {
         const testRunner =

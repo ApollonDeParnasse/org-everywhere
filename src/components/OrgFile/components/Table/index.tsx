@@ -47,35 +47,38 @@ const Table = ({
       ? MINCOLUMNSIZE
       : columnWidthScaledToContainer;
 
-
   return (
     <table className="table-part">
       <tbody>
-        {table.get("contents").map((row: MapOf<OrgTableRow>, rowIndex: number) => {
-          return (
-            <tr
-              className={"table-part__row"}
-              key={row.get("id")}
-              style={{
-                height,
-              }}
-            >
-              {row.get("contents").map((cell: MapOf<OrgTableCell>, columnIndex: number) => {
-                const cellId = cell.get("id");
-                const cellProps = {
-                  filePath,
-                  headerIndex,
-                  descriptionItemIndex,
-                  cellId,
-		  minWidth,
-                  row: rowIndex,
-                  column: columnIndex,
-                };
-                return <TableCell key={cellId} props={cellProps} />;
-              })}
-            </tr>
-          );
-        })}
+        {table
+          .get("contents")
+          .map((row: MapOf<OrgTableRow>, rowIndex: number) => {
+            return (
+              <tr
+                className={"table-part__row"}
+                key={row.get("id")}
+                style={{
+                  height,
+                }}
+              >
+                {row
+                  .get("contents")
+                  .map((cell: MapOf<OrgTableCell>, columnIndex: number) => {
+                    const cellId = cell.get("id");
+                    const cellProps = {
+                      filePath,
+                      headerIndex,
+                      descriptionItemIndex,
+                      cellId,
+                      minWidth,
+                      row: rowIndex,
+                      column: columnIndex,
+                    };
+                    return <TableCell key={cellId} props={cellProps} />;
+                  })}
+              </tr>
+            );
+          })}
       </tbody>
     </table>
   );
