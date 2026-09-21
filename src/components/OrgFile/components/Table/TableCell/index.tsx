@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import classNames from "classnames";
 import { is, type MapOf } from "immutable";
-import type { OrgTableCell } from "../../../../../types";
+import type { OrgTableCell } from "../../../../../Types";
 import AttributedString from "../../AttributedString";
 import TableCellEditContainer from "../TableCellEditContainer/index";
 import {

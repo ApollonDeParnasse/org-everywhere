@@ -6,7 +6,7 @@ import { curry, forEach } from "lodash/fp";
 import { createStore, applyMiddleware } from "redux";
 import undoable, { ActionTypes } from "redux-undo";
 import thunk from "redux-thunk";
-import type { OrgHeadline, OrgState, OrgAction } from "../../types";
+import type { OrgHeadline, OrgState, OrgAction } from "../../Types";
 import generateId from "../../lib/id_generator";
 import reducer from "../org";
 import rootReducer from "../index";

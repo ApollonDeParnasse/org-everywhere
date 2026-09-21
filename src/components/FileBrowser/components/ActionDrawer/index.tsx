@@ -8,7 +8,7 @@ import { bindActionCreators } from "redux";
 import { includes } from "lodash/fp";
 import { List } from "immutable";
 import type { MapOf } from "immutable";
-import type { Client, DirectoryListingEntry } from "../../../../types";
+import type { Client, DirectoryListingEntry } from "../../../../Types";
 import "../../stylesheet.css";
 
 import * as orgActions from "../../../../actions/org";

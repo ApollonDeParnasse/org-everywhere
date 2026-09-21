@@ -2,9 +2,9 @@
 import { describe, expect } from "vitest";
 import { test, fc } from "@fast-check/vitest";
 import { forEach } from "lodash/fp";
-import type { OrgElement, OrgTimestampPart } from "../../types";
+import type { OrgElement, OrgTimestampPart } from "../../Types";
 import readFixture from "../../../test_helpers/NodeTestingHelpers";
-import { RENDERASTEXTESTCASES } from "./test_constants.ts";
+import { TIMESTAMPCREATIONTESTCASES } from "./TestConstants.ts";
 import {
   fcGenRandomStringGenerator,
   fcNLengthUniqueStringArrayGenerator,

@@ -34,7 +34,7 @@ import type {
   PlanningType,
   OrgAction,
   OrgCheckboxState,
-} from "../types";
+} from "../Types";
 
 import {
   extractAllOrgProperties,

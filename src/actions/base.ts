@@ -7,7 +7,7 @@ import type {
   BaseAction,
   DelayUnit,
   FinderTab,
-} from "../types";
+} from "../Types";
 import { parseFile, resetFileDisplay, setPath } from "./org";
 import { Set } from "immutable";
 

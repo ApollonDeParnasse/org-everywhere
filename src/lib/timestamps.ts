@@ -54,8 +54,9 @@ import type {
   RepeaterType,
   RepeaterUnit,
   StartOrEnd,
-} from "../types";
-import { makeOrgTimestampPartRecord } from "../types"
+  TimestampArgs,
+} from "../Types";
+import { makeOrgTimestampPartRecord } from "../Types";
 import {
   REPEATERTYPESSET,
   TIMESTAMPUNITSSET,

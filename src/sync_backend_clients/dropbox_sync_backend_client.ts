@@ -9,7 +9,7 @@ import type {
   DirectoryListing,
   DirectoryListingEntry,
   AdditionalSyncBackendState,
-} from "../types";
+} from "../Types";
 import { orgFileExtensions } from "../lib/org_utils";
 import { persistField, getPersistedField } from "../util/settings_persister";
 import parseQueryString from "../util/parse_query_string";

@@ -1,7 +1,7 @@
 import React, { type RefObject } from "react";
 import TableCell from "./TableCell/index";
 import "./stylesheet.css";
-import type { OrgTable, OrgTableCell, OrgTableRow } from "../../../../types";
+import type { OrgTable, OrgTableCell, OrgTableRow } from "../../../../Types";
 import type { MapOf } from "immutable";
 
 interface TableProps {

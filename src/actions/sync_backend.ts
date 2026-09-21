@@ -11,7 +11,7 @@ import type {
   DirectoryListing,
   DirectoryListingEntry,
   SyncBackendAction,
-} from "../types";
+} from "../Types";
 import {
   localStorageAvailable,
   persistField,

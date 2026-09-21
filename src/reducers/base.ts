@@ -8,7 +8,7 @@ import type {
   PopupType,
   AgendaTimeframe,
   FinderTab,
-} from "../types";
+} from "../Types";
 import { applyCategorySettingsFromConfig } from "../util/settings_persister";
 
 const setLoadingMessage = (

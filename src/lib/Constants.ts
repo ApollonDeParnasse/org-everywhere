@@ -4,7 +4,9 @@ import type {
   OrgCheckboxState,
   RepeaterType,
   DelayType,
-} from "../types";
+  RepeaterUnit,
+  DelayUnit,
+} from "../Types";
 
 export const HOURSINAYEAR: number = 8760;
 export const DAYSINAYEAR: number = 365;

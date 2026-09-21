@@ -24,7 +24,7 @@ import type {
   PlanningType,
   SyncOptions,
   ForceAction,
-} from "../types";
+} from "../Types";
 import {
   persistIsDirty,
   saveFileContentsToLocalStorage,

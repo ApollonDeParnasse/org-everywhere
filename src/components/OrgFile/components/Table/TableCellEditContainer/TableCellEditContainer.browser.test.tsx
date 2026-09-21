@@ -8,7 +8,7 @@ import { trim } from "lodash/fp";
 import { type RenderResult, cleanup } from "vitest-browser-react";
 import type { UserEvent } from "vitest/browser";
 import type { MapOf } from "immutable";
-import type { OrgTableCell } from "../../../../../types";
+import type { OrgTableCell } from "../../../../../Types";
 import { randomArrayIndex } from "../../../../../../test_helpers/TestDataGenerators";
 import rootReducer from "../../../../../reducers/";
 import { getCurrentJSDateAsOrgTimestampString } from "../../../../../lib/timestamps";

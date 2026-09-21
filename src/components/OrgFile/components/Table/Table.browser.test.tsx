@@ -8,7 +8,7 @@ import { trim } from "lodash/fp";
 import { type RenderResult, cleanup } from "vitest-browser-react";
 import type { UserEvent } from "vitest/browser";
 import type { MapOf } from "immutable";
-import type { OrgTable, OrgTableRow, OrgTableCell } from "../../../../types";
+import type { OrgTable, OrgTableRow, OrgTableCell } from "../../../../Types";
 import {
   randomArrayIndex,
   threeRandomArrayIndices,

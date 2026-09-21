@@ -17,7 +17,7 @@ import type {
   OrgTable,
   OrgTableRow,
   OrgTableCell,
-} from "../../../../../../types";
+} from "../../../../../../Types";
 import { randomArrayIndex } from "../../../../../../../test_helpers/TestDataGenerators";
 import multipleTables from "../../../../../../../test_helpers/fixtures/multiple_tables.org?raw";
 import {

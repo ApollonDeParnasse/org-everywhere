@@ -18,7 +18,7 @@ import type {
   OrgTodoKeywordSet,
   State,
   EditModeType,
-} from "../types";
+} from "../Types";
 import substituteTemplateVariables from "./capture_template_substitution";
 import { attributedStringToRawText } from "./export_org";
 import generateId from "./id_generator";

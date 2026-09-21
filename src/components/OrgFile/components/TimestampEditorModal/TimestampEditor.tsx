@@ -18,7 +18,8 @@ import type {
   DelayUnit,
   StartOrEnd,
   RepeaterUnit,
-} from "../../../../types";
+  PopupType,
+} from "../../../../Types";
 import { getIcon } from "../../../UI/icons";
 import Switch from "../../../UI/Switch/";
 import TabButtons from "../../../UI/TabButtons/";

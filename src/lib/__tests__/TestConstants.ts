@@ -10,8 +10,8 @@ import {
   flatMap,
 } from "lodash/fp";
 import { unfold, arrayCombinations } from "../../util/transformers";
-import type { RepeaterType } from "../../types";
-import { REPEATERTYPES } from "../constants";
+import type { RepeaterType } from "../../Types";
+import { REPEATERTYPES } from "../Constants";
 const predicateForCombosToRemove = (x: Array<string>): boolean => {
   return overSome([
     overEvery([negate(includes("withRepeater")), includes("withDeadline")]),

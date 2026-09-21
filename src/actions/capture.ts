@@ -1,4 +1,4 @@
-import type { OrgCaptureAction } from "../types";
+import type { OrgCaptureAction } from "../Types";
 
 export const addNewEmptyCaptureTemplate = (): OrgCaptureAction => ({
   type: "ADD_NEW_EMPTY_CAPTURE_TEMPLATE",

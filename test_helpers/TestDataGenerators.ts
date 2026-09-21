@@ -44,8 +44,9 @@ import type {
   DelayType,
   DelayUnit,
   OrgTimestampPartRecord,
-} from "../src/types";
-import { makeOrgTimestampPartRecord } from "../src/types";
+  TimestampArgs,
+} from "../src/Types";
+import { makeOrgTimestampPartRecord } from "../src/Types";
 import {
   unfold,
   unfoldAndShuffleArray,

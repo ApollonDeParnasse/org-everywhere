@@ -6,7 +6,7 @@ import type {
   DirectoryListingEntry,
   AdditionalSyncBackendState,
   DirectoryListing,
-} from "../types";
+} from "../Types";
 
 const signOut = (state: MapOf<SyncBackendState>): MapOf<SyncBackendState> =>
   state.set("isAuthenticated", false).set("client", null);

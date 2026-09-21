@@ -27,12 +27,12 @@ import type {
   OrgTimestampPartRecord,
   OrgTimestampPartKey,
   RepeaterType,
-} from "../../types";
-import { TIMESTAMPUNITS, HOURSINADAY, DAYABBREVS } from "../constants";
+} from "../../Types";
+import { TIMESTAMPUNITS, HOURSINADAY, DAYABBREVS } from "../Constants";
 import {
   RENDERASTEXTESTCASES,
   APPLYREPEATERTESTCASES,
-} from "./test_constants.ts";
+} from "./TestConstants.ts";
 import {
   fcGenRandomRepeaterType,
   fcGenValidJSDateObject,

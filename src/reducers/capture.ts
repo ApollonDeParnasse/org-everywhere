@@ -7,7 +7,7 @@ import type {
   RestoreOrgCaptureAction,
   UpdateOrgCaptureAction,
   OrgCaptureState,
-} from "../types";
+} from "../Types";
 import generateId from "../lib/id_generator";
 import { applyCaptureSettingsFromConfig } from "../util/settings_persister";
 

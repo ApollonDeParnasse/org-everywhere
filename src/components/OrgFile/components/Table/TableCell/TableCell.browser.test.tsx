@@ -8,7 +8,7 @@ import { Provider } from "react-redux";
 import { createStore, applyMiddleware } from "redux";
 import { trim, property, pipe } from "lodash/fp";
 import type { MapOf } from "immutable";
-import type { OrgTableCell, State } from "../../../../../types";
+import type { OrgTableCell, State } from "../../../../../Types";
 import multipleTables from "../../../../../../test_helpers/fixtures/multiple_tables.org?raw";
 import { setup } from "../../../../../../test_helpers/BrowserTestingHelpers";
 import {

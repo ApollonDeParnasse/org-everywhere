@@ -28,7 +28,7 @@ import {
   TESTDELAYTYPESSET,
   TESTDELAYUNITSSET,
 } from "../Constants";
-import type { OrgTimestampPart, RepeaterType } from "../../src/types";
+import type { OrgTimestampPart, RepeaterType } from "../../src/Types";
 import { convertCharacterIntoCharacterCode } from "../../src/util/transformers";
 import {
   getHourPartFromDate,

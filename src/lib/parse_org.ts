@@ -46,6 +46,9 @@ import type {
   OrgPropertyListItem,
 } from "../types";
 import { ORGCHECKBOXSTATEMAPPING } from "./constants";
+} from "../Types";
+import { makeOrgTimestampPartRecord } from "../Types";
+import { ORGCHECKBOXSTATEMAPPING } from "./Constants";
 import { isValidRepeaterType, isValidDelayType } from "./timestamps";
 
 // TODO: Extract all match groups of `beginningRegexp` (for example

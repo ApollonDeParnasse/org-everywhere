@@ -12,7 +12,7 @@ import type {
   ClientType,
   Client,
   DirectoryListingEntry,
-} from "../../types";
+} from "../../Types";
 import { getIcon } from "../UI/icons";
 
 import ActionDrawer from "./components/ActionDrawer";
