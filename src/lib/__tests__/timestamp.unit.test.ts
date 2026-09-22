@@ -20,6 +20,7 @@ import {
   startsWith,
   endsWith,
   forEach,
+  pick,
 } from "lodash/fp";
 import type {
   TimestampUnit,
@@ -30,7 +31,7 @@ import type {
 } from "../../Types";
 import { TIMESTAMPUNITS, HOURSINADAY, DAYABBREVS } from "../Constants";
 import {
-  RENDERASTEXTESTCASES,
+  TIMESTAMPCREATIONTESTCASES,
   APPLYREPEATERTESTCASES,
 } from "./TestConstants.ts";
 import {
@@ -38,6 +39,7 @@ import {
   fcGenValidJSDateObject,
   fcGenRandomItemFromArray,
   fcGenOrgTimestampPartRecord,
+  fcGenOrgTimestampPartObject,
   fcGenOrgTimestampPartRecordWithRepeater,
   fcGenOrgTimestampPartObjectWithRepeaterTypeX,
   fcGenRandomTimeStringMV,
@@ -77,9 +79,7 @@ import {
   startTimeChange,
   endTimeChange,
 } from "../timestamps";
-import { unfold,
-  getFromRecord
-} from "../../util/transformers";
+import { unfold, getFromRecord } from "../../util/transformers";
 
 describe("timestamp unit tests", () => {
   describe("JS Date Object functions", () => {
@@ -429,36 +429,102 @@ describe("timestamp unit tests", () => {
   });
 
   describe("timestamp element", () => {
-    test.prop([fc.boolean(), fc.boolean(), fc.gen()])(
-      "timestampPartObjectForDate",
-      (isActive, withStartTime, fcGen) => {
-        const testDate: Date = fcGenValidJSDateObject(fcGen, withStartTime);
-        const actualTimestamp = timestampPartObjectForDate(testDate, {
-          isActive,
-          withStartTime,
-        });
-        expect(actualTimestamp).toMatchObject({
-          isActive,
-          withStartTime,
-	  year: `${testDate.getFullYear()}`,
-          month: padCharsStart("0", 2, (testDate.getMonth() + 1).toString()),
-          day: padCharsStart("0", 2, testDate.getDate().toString()),
-          dayName: convertDayNumberIntoDayName(testDate.getDay()),
-          startHour: padCharsStart("0", 2, testDate.getHours().toString()),
-          startMinute: padCharsStart("0", 2, testDate.getMinutes().toString()),
-          endHour: undefined,
-          endMinute: undefined,
-          repeaterType: undefined,
-          repeaterValue: undefined,
-          repeaterUnit: undefined,
-          repeaterDeadlineValue: undefined,
-          repeaterDeadlineUnit: undefined,
-          delayType: undefined,
-          delayValue: undefined,
-          delayUnit: undefined,
-        });
-      },
-    );
+    describe("timestampPartObjectForDate", () => {
+      const testRunner =
+        (fcGen: fc.GeneratorValue) =>
+        (timestampArgs: Record<string, boolean>) => {
+          const [generatedTimestampPart, testDate] =
+            fcGenOrgTimestampPartObject(timestampArgs, fcGen);
+          const expectedKeys: Array<string> = [
+            "isActive",
+            "withStartTime",
+            "year",
+            "month",
+            "day",
+            "dayName",
+          ];
+
+          const expectedTimestampPart = pick(
+            expectedKeys,
+            generatedTimestampPart,
+          );
+          const actualTimestampPart = timestampPartObjectForDate(
+            testDate,
+            timestampArgs,
+          );
+          expect(actualTimestampPart).toMatchObject(expectedTimestampPart);
+          const {
+            withStartTime = false,
+            withEndTime = false,
+            withRepeater = false,
+            withDeadline = false,
+            withDelay = false,
+          } = timestampArgs;
+
+          // Ugly But Honest
+          if (withStartTime) {
+            expect(actualTimestampPart).toMatchObject({
+              startHour: expect.any(String),
+              startMinute: expect.any(String),
+            });
+          }
+
+          if (withEndTime) {
+            expect(actualTimestampPart).toMatchObject({
+              endHour: expect.any(String),
+              endMinute: expect.any(String),
+            });
+          }
+
+          if (withRepeater) {
+            if (withStartTime) {
+              expect(actualTimestampPart).toMatchObject({
+                repeaterUnit: "h",
+                repeaterValue: "1",
+                repeaterType: "+",
+              });
+            } else {
+              expect(actualTimestampPart).toMatchObject({
+                repeaterUnit: "d",
+                repeaterValue: "1",
+                repeaterType: "+",
+              });
+            }
+          }
+          if (withDeadline) {
+            if (withStartTime) {
+              expect(actualTimestampPart).toMatchObject({
+                repeaterDeadlineUnit: "h",
+                repeaterDeadlineValue: "2",
+              });
+            } else {
+              expect(actualTimestampPart).toMatchObject({
+                repeaterDeadlineUnit: "d",
+                repeaterDeadlineValue: "2",
+              });
+            }
+          }
+          if (withDelay) {
+            if (withStartTime) {
+              expect(actualTimestampPart).toMatchObject({
+                delayUnit: "h",
+                delayValue: "1",
+                delayType: "-",
+              });
+            } else {
+              expect(actualTimestampPart).toMatchObject({
+                delayUnit: "d",
+                delayValue: "1",
+                delayType: "-",
+              });
+            }
+          }
+        };
+
+      test.prop([fc.gen()])("runner", (fcGen) => {
+        forEach(testRunner(fcGen))(TIMESTAMPCREATIONTESTCASES);
+      });
+    });
 
     test.prop([fc.boolean(), fc.boolean()])(
       "getCurrentTimestamp",
@@ -546,12 +612,10 @@ describe("timestamp unit tests", () => {
       });
 
       test.prop([fc.gen()])("removeStartTime", (fcGen) => {
-	const EXPECTEDKEYS = [
-          ["startHour", "startMinute"],
-        ];
+        const EXPECTEDKEYS = [["startHour", "startMinute"]];
 
-	const [testTimestamp] = fcGenOrgTimestampPartRecord(
-	  { withStartTime: true },
+        const [testTimestamp] = fcGenOrgTimestampPartRecord(
+          { withStartTime: true },
           fcGen,
         );
 
@@ -561,17 +625,14 @@ describe("timestamp unit tests", () => {
           expect(get(actualTimestamp, key)).not.toBeDefined();
         })(EXPECTEDKEYS);
 
-	expect(get(actualTimestamp, "withStartTime")).toBe(false);
-
+        expect(get(actualTimestamp, "withStartTime")).toBe(false);
       });
 
       test.prop([fc.gen()])("removeEndTime", (fcGen) => {
-	const EXPECTEDKEYS = [
-          ["endHour", "endMinute"],
-        ];
+        const EXPECTEDKEYS = [["endHour", "endMinute"]];
 
-	const [testTimestamp] = fcGenOrgTimestampPartRecord(
-	  { withStartTime: true, withEndTime: true },
+        const [testTimestamp] = fcGenOrgTimestampPartRecord(
+          { withStartTime: true, withEndTime: true },
           fcGen,
         );
 
@@ -580,7 +641,6 @@ describe("timestamp unit tests", () => {
         forEach((key: OrgTimestampPartKey) => {
           expect(get(actualTimestamp, key)).not.toBeDefined();
         })(EXPECTEDKEYS);
-
       });
     });
 
@@ -592,14 +652,34 @@ describe("timestamp unit tests", () => {
       ];
 
       const addTimeAsserter =
-        ([keyOne, keyTwo]: ["startHour" | "endHour", "startMinute" | "endMinute"]) =>
+        ([keyOne, keyTwo]: [
+          "startHour" | "endHour",
+          "startMinute" | "endMinute",
+        ]) =>
         (actualTimestamp: OrgTimestampPartRecord): void => {
-          const [actualHour, actualMinute] = [
-            getFromRecord<OrgTimestampPart, "startHour" | "endHour">(keyOne, actualTimestamp),
-            getFromRecord<OrgTimestampPart, "startMinute" | "endMinute">(keyTwo, actualTimestamp),
+          const [actualWithStartTime, actualHour, actualMinute] = [
+            getFromRecord<OrgTimestampPart, "withStartTime">(
+              "withStartTime",
+              actualTimestamp,
+            ),
+            getFromRecord<OrgTimestampPart, "startHour" | "endHour">(
+              keyOne,
+              actualTimestamp,
+            ),
+            getFromRecord<OrgTimestampPart, "startMinute" | "endMinute">(
+              keyTwo,
+              actualTimestamp,
+            ),
           ];
-          expect(actualHour && parseInt(actualHour)).toBe(getCurrentDate().getHours());
-          expect(actualMinute && parseInt(actualMinute)).toBe(getCurrentDate().getMinutes());
+
+          expect(actualWithStartTime).toBe(true);
+
+          expect(actualHour && parseInt(actualHour)).toBe(
+            getCurrentDate().getHours(),
+          );
+          expect(actualMinute && parseInt(actualMinute)).toBe(
+            getCurrentDate().getMinutes(),
+          );
         };
 
       const regularAsserter =
@@ -612,12 +692,12 @@ describe("timestamp unit tests", () => {
           })(keyValuePairs);
         };
       const repeaterAsserter = regularAsserter([
-        ["repeaterUnit", "h"],
+        ["repeaterUnit", "d"],
         ["repeaterType", "+"],
         ["repeaterValue", "1"],
       ]);
       const delayAsserter = regularAsserter([
-        ["delayUnit", "h"],
+        ["delayUnit", "d"],
         ["delayType", "-"],
         ["delayValue", "1"],
       ]);
@@ -633,7 +713,9 @@ describe("timestamp unit tests", () => {
           { withStartTime: true, withEndTime: true },
           addTimeAsserter(["endHour", "endMinute"]),
         ],
+        [addRepeater, { withStartTime: false }, repeaterAsserter],
         [addRepeater, { withStartTime: true }, repeaterAsserter],
+        [addDelay, { withStartTime: false }, delayAsserter],
         [addDelay, { withStartTime: true }, delayAsserter],
       ];
 
@@ -845,7 +927,7 @@ describe("timestamp unit tests", () => {
           expect(actualText).toBe(expectedText);
         };
       test.prop([fc.gen()])("runner", (fcGen) => {
-        forEach(testRunner(fcGen))(RENDERASTEXTESTCASES);
+        forEach(testRunner(fcGen))(TIMESTAMPCREATIONTESTCASES);
       });
     });
 

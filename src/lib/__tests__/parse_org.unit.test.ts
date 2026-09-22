@@ -212,7 +212,7 @@ describe("Test the parser", () => {
         };
 
       test.prop([fc.gen()])("runner", (fcGen) => {
-        forEach(testRunner(fcGen))(RENDERASTEXTESTCASES);
+        forEach(testRunner(fcGen))(TIMESTAMPCREATIONTESTCASES);
       });
     });
 

@@ -17,7 +17,7 @@ import { convertArraysToSetsAndAssertStrictEqual } from "../../../test_helpers/A
 import {
   isUpperAlphaCharacter,
   reduceReplaceAll,
-  getAllForRecord,
+  getAllFromRecord,
   setAllForRecord,
   updateAllForRecord,
 } from "../transformers";
@@ -65,13 +65,13 @@ describe("transformers test suite", () => {
     };
     const getActualArrayOfJSValues = map(getActualJSValue);
 
-    test.prop([fc.gen()])("getAllForRecord", (fcGen) => {
+    test.prop([fc.gen()])("getAllFromRecord", (fcGen) => {
       const [testRecord, testObj] = fcGenRandomImmutableRecord(fcGen);
       const [testKeys, expectedValues] = pipe([
         fcGenRandomListOfObjectKeyValuePairs,
         zipAll,
       ])(fcGen, testObj);
-      const actualImmutableValues = getAllForRecord(testKeys, testRecord);
+      const actualImmutableValues = getAllFromRecord(testKeys, testRecord);
       const actualValues = getActualArrayOfJSValues(actualImmutableValues);
       convertArraysToSetsAndAssertStrictEqual([actualValues, expectedValues]);
     });

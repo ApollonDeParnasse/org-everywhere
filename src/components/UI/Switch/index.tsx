@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type MouseEvent } from "react";
 import { Motion, spring } from "react-motion";
 
 import {
@@ -8,7 +8,13 @@ import {
 
 import "./stylesheet.css";
 
-export default ({ isEnabled, onToggle }) => {
+interface SwitchProps {
+  isEnabled: boolean;
+  onToggle: (event: MouseEvent) => void;
+  testId: string;
+}
+
+export default ({ isEnabled, onToggle, testId }: SwitchProps) => {
   const disabledColor = createColorObject(255, 255, 255, 1);
   const enabledColor = createColorObject(238, 232, 213, 1);
 
@@ -34,6 +40,7 @@ export default ({ isEnabled, onToggle }) => {
             className="switch"
             style={{ backgroundColor }}
             onClick={onToggle}
+            data-testid={testId}
           >
             <Motion style={grabberStyle}>
               {(style) => <div className="switch__grabber" style={style} />}

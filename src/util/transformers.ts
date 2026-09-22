@@ -4,7 +4,6 @@ import {
   map,
   flatten,
   curry,
-  over,
   identity,
   add,
   first,
@@ -55,7 +54,7 @@ import {
 import type { ReadonlyNonEmptyArray } from "fp-ts/ReadonlyNonEmptyArray";
 import { flap } from "fp-ts/Array";
 import { sequenceT } from "fp-ts/Apply";
-import { pipe as fpipe, flip } from "fp-ts/function";
+import { pipe as fpipe, flip, flow } from "fp-ts/function";
 import {
   prepend,
   Applicative as readonlyArrayApplicative,
@@ -64,10 +63,11 @@ import {
 } from "fp-ts/ReadonlyArray";
 import { traverseArray, execute } from "fp-ts/State";
 
+export const over = flip(flap);
 export const ensureArray = <T>(obj: T): T | Array<T> => {
   return isArray(obj) ? obj : [obj];
 };
-export const filterMap = curry(pipe([map, compact]));
+export const filterMap = curry(flow(compact, map));
 export const clampAddFromZero = (
   max: number,
   augend: number,
@@ -263,9 +263,10 @@ export const convertArrayOfArraysIntoShuffledArray = pipe([flatten, shuffle]);
 
 export const convertRangeSizeAndMinIntoRange = curry(
   (rangeSize: number, rangeMin: number): [number, number] => {
-    return over<number>([identity, pipe([add(rangeSize), add(1)])])(
-      rangeMin,
-    ) as [number, number];
+    return over([identity, pipe([add(rangeSize), add(1)])])(rangeMin) as [
+      number,
+      number,
+    ];
   },
 );
 
@@ -513,7 +514,7 @@ export const pathParse = (
 export const getFromRecord = <TProps extends object, K extends keyof TProps>(
   key: K,
   record: ImmutableRecord<TProps>,
-): TProps[K] | undefined => {
+): TProps[K] => {
   return get(record, key, undefined);
 };
 export const curriedGetFromRecord =
@@ -596,18 +597,18 @@ export const curriedUpdateInRecord =
 
 // immutable extensions - types are a nightmare
 
-export const getAllForRecord = <TProps extends object, K extends keyof TProps>(
-  keys: Array<K>,
+export const getAllFromRecord = <TProps extends object, K extends keyof TProps>(
+  keys: [...Array<K>],
   record: ImmutableRecord<TProps>,
-): Array<TProps[K] | undefined> => {
-  return map((key: K): TProps[K] | undefined => getFromRecord(key, record))(
-    keys,
-  );
+): [...Array<TProps[K]>] => {
+  return [
+    ...map((key: K): TProps[K] => getFromRecord<TProps, K>(key, record))(keys),
+  ];
 };
 export const curriedGetAllForRecord =
   <TProps extends object, K extends keyof TProps>(keys: Array<K>) =>
-  (record: ImmutableRecord<TProps>): Array<TProps[K] | undefined> => {
-    return getAllForRecord(keys, record);
+  (record: ImmutableRecord<TProps>): [...Array<TProps[K]>] => {
+    return getAllFromRecord(keys, record);
   };
 
 export const setAllForRecord = <
@@ -666,5 +667,3 @@ export const curriedUpdateAllForRecord =
   (record: C): C => {
     return updateAllForRecord(keyUpdaterPairs, record);
   };
-
-export const over = flip(flap);

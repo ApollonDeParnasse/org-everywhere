@@ -19,7 +19,7 @@ const predicateForCombosToRemove = (x: Array<string>): boolean => {
   ])(x);
 };
 
-export const RENDERASTEXTESTCASES: Array<Record<string, boolean>> = pipe([
+export const TIMESTAMPCREATIONTESTCASES: Array<Record<string, boolean>> = pipe([
   arrayCombinations,
   remove(predicateForCombosToRemove),
   map((options: Array<string>) =>

@@ -23,7 +23,7 @@ import {
   partial,
   zipObject,
 } from "lodash/fp";
-import { pipe as fpipe, identity } from "fp-ts/function";
+import { pipe as fpipe, identity, flow } from "fp-ts/function";
 import { mapFst } from "fp-ts/Tuple";
 import { match } from "ts-pattern";
 import {
@@ -79,6 +79,9 @@ import {
   TESTDELAYTYPES,
   TESTMINHOURSDIFF,
   TESTMINDAYSDIFF,
+  HOURS,
+  MINUTES,
+  YEARS,
 } from "./Constants";
 
 export const randomArrayValue = pipe([shuffle, first]);
@@ -92,16 +95,26 @@ export const randomArrayIndexMinusLastIndex = pipe([
   randomArrayValue,
 ]);
 
-const MINUTES = unfold(identity, 60);
-const HOURS = unfold(identity, 24);
+export const getRandomIntegerInRange = ([min, max]: [
+  number,
+  number,
+]): number => {
+  const minCeiled = Math.ceil(min),
+    maxFloored = Math.floor(max);
+  return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled);
+};
+
 export const randomMinutePart = pipe([
-  partial(randomArrayValue, [MINUTES]),
+  partial(getRandomIntegerInRange, [MINUTES]),
   padTimePart,
 ]);
 export const randomHourPart = pipe([
-  partial(randomArrayValue, [HOURS]),
+  partial(getRandomIntegerInRange, [HOURS]),
   padTimePart,
 ]);
+
+export const randomYear = (): string =>
+  fpipe(getRandomIntegerInRange(YEARS), toString);
 
 // fast-check
 
@@ -809,7 +822,6 @@ export const fcNLengthArrayOfRandomColorObjects = curry(
 export const fcTwoRandomColorObjects = fcNLengthArrayOfRandomColorObjects(2);
 
 // Dates
-
 const cleanTestDate = curry((withStartTime: boolean, testDate: Date): Date => {
   if (withStartTime) {
     // no seconds or milliseconds
@@ -968,27 +980,32 @@ export const fcGenRandomTimeStringMV = pipe([
 ]);
 
 export const fcGenTimeRangeParts = (
-  [hourOne, minuteOne]: Array<string>,
+  [startHour, startMinute]: Array<string>,
   fcGen: fc.GeneratorValue,
 ): Array<string> => {
-  const hourTwoNumber = fcGenRandomHours(fcGen);
-  const [startHour, endHour] = sortBy(identity, [
-    parseInt(hourOne),
-    hourTwoNumber,
+  const [startHourAsNumber, startMinuteAsNumber]: Array<number> = map(parseInt)(
+    [startHour, startMinute],
+  );
+  const endHourAsNumber: number = fcGenRandomIntegerInRange(fcGen, [
+    startHourAsNumber,
+    24,
   ]);
-  const minuteOneNumber = parseInt(minuteOne);
-  const minuteTwoNumber =
-    (minuteOneNumber + fcGenRandomIntegerBetweenOneAnd(fcGen, 59)) % 60;
-  const [startMinute, endMinute] = sortBy(identity, [
-    minuteOneNumber,
-    minuteTwoNumber,
-  ]);
-  return map<number, string>(pipe([padCharsStart("0", 2)]))([
-    startHour,
-    startMinute,
-    endHour,
-    endMinute,
-  ]);
+  const endMinuteAsNumber: number = ((): number => {
+    if (endHourAsNumber > startHourAsNumber) {
+      // we can return anything
+      return (
+        (startMinuteAsNumber + fcGenRandomIntegerBetweenOneAnd(fcGen, 59)) % 60
+      );
+    }
+    // endMinute must be at least equal to startMinute
+    return fcGenRandomIntegerInRange(fcGen, [startMinuteAsNumber, 60]);
+  })();
+
+  const [endHour, endMinute] = map((timePart: number): string =>
+    fpipe(timePart, toString, padTimePart),
+  )([endHourAsNumber, endMinuteAsNumber]);
+
+  return [startHour, startMinute, endHour, endMinute];
 };
 
 export const fcGenOrgTimestampPartObject = (
@@ -999,7 +1016,7 @@ export const fcGenOrgTimestampPartObject = (
     withRepeater = false,
     withDeadline = false,
     withDelay = false,
-  }: Record<string, boolean>,
+  }: TimestampArgs,
   fcGen: fc.GeneratorValue,
 ): [OrgTimestampPart, Date, string] => {
   const testDate = fcGenValidJSDateObject(fcGen, withStartTime);

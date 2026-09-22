@@ -66,6 +66,7 @@ import {
   fcGenValidJSDateObjectInRange,
   randomHourPart,
   randomMinutePart,
+  randomYear,
   fcGenRandomImmutableMap,
   fcGenObject,
   fcGenRandomObject,
@@ -150,6 +151,13 @@ describe("TestDataGenerators test suite", () => {
         assert.isString(actualMinute);
         assert.lengthOf(actualMinute, 2);
         parseIntAndAssertIntegerInRangeInclusive([0, 60], actualMinute);
+      });
+
+      test.prop([fc.gen()])("randomYear", (_) => {
+        const actualYear: string = randomYear();
+        assert.isString(actualYear);
+        assert.lengthOf(actualYear, 4);
+        parseIntAndAssertIntegerInRangeInclusive([2000, 3000], actualYear);
       });
     });
   });
@@ -438,6 +446,10 @@ describe("TestDataGenerators test suite", () => {
           testTimeRangeStartParts,
           fcGen,
         );
+
+        expect(actualTimeRangeParts[0]).toBe(testTimeRangeStartParts[0]);
+        expect(actualTimeRangeParts[1]).toBe(testTimeRangeStartParts[1]);
+
         const testAsserters: Array<
           (
             startHour: number,
@@ -458,7 +470,14 @@ describe("TestDataGenerators test suite", () => {
             endHour: number,
             endMinute: number,
           ): boolean => endHour === startHour && endMinute > startMinute,
+          (
+            startHour: number,
+            startMinute: number,
+            endHour: number,
+            endMinute: number,
+          ): boolean => endHour === startHour && endMinute === startMinute,
         ];
+
         const asserter = pipe([
           map(parseInt),
           overSome(map(spread)(testAsserters)),

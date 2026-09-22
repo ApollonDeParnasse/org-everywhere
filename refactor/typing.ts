@@ -1527,9 +1527,6 @@ const replaceMapOfTypesInPropertySignaturesWithRecords = async (
     if (Node.isTypeReference(propType)) {
       const typeName: string = propType.getTypeName().getText();
       const typeArgs: Array<TypeNode> = propType.getTypeArguments();
-      if (includes("Immutable", typeName)) {
-        return;
-      }
 
       // OrgPlanningItemType -> OrgPlanningItemType
       if (!isSubRecordType(typeName) && typeArgs.length === 0) {

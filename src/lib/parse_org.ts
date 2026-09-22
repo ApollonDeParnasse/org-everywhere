@@ -27,6 +27,8 @@ import {
   constant,
 } from "lodash/fp";
 import type {
+  OrgTimestamp,
+  OrgTimestampRecord,
   OrgTimestampType,
   OrgTimestampPart,
   OrgSimpleToken,
@@ -44,8 +46,6 @@ import type {
   OrgRawListContentToken,
   OrgRawListHeaderToken,
   OrgPropertyListItem,
-} from "../types";
-import { ORGCHECKBOXSTATEMAPPING } from "./constants";
 } from "../Types";
 import { makeOrgTimestampPartRecord } from "../Types";
 import { ORGCHECKBOXSTATEMAPPING } from "./Constants";
@@ -658,14 +658,14 @@ export const parseRawText = (
 export const _parsePlanningItems = (
   rawText: string,
 ): {
-  planningItems: List<MapOf<OrgTimestampPart>>;
+  planningItems: List<OrgTimestampPartRecord>;
   strippedDescription: string;
 } => {
   const planningMatch: RegExpMatchArray | null = rawText.match(planningRegex);
 
   const planningItems = fromJS(
     planningRegexCaptureGroupsOfType
-      .map((planningTypeIndex: number): null | MapOf<OrgTimestampPart> => {
+      .map((planningTypeIndex: number): null | OrgTimestampPartRecord => {
         const type = planningMatch && planningMatch[planningTypeIndex];
         if (!type) {
           return null;
@@ -704,7 +704,7 @@ const createOrUpdateTimestamp = ({
   type: OrgTimestampType;
   timestamp: OrgTimestampPart;
   id?: number;
-}): MapOf<OrgTimestampPart> => {
+}): OrgTimestampRecord => {
   const orgTimestamp: OrgTimestamp = {
     type,
     timestamp: Map(timestamp),

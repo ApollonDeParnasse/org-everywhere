@@ -2,7 +2,7 @@ import React, { PureComponent, Fragment } from "react";
 
 import "./stylesheet.css";
 
-import TimestampEditor from "./components/TimestampEditor";
+import TimestampEditor from "./TimestampEditor";
 
 import { bindAll } from "lodash";
 import { format } from "date-fns/fp";

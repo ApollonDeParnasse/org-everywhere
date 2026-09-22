@@ -1595,3 +1595,12 @@ const defaultState: State = {
 export const makeStateRecord: ImmutableRecord.Factory<State> =
   ImmutableRecord(defaultState);
 export type StateRecord = ImmutableRecord<State>;
+
+export interface TimestampArgs {
+  isActive?: boolean;
+  withStartTime?: boolean;
+  withEndTime?: boolean;
+  withRepeater?: boolean;
+  withDeadline?: boolean;
+  withDelay?: boolean;
+}

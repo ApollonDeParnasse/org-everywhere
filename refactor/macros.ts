@@ -8,6 +8,7 @@ import {
   VariableDeclaration,
   ParameterDeclaration,
   TypeParameterDeclaration,
+  PropertySignature,
 } from "ts-morph";
 
 import { curriedFilterMap, capitalize } from "./Utilities";
@@ -124,7 +125,7 @@ const FUNCS = [
   "setRecord",
   "updateRecord",
   "updateInRecord",
-  "getAllForRecord",
+  "getAllFromRecord",
   "setAllForRecord",
   "updateAllForRecord",
 ];
@@ -141,16 +142,26 @@ const FUNCSTOCREATE = [
 ];
 
 const createSettersForObject = async (
-  keys: Array<string>,
+  objectName: string,
+  recordName: string,
   file: string,
 ): Promise<void> => {
   const project = new Project({});
   const sourceFile = project.addSourceFileAtPath(file);
+  const typesFile = project.addSourceFileAtPath("src/Types.ts");
+  const props = typesFile
+    .getTypeAliasOrThrow(objectName)
+    .getFirstDescendantByKindOrThrow(SyntaxKind.TypeLiteral)
+    .getProperties();
+  const keys = map((prop: PropertySignature): string => {
+    return prop.getName();
+  })(props);
+
   const newSetters = map((key: string): string => {
     const setter = new CodeBlockWriter();
     return setter
       .write(`export const ${key}Change = curriedSetRecord`)
-      .write(`<OrgTimestampPart, OrgTimestampPartRecord,`)
+      .write(`<${objectName}, ${recordName}`)
       .space()
       .quote(key)
       .write(">")
@@ -165,16 +176,25 @@ const createSettersForObject = async (
 };
 
 const createGettersForObject = async (
-  keys: Array<string>,
+  objectName: string,
   file: string,
 ): Promise<void> => {
   const project = new Project({});
   const sourceFile = project.addSourceFileAtPath(file);
+  const typesFile = project.addSourceFileAtPath("src/Types.ts");
+  const props = typesFile
+    .getTypeAliasOrThrow(objectName)
+    .getFirstDescendantByKindOrThrow(SyntaxKind.TypeLiteral)
+    .getProperties();
+  const keys = map((prop: PropertySignature): string => {
+    return prop.getName();
+  })(props);
+
   const newSetters = map((key: string): string => {
     const setter = new CodeBlockWriter();
     return setter
       .write(`export const get${capitalize(key)} = curriedGetFromRecord`)
-      .write(`<OrgTimestampPart,`)
+      .write(`<${objectName},`)
       .space()
       .quote(key)
       .write(">")
@@ -188,4 +208,4 @@ const createGettersForObject = async (
   await sourceFile.save();
 };
 
-await createGettersForObject(FUNCSTOCREATE, "src/lib/timestamps.ts");
+await createGettersForObject("OrgTimestampPart", "src/lib/timestamps.ts");

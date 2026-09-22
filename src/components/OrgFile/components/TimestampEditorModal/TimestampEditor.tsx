@@ -1,7 +1,8 @@
 import { format, parseISO } from "date-fns";
-import { Map, type MapOf } from "immutable";
-import { isEmpty, isNumber } from "lodash/fp";
-import React, { type ChangeEvent, Fragment } from "react";
+import { Map } from "immutable";
+import { match, P } from "ts-pattern";
+import { isEmpty, isNumber, every, isString } from "lodash/fp";
+import React, { type ChangeEvent, type MouseEvent, Fragment } from "react";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import * as baseActions from "../../../../actions/base";
@@ -9,10 +10,10 @@ import * as orgActions from "../../../../actions/org";
 import { getSelectedHeader } from "../../../../lib/org_utils";
 import { renderAsText } from "../../../../lib/timestamps";
 import type {
-  OrgFile,
+  OrgFileRecord,
   OrgTimestampPartRecord,
   PlanningType,
-  Popup,
+  PopupRecord,
   RepeaterType,
   DelayType,
   DelayUnit,
@@ -24,6 +25,14 @@ import { getIcon } from "../../../UI/icons";
 import Switch from "../../../UI/Switch/";
 import TabButtons from "../../../UI/TabButtons/";
 import "./stylesheet.css";
+import {
+  REPEATERUNITS,
+  WITHOUTSTARTIMEREPEATERUNITS,
+  REPEATERTYPES,
+  DELAYUNITS,
+  DELAYTYPES,
+  WITHOUTSTARTIMEDELAYUNITS,
+} from "../../../../lib/Constants";
 import {
   activeToggle,
   addTime,
@@ -39,6 +48,22 @@ import {
   delayTypeChange,
   delayValueChange,
   delayUnitChange,
+  padTimePart,
+  getDelayType,
+  getDelayUnit,
+  getDelayValue,
+  getRepeaterUnit,
+  getRepeaterType,
+  getRepeaterValue,
+  getWithStartTime,
+  getIsActive,
+  getYear,
+  getMonth,
+  getDay,
+  getStartHour,
+  getStartMinute,
+  getEndHour,
+  getEndMinute,
 } from "../../../../lib/timestamps";
 
 interface TimestampEditorProps {
@@ -49,6 +74,59 @@ interface TimestampEditorProps {
   onClose: Function;
   onChange: Function;
 }
+
+const CHANGESTARTTIMEKEYS: Array<string> = [
+  "add-start-time",
+  "change-start-time",
+  "remove-start-time",
+];
+const CHANGEENDTIMEKEYS: Array<string> = [
+  "add-end-time",
+  "change-end-time",
+  "remove-end-time",
+];
+
+const getTestIds = (
+  startOrEnd: StartOrEnd,
+  changeStartTimekeys = CHANGESTARTTIMEKEYS,
+  changeEndTimeKeys = CHANGEENDTIMEKEYS,
+): Array<string> => {
+  return startOrEnd === "start" ? changeStartTimekeys : changeEndTimeKeys;
+};
+
+const getEnabledButtons =
+  (
+    withStartTimeUnits: Array<RepeaterUnit> | Array<RepeaterUnit>,
+    withoutStartTimeUnits: Array<RepeaterUnit> | Array<RepeaterUnit>,
+  ) =>
+  (
+    timestamp: OrgTimestampPartRecord,
+  ): [Array<RepeaterUnit | DelayUnit>, Array<string>] => {
+    if (getWithStartTime(timestamp)) {
+      return [
+        withStartTimeUnits,
+        ["hours", "days", "weeks", "months", "years"],
+      ];
+    }
+    return [withoutStartTimeUnits, ["days", "weeks", "months", "years"]];
+  };
+
+const getEnabledButtonsForRepeaters = getEnabledButtons(
+  REPEATERUNITS,
+  WITHOUTSTARTIMEREPEATERUNITS,
+);
+const getEnabledButtonsForDelayUnits = getEnabledButtons(
+  DELAYUNITS,
+  WITHOUTSTARTIMEDELAYUNITS,
+);
+
+const getPlanningType = (activePopupType: PopupType): PlanningType => {
+  return match(activePopupType)
+    .with("deadline-editor", (): PlanningType => "DEADLINE")
+    .with("scheduled-editor", (): PlanningType => "SCHEDULED")
+    .with(P._, (): PlanningType => "SCHEDULED")
+    .run();
+};
 
 const TimestampEditor = (props: TimestampEditorProps) => {
   const {
@@ -63,12 +141,13 @@ const TimestampEditor = (props: TimestampEditorProps) => {
     planningItemIndex,
   } = props;
 
-  const handleActiveToggle = (_: MouseEvent<HTMLDivElement>): void => {
+  const handleActiveToggle = (_: MouseEvent): void => {
     onChange(activeToggle(timestamp));
   };
 
+  // not worth changing until we use hooks
   const handleDateChange = (
-    event,
+    event: ChangeEvent<HTMLInputElement, HTMLInputElement>,
     planningItemIndex: number,
     timestampId: number,
   ): void => {
@@ -80,8 +159,8 @@ const TimestampEditor = (props: TimestampEditorProps) => {
         props.org.removeTimestamp(headerId, timestampId);
       }
       if (
-        props.activePopupType !== "scheduled-editor" &&
-        props.activePopupType !== "deadline-editor"
+        activePopupType !== "scheduled-editor" &&
+        activePopupType !== "deadline-editor"
       ) {
         // for scheduled timestamp and deadline the modal can be open when no timestamp exists
         onClose();
@@ -149,30 +228,33 @@ const TimestampEditor = (props: TimestampEditorProps) => {
   const handleDelayUnitChange = (newDelayUnit: DelayUnit): void => {
     onChange(delayUnitChange(newDelayUnit)(timestamp));
   };
+
   const renderTimeField = (
     label: string,
     timeKey: StartOrEnd,
-    hour: string | null,
-    minute: string | null,
-    showRemoveButton: boolean = true,
+    withTime: boolean,
+    hour: string | undefined,
+    minute: string | undefined,
+    showRemoveButton: boolean,
   ) => {
+    const [addTimeID, changeTimeID, removeTimeID] = getTestIds(timeKey);
     return (
       <div className="timestamp-editor__field-container timestamp-editor__field-container--inline">
         <div className="timestamp-editor__field-title">{label}</div>
         <div className="timestamp-editor__field">
-          {!!hour ? (
+          {withTime ? (
             <Fragment>
               <input
                 type="time"
                 className="timestamp-editor__time-input"
-                data-testid="change-time"
-                value={`${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`}
+                data-testid={changeTimeID}
+                value={`${padTimePart(hour ?? "0")}:${padTimePart(minute ?? "0")}`}
                 onChange={handleTimeChange(timeKey)}
               />
               {showRemoveButton && (
                 <div
                   className="timestamp-editor__icon timestamp-editor__icon--remove"
-                  data-testid="remove-time"
+                  data-testid={removeTimeID}
                   onClick={handleRemoveTime(timeKey)}
                 >
                   {getIcon("times")}
@@ -182,7 +264,7 @@ const TimestampEditor = (props: TimestampEditorProps) => {
           ) : (
             <div
               className="timestamp-editor__icon timestamp-editor__icon--add"
-              data-testid="add-time"
+              data-testid={addTimeID}
               onClick={handleAddTime(timeKey)}
             >
               {getIcon("plus")}
@@ -193,17 +275,25 @@ const TimestampEditor = (props: TimestampEditorProps) => {
     );
   };
   const renderRepeater = () => {
-    const { repeaterType, repeaterValue, repeaterUnit } =
-      props.timestamp.toJS();
+    const [repeaterType, repeaterValue, repeaterUnit] = [
+      getRepeaterType(timestamp),
+      getRepeaterValue(timestamp),
+      getRepeaterUnit(timestamp),
+    ];
+    const [buttons, titles] = getEnabledButtonsForRepeaters(timestamp);
+
     return (
       <div className="timestamp-editor__field-container">
         <div className="timestamp-editor__field-title">Repeater</div>
         <div className="timestamp-editor__field timestamp-editor__field--delay-repeater">
           {!!repeaterType ? (
             <Fragment>
-              <div className="timestamp-editor__delay-repeater-type">
+              <div
+                className="timestamp-editor__delay-repeater-type"
+                data-testid="change-repeater-type"
+              >
                 <TabButtons
-                  buttons={["+", "++", ".+"]}
+                  buttons={REPEATERTYPES}
                   titles={[
                     "Shift exactly the amount of time in the repeater (i.e. one month for +1m).",
                     "Shift the date by as many intervals of the amount of time in the repeater (i.e. one or many months for for ++1m) as it takes to get this date into the future.",
@@ -217,19 +307,21 @@ const TimestampEditor = (props: TimestampEditorProps) => {
                 type="number"
                 min="1"
                 className="textfield delay-repeater-value-input"
+                data-testid="change-repeater-value"
                 value={repeaterValue || 1}
                 onChange={handleRepeaterValueChange}
               />
-              <div>
+              <div data-testid="change-repeater-unit">
                 <TabButtons
-                  buttons={["h", "d", "w", "m", "y"]}
-                  titles={["hours", "days", "weeks", "months", "years"]}
-                  selectedButton={repeaterUnit || "h"}
+                  buttons={buttons}
+                  titles={titles}
+                  selectedButton={repeaterUnit || "d"}
                   onSelect={handleRepeaterUnitChange}
                 />
               </div>
               <div
                 className="timestamp-editor__icon timestamp-editor__icon--remove"
+                data-testid="remove-repeater"
                 onClick={handleRemoveRepeater}
               >
                 {getIcon("times")}
@@ -238,6 +330,7 @@ const TimestampEditor = (props: TimestampEditorProps) => {
           ) : (
             <div
               className="timestamp-editor__icon timestamp-editor__icon--add"
+              data-testid="add-repeater"
               onClick={handleAddRepeater}
             >
               {getIcon("plus")}
@@ -247,17 +340,27 @@ const TimestampEditor = (props: TimestampEditorProps) => {
       </div>
     );
   };
-  const renderDelay = (): Element => {
-    const { delayType, delayValue, delayUnit } = props.timestamp.toJS();
+  const renderDelay = () => {
+    const [delayType, delayValue, delayUnit] = [
+      getDelayType(timestamp),
+      getDelayValue(timestamp),
+      getDelayUnit(timestamp),
+    ];
+
+    const [buttons, titles] = getEnabledButtonsForDelayUnits(timestamp);
+
     return (
       <div className="timestamp-editor__field-container">
         <div className="timestamp-editor__field-title">Delay</div>
         <div className="timestamp-editor__field">
           {!!delayType ? (
             <Fragment>
-              <div className="timestamp-editor__delay-repeater-type">
+              <div
+                className="timestamp-editor__delay-repeater-type"
+                data-testid="change-delay-type"
+              >
                 <TabButtons
-                  buttons={["-", "--"]}
+                  buttons={DELAYTYPES}
                   titles={[
                     "Set a different lead time before the entry is put into the agenda.",
                     "In case the task contains a repeater, the delay is considered to affect all occurrences; if you want the delay to only affect the first scheduled occurrence of the task, use '--' instead.",
@@ -270,19 +373,21 @@ const TimestampEditor = (props: TimestampEditorProps) => {
                 type="number"
                 min="1"
                 className="textfield delay-repeater-value-input"
+                data-testid="change-delay-value"
                 value={delayValue || 1}
                 onChange={handleDelayValueChange}
               />
-              <div>
+              <div data-testid="change-delay-unit">
                 <TabButtons
-                  buttons={["h", "d", "w", "m", "y"]}
-                  titles={["hours", "days", "weeks", "months", "years"]}
-                  selectedButton={delayUnit || "h"}
+                  buttons={buttons}
+                  titles={titles}
+                  selectedButton={delayUnit || "d"}
                   onSelect={handleDelayUnitChange}
                 />
               </div>
               <div
                 className="timestamp-editor__icon timestamp-editor__icon--remove"
+                data-testid="remove-delay"
                 onClick={handleRemoveDelay}
               >
                 {getIcon("times")}
@@ -291,6 +396,7 @@ const TimestampEditor = (props: TimestampEditorProps) => {
           ) : (
             <div
               className="timestamp-editor__icon timestamp-editor__icon--add"
+              data-testid="add-delay"
               onClick={handleAddDelay}
             >
               {getIcon("plus")}
@@ -301,10 +407,7 @@ const TimestampEditor = (props: TimestampEditorProps) => {
     );
   };
   const createPlanningItem = (): void => {
-    const planningType: PlanningType = {
-      "deadline-editor": "DEADLINE",
-      "scheduled-editor": "SCHEDULED",
-    }[activePopupType];
+    const planningType = getPlanningType(activePopupType);
     props.org.addNewPlanningItem(selectedHeaderId, planningType);
     props.base.activatePopup(activePopupType, {
       headerId: selectedHeaderId,
@@ -327,16 +430,31 @@ const TimestampEditor = (props: TimestampEditorProps) => {
     );
   }
 
-  const {
-    isActive: isActive,
-    year: year,
-    month: month,
-    day: day,
-    startHour: startHour,
-    startMinute: startMinute,
-    endHour: endHour,
-    endMinute: endMinute,
-  } = timestamp.toJS();
+  // it would be better to fetch each value individually
+
+  const [
+    isActive,
+    year,
+    month,
+    day,
+    withStartTime,
+    startHour,
+    startMinute,
+    endHour,
+    endMinute,
+  ] = [
+    getIsActive(timestamp),
+    getYear(timestamp),
+    getMonth(timestamp),
+    getDay(timestamp),
+    getWithStartTime(timestamp),
+    getStartHour(timestamp),
+    getStartMinute(timestamp),
+    getEndHour(timestamp),
+    getEndMinute(timestamp),
+  ];
+
+  const withEndTime = every(isString)([endHour, endMinute]);
 
   return (
     <div>
@@ -347,7 +465,7 @@ const TimestampEditor = (props: TimestampEditorProps) => {
           <div className="timestamp-editor__field-title">Active</div>
           <div className="timestamp-editor__field">
             <Switch
-              isEnabled={isActive}
+              isEnabled={isActive ?? false}
               onToggle={handleActiveToggle}
               testId={"active-switch"}
             />
@@ -358,7 +476,7 @@ const TimestampEditor = (props: TimestampEditorProps) => {
           <div className="timestamp-editor__field-title">Date</div>
           <div className="timestamp-editor__field">
             <input
-              data-testid="timestamp-selector"
+              data-testid="change-date"
               type="date"
               className="timestamp-editor__date-input"
               onChange={(
@@ -368,7 +486,7 @@ const TimestampEditor = (props: TimestampEditorProps) => {
               }
               // Needed for iOS due to React bug
               // https://github.com/facebook/react/issues/8938#issuecomment-519074141
-              onFocus={(event: FocusEvent<HTMLInputElement>): string =>
+              onFocus={(event: FocusEvent): string =>
                 (event.nativeEvent.target.defaultValue = "")
               }
               value={`${year}-${month}-${day}`}
@@ -379,11 +497,20 @@ const TimestampEditor = (props: TimestampEditorProps) => {
         {renderTimeField(
           "Start time",
           "start",
+          withStartTime ?? false,
           startHour,
           startMinute,
           !endHour,
         )}
-        {!!startHour && renderTimeField("End time", "end", endHour, endMinute)}
+        {withStartTime &&
+          renderTimeField(
+            "End time",
+            "end",
+            withEndTime,
+            endHour,
+            endMinute,
+            withEndTime,
+          )}
       </div>
 
       {renderRepeater()}
@@ -394,13 +521,13 @@ const TimestampEditor = (props: TimestampEditorProps) => {
 
 const mapStateToProps = (state) => {
   const path: string = state.org.present.get("path");
-  const file: MapOf<OrgFile> = state.org.present.getIn(["files", path], Map());
-  const activePopup: MapOf<Popup> = state.base.get("activePopup");
+  const file: OrgFileRecord = state.org.present.getIn(["files", path], Map());
+  const activePopup: PopupRecord = state.base.get("activePopup");
   return {
     selectedHeaderId: file.get("selectedHeaderId"),
     header: getSelectedHeader(state),
-    activePopupType: !!activePopup ? activePopup.get("type") : null,
-    activePopupData: !!activePopup ? activePopup.get("data") : null,
+    activePopupType: !!activePopup ? activePopup.get("type") : undefined,
+    activePopupData: !!activePopup ? activePopup.get("data") : undefined,
   };
 };
 const mapDispatchToProps = (dispatch) => ({

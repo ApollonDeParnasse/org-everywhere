@@ -26,6 +26,10 @@ export const TESTSECONDSINADAY: number = 86400;
 export const TESTMINHOURSDIFF: number = 2;
 export const TESTMINDAYSDIFF: number = 2;
 
+export const MINUTES: [number, number] = [0, 60];
+export const HOURS: [number, number] = [0, 24];
+export const YEARS: [number, number] = [2000, 3000];
+
 export const TESTORGCAPTURETEMPLATES: Array<string> = [
   "%t",
   "%T",

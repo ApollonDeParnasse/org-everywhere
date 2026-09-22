@@ -15,6 +15,19 @@ export const MONTHSINAYEAR: number = 12;
 export const HOURSINADAY: number = 24;
 
 export const TIMESTAMPUNITS: Array<TimestampUnit> = ["h", "d", "w", "m", "y"];
+export const WITHOUTSTARTTIMETIMESTAMPUNITS: Array<TimestampUnit> = [
+  "d",
+  "w",
+  "m",
+  "y",
+];
+export const REPEATERUNITS: Array<RepeaterUnit> = TIMESTAMPUNITS;
+export const DELAYUNITS: Array<DelayUnit> = TIMESTAMPUNITS;
+export const WITHOUTSTARTIMEREPEATERUNITS: Array<RepeaterUnit> =
+  WITHOUTSTARTTIMETIMESTAMPUNITS;
+export const WITHOUTSTARTIMEDELAYUNITS: Array<DelayUnit> =
+  WITHOUTSTARTTIMETIMESTAMPUNITS;
+
 export const TIMESTAMPUNITSSET: Set<string> = new Set(TIMESTAMPUNITS);
 export const DAYNAMES: Array<string> = [
   "Sunday",
@@ -34,6 +47,7 @@ export const ORGCHECKBOXSTATEMAPPING: Record<string, OrgCheckboxState> = {
 };
 
 export const REPEATERTYPES: Array<RepeaterType> = ["+", "++", ".+"];
+
 export const REPEATERTYPESSET: Set<string> = new Set(REPEATERTYPES);
 
 export const DELAYTYPES: Array<DelayType> = ["-", "--"];
