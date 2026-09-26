@@ -1,4 +1,4 @@
-import React, { PureComponent, type MouseEventHandler } from "react";
+import React, { type MouseEventHandler } from "react";
 import { IconContext } from "react-icons";
 import { getIcon } from "../../../../../UI/icons.tsx";
 import "./stylesheet.css";

@@ -82,11 +82,8 @@ const createFileWithHeadlineAndTimestampInDescription = (
   ];
 };
 
-// don't need onCloseFunc
 const testRenderer = async (
-  onChangeFunc: (actualTimestampPart: OrgTimestampPartRecord) => boolean,
-  onCloseFunc: (actualTimestampPart: OrgTimestampPartRecord) => boolean,
-  timestampArgs: TimestampArgs,
+  headerArgs: Record<string, string>,
 ): Promise<
   [
     { user: UserEvent; screen: RenderResult },
