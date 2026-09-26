@@ -419,11 +419,8 @@ const TimestampEditor = (props: TimestampEditorProps) => {
     return (
       <>
         <div className="timestamp-editor__field-title">Add Timestamp</div>
-        <div className="timestamp-editor__field">
-          <div
-            className="fas fa-plus timestamp-editor__icon timestamp-editor__icon--add"
-            onClick={createPlanningItem}
-          ></div>
+        <div className="timestamp-editor__field" onClick={createPlanningItem}>
+          <div className="fas fa-plus timestamp-editor__icon timestamp-editor__icon--add"></div>
           {getIcon("plus")}
         </div>
       </>
