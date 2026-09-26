@@ -2,10 +2,12 @@
 import { describe, expect } from "vitest";
 import { test, fc } from "@fast-check/vitest";
 import { forEach } from "lodash/fp";
+import { isMap, isRecord, getIn } from "immutable";
 import type { OrgElement, OrgTimestampPart } from "../../Types";
 import readFixture from "../../../test_helpers/NodeTestingHelpers";
 import { TIMESTAMPCREATIONTESTCASES } from "./TestConstants.ts";
 import {
+  fcGenRandomInteger,
   fcGenRandomStringGenerator,
   fcNLengthUniqueStringArrayGenerator,
   fcGenOrgHeadingAsString,
@@ -13,6 +15,9 @@ import {
   fcGenRandomAlphaString,
   fcGenRandomOrgHeadingAsString,
   fcGenOrgTimestampPartRecord,
+  fcGenRandomOrgTimestampPartObject,
+  fcGenRandomOrgTimestampPartRecord,
+  fcGenRandomOrgTimestampType,
 } from "../../../test_helpers/TestDataGenerators";
 import { createHeadingStars } from "../org_utils";
 import {
@@ -23,6 +28,7 @@ import {
   _parseLogNotes,
   parseMarkupAndCookies,
   computeNestingLevel,
+  createOrUpdateTimestamp,
 } from "../parse_org";
 
 const expectType = (result: Array<OrgElement>) =>
@@ -62,152 +68,38 @@ const testTimestampText = (
 };
 
 describe("Test the parser", () => {
-  describe("computeNestingLevel", () => {
-    test.prop([fc.integer({ min: 1, max: 15 }), fc.gen()])(
-      "test with normal headline",
-      (expectedNestingLevel, fcGen) => {
-        const [testHeadline] = fcGenOrgHeadingAsString(
-          expectedNestingLevel,
-          fcGen,
-        );
-        expect(computeNestingLevel(testHeadline)).toEqual(expectedNestingLevel);
-      },
-    );
+  describe("Timestamps and Planning Items", () => {
+    test.prop([fc.gen()])("createOrUpdateTimestamp", (fcGen) => {
+      const [testTimestampPartRecord] =
+        fcGenRandomOrgTimestampPartRecord(fcGen);
 
-    test.prop([fc.integer({ min: 1, max: 15 })])(
-      "test with stars only",
-      (expectedNestingLevel) => {
-        const testHeadline = createHeadingStars(expectedNestingLevel);
-        expect(computeNestingLevel(testHeadline)).toEqual(expectedNestingLevel);
-      },
-    );
-  });
-
-  describe("Parsing inline-markup", () => {
-    test.prop([fc.gen()])(
-      "Parses inline-markup where closing delim is followed by ;",
-      (fcGen) => {
-        const testString: string = fcGenRandomAlphaString(fcGen);
-        const testMarkup = ` *${testString}*;`;
-        const result = parseMarkupAndCookies(testMarkup);
-        expectType(result).toEqual(["text", "inline-markup", "text"]);
-      },
-    );
-  });
-
-  describe("Parse an header with empty description", () => {
-    test.prop([fc.gen()])(
-      "Parse headline without trailing newline",
-      (fcGen) => {
-        const testString: string = fcGenRandomStringGenerator(fcGen);
-        const testHeadline: string = `* ${testString}`;
-        const result = parseFirstHeaderFromOrg(testHeadline);
-        expect(result.description).toEqual([]);
-        expect(result.rawDescription).toEqual("");
-      },
-    );
-    test.prop([fc.gen()])(
-      "Parse headline with trailing newline but no description",
-      (fcGen) => {
-        const testHeadline: string = `${fcGenRandomOrgHeadingAsString(fcGen)}\n`;
-        const result = parseFirstHeaderFromOrg(testHeadline);
-        expect(result.description).toEqual([]);
-        expect(result.rawDescription).toEqual("");
-      },
-    );
-    test.prop([fc.gen()])(
-      "Parse headline with an empty line of description",
-      (fcGen) => {
-        const testHeadline: string = `${fcGenRandomOrgHeadingAsString(fcGen)}\n\n`;
-        const result = parseFirstHeaderFromOrg(testHeadline);
-        expect(result.description.length).toEqual(1);
-        expect(result.rawDescription).toEqual("\n");
-      },
-    );
-    test.prop([fc.gen()])(
-      "Parse headline directly followed by next headline",
-      (fcGen) => {
-        const [testHeadlineOne, testHeadlineTwo]: Array<string> =
-          fcNLengthUniqueStringArrayGenerator(fcGen, 2);
-        const testHeadlines: string = `* ${testHeadlineOne}\n* ${testHeadlineTwo} 2`;
-        const result = parseFirstHeaderFromOrg(testHeadlines);
-        expect(result.description).toEqual([]);
-        expect(result.rawDescription).toEqual("");
-      },
-    );
-  });
-
-  describe("Test parsing of log notes", () => {
-    test("Parses notes when followed by logbook", () => {
-      const result = _parseLogNotes("- a note\n  two lines\n:LOGBOOK:\n...");
-      expect(result.rawLogNotes).toEqual("- a note\n  two lines");
-      expect(result.strippedDescription).toEqual(":LOGBOOK:\n...");
-    });
-    test("Does not parse notes when no logbook exists (they will go into description)", () => {
-      const text = "- a note\n  two lines\n\nrest";
-      const result = _parseLogNotes(text);
-      expect(result.rawLogNotes).toEqual("");
-      expect(result.strippedDescription).toEqual(text);
-    });
-  });
-
-  describe("Parse raw text", () => {
-    test("Parses empty string", () => {
-      expect(parseRawText("").toJS()).toEqual([]);
-    });
-
-    test.prop([fc.gen()])("Parses simple line", (fcGen) => {
-      const testString: string = fcGenRandomAlphaString(fcGen);
-      expect(parseRawText(testString).toJS()).toEqual([
-        { type: "text", contents: testString },
-      ]);
-    });
-  });
-
-  describe("Parse in-buffer TODO keyword settings", () => {
-    test.prop([fc.gen(), fc.integer({ min: 1, max: 15 })])(
-      "Normal headline",
-      (fcGen, testStarCount) => {
-        const [testHeadline] = fcGenOrgHeadingAsString(testStarCount, fcGen);
-        const result = parseTodoKeywordConfig(testHeadline);
-        expect(result).toBeNull();
-      },
-    );
-
-    test.prop([fc.gen()])("Normal text line", (fcGen) => {
-      const testString = fcGenRandomStringGenerator(fcGen);
-      const result = parseTodoKeywordConfig(testString);
-      expect(result).toBeNull();
-    });
-
-    test.prop([fc.gen()])("Other InBuffer Settings", (fcGen) => {
-      const testInBufferSetting: string = fcGenRandomInBufferSetting(fcGen);
-      const result = parseTodoKeywordConfig(
-        `#+STARTUP: ${testInBufferSetting}`,
-      );
-      expect(result).toBeNull();
-    });
-  });
-
-  // Transition to fast-check later
-  describe("Parse headline with planning items and active timestamps", () => {
-    test("Planning items should contain active timestamps from title and description as well", () => {
-      const testOrgFile = readFixture("schedule_and_timestamps");
-      const parsedFile = parseOrg(testOrgFile);
-      const headers = parsedFile.get("headers")?.toJS();
-      const header = headers[0];
-      expect(header.planningItems.length).toEqual(3);
+      const testID = fcGenRandomInteger(fcGen);
+      const testType = fcGenRandomOrgTimestampType(fcGen);
+      const actualTimestamp: OrgTimestampRecord = createOrUpdateTimestamp({
+        type: testType,
+        timestamp: testTimestampPartRecord,
+        id: testID,
+      });
+      expect(isRecord(actualTimestamp)).toBeTruthy();
+      expect(actualTimestamp.toJS()).toStrictEqual({
+        type: testType,
+        timestamp: testTimestampPartRecord.toJS(),
+        id: testID,
+      });
     });
 
     describe("timestampFromRegexMatch", () => {
       const testRunner =
         (fcGen: fc.GeneratorValue) =>
         (timestampArgs: Record<string, boolean>) => {
-          const [expectedTimestampPartObject, _, testText] =
+          const [expectedTimestampPartRecord, _, testText] =
             fcGenOrgTimestampPartRecord(timestampArgs, fcGen);
-          const [{ firstTimestamp }] = parseRawText(testText).toJS();
-          expect(firstTimestamp).toStrictEqual(
-            expectedTimestampPartObject.toJS(),
+
+          const actualParse = parseRawText(testText);
+          const firstTimestampPart = getIn(actualParse, [0, "firstTimestamp"]);
+          expect(isRecord(firstTimestampPart)).toBeTruthy();
+          expect(firstTimestampPart.toJS()).toStrictEqual(
+            expectedTimestampPartRecord.toJS(),
           );
         };
 
@@ -216,16 +108,150 @@ describe("Test the parser", () => {
       });
     });
 
-    // describe("Parse clock strings", () => {
-    //   leave until we can generate clock strings
-    //   testTimestampText(
-    //     "<2021-05-16>--<2021-05-23>",
-    //     { isActive: true, year: "2021", month: "05", day: "16" },
-    //     { isActive: true, year: "2021", month: "05", day: "23" },
-    //   );
-    // });
+    test("Planning items should contain active timestamps from title and description as well", () => {
+      const testOrgFile = readFixture("schedule_and_timestamps");
+      const parsedFile = parseOrg(testOrgFile);
+      const headers = parsedFile.get("headers")?.toJS();
+      const header = headers[0];
+      console.log(header.planningItems);
+      expect(header.planningItems.length).toEqual(3);
+    });
   });
 
+  // describe("Parse clock strings", () => {
+  //   leave until we can generate clock strings
+  //   testTimestampText(
+  //     "<2021-05-16>--<2021-05-23>",
+  //     { isActive: true, year: "2021", month: "05", day: "16" },
+  //     { isActive: true, year: "2021", month: "05", day: "23" },
+  //   );
+  // });
+});
+
+describe("computeNestingLevel", () => {
+  test.prop([fc.integer({ min: 1, max: 15 }), fc.gen()])(
+    "test with normal headline",
+    (expectedNestingLevel, fcGen) => {
+      const [testHeadline] = fcGenOrgHeadingAsString(
+        expectedNestingLevel,
+        fcGen,
+      );
+      expect(computeNestingLevel(testHeadline)).toEqual(expectedNestingLevel);
+    },
+  );
+
+  test.prop([fc.integer({ min: 1, max: 15 })])(
+    "test with stars only",
+    (expectedNestingLevel) => {
+      const testHeadline = createHeadingStars(expectedNestingLevel);
+      expect(computeNestingLevel(testHeadline)).toEqual(expectedNestingLevel);
+    },
+  );
+});
+
+describe("Parsing inline-markup", () => {
+  test.prop([fc.gen()])(
+    "Parses inline-markup where closing delim is followed by ;",
+    (fcGen) => {
+      const testString: string = fcGenRandomAlphaString(fcGen);
+      const testMarkup = ` *${testString}*;`;
+      const result = parseMarkupAndCookies(testMarkup);
+      expectType(result).toEqual(["text", "inline-markup", "text"]);
+    },
+  );
+});
+
+describe("Parse an header with empty description", () => {
+  test.prop([fc.gen()])("Parse headline without trailing newline", (fcGen) => {
+    const testString: string = fcGenRandomStringGenerator(fcGen);
+    const testHeadline: string = `* ${testString}`;
+    const result = parseFirstHeaderFromOrg(testHeadline);
+    expect(result.description).toEqual([]);
+    expect(result.rawDescription).toEqual("");
+  });
+  test.prop([fc.gen()])(
+    "Parse headline with trailing newline but no description",
+    (fcGen) => {
+      const testHeadline: string = `${fcGenRandomOrgHeadingAsString(fcGen)}\n`;
+      const result = parseFirstHeaderFromOrg(testHeadline);
+      expect(result.description).toEqual([]);
+      expect(result.rawDescription).toEqual("");
+    },
+  );
+  test.prop([fc.gen()])(
+    "Parse headline with an empty line of description",
+    (fcGen) => {
+      const testHeadline: string = `${fcGenRandomOrgHeadingAsString(fcGen)}\n\n`;
+      const result = parseFirstHeaderFromOrg(testHeadline);
+      expect(result.description.length).toEqual(1);
+      expect(result.rawDescription).toEqual("\n");
+    },
+  );
+  test.prop([fc.gen()])(
+    "Parse headline directly followed by next headline",
+    (fcGen) => {
+      const [testHeadlineOne, testHeadlineTwo]: Array<string> =
+        fcNLengthUniqueStringArrayGenerator(fcGen, 2);
+      const testHeadlines: string = `* ${testHeadlineOne}\n* ${testHeadlineTwo} 2`;
+      const result = parseFirstHeaderFromOrg(testHeadlines);
+      expect(result.description).toEqual([]);
+      expect(result.rawDescription).toEqual("");
+    },
+  );
+});
+
+describe("Test parsing of log notes", () => {
+  test("Parses notes when followed by logbook", () => {
+    const result = _parseLogNotes("- a note\n  two lines\n:LOGBOOK:\n...");
+    expect(result.rawLogNotes).toEqual("- a note\n  two lines");
+    expect(result.strippedDescription).toEqual(":LOGBOOK:\n...");
+  });
+  test("Does not parse notes when no logbook exists (they will go into description)", () => {
+    const text = "- a note\n  two lines\n\nrest";
+    const result = _parseLogNotes(text);
+    expect(result.rawLogNotes).toEqual("");
+    expect(result.strippedDescription).toEqual(text);
+  });
+});
+
+describe("Parse raw text", () => {
+  test("Parses empty string", () => {
+    expect(parseRawText("").toJS()).toEqual([]);
+  });
+
+  test.prop([fc.gen()])("Parses simple line", (fcGen) => {
+    const testString: string = fcGenRandomAlphaString(fcGen);
+    expect(parseRawText(testString).toJS()).toEqual([
+      { type: "text", contents: testString },
+    ]);
+  });
+});
+
+describe("Parse in-buffer TODO keyword settings", () => {
+  test.prop([fc.gen(), fc.integer({ min: 1, max: 15 })])(
+    "Normal headline",
+    (fcGen, testStarCount) => {
+      const [testHeadline] = fcGenOrgHeadingAsString(testStarCount, fcGen);
+      const result = parseTodoKeywordConfig(testHeadline);
+      expect(result).toBeNull();
+    },
+  );
+
+  test.prop([fc.gen()])("Normal text line", (fcGen) => {
+    const testString = fcGenRandomStringGenerator(fcGen);
+    const result = parseTodoKeywordConfig(testString);
+    expect(result).toBeNull();
+  });
+
+  test.prop([fc.gen()])("Other InBuffer Settings", (fcGen) => {
+    const testInBufferSetting: string = fcGenRandomInBufferSetting(fcGen);
+    const result = parseTodoKeywordConfig(`#+STARTUP: ${testInBufferSetting}`);
+    expect(result).toBeNull();
+  });
+});
+
+// Transition to fast-check later
+describe("Parse headline with planning items and active timestamps", () => {
   ["#+TODO", "#+TYP_TODO"].forEach((t) => {
     describe(t, () => {
       const expectNewSetFromLine = (line: string) => {

@@ -82,6 +82,7 @@ import {
   HOURS,
   MINUTES,
   YEARS,
+  TESTIMESTAMPTYPES,
 } from "./Constants";
 
 export const randomArrayValue = pipe([shuffle, first]);
@@ -919,6 +920,9 @@ const fcGenRandomRepeaterUnitWithHours =
 const fcGenRandomRepeaterUnitWithoutHours = curriedFCRandomItemFromArray(
   TESTREPEATERUNITSWITHOUTHOURS,
 );
+
+export const fcGenRandomOrgTimestampType =
+  curriedFCRandomItemFromArray(TESTIMESTAMPTYPES);
 
 export const fcGenRandomRepeaterUnit = (
   withStartTime: boolean,

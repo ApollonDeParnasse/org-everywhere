@@ -175,6 +175,11 @@ export const isValidDelayType = (
   delayTypesSet = DELAYTYPESSET,
 ): value is RepeaterType => isString(value) && delayTypesSet.has(value);
 
+export const isValidDelayUnit = (
+  value: unknown,
+  delayUnitsSet = TIMESTAMPUNITSSET,
+): value is DelayUnit => isString(value) && delayUnitsSet.has(value);
+
 // Timestamp string constructors
 
 const renderAsTextReducer = (

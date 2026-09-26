@@ -27,10 +27,11 @@ import {
   constant,
 } from "lodash/fp";
 import type {
+  OrgTimestampPart,
+  OrgTimestampPartRecord,
   OrgTimestamp,
   OrgTimestampRecord,
   OrgTimestampType,
-  OrgTimestampPart,
   OrgSimpleToken,
   OrgRecursiveToken,
   OrgMarkupType,
@@ -47,9 +48,14 @@ import type {
   OrgRawListHeaderToken,
   OrgPropertyListItem,
 } from "../Types";
-import { makeOrgTimestampPartRecord } from "../Types";
+import { makeOrgTimestampPartRecord, makeOrgTimestampRecord } from "../Types";
 import { ORGCHECKBOXSTATEMAPPING } from "./Constants";
-import { isValidRepeaterType, isValidDelayType } from "./timestamps";
+import {
+  isValidRepeaterType,
+  isValidRepeaterUnit,
+  isValidDelayType,
+  isValidDelayUnit,
+} from "./timestamps";
 
 // TODO: Extract all match groups of `beginningRegexp` (for example
 // like `emailRegexp`), so that they can be documented and are less
@@ -146,7 +152,7 @@ const planningRegexCaptureGroupsOfType = [2, 21, 40]; // depends on timestampReg
 const timestampFromRegexMatch = (
   match: RegExpExecArray | RegExpMatchArray,
   partIndices: Array<number>,
-): OrgTimestampPart | null => {
+): OrgTimestampPartRecord | null => {
   const [
     typeBracket,
     year,
@@ -184,26 +190,51 @@ const timestampFromRegexMatch = (
     repeaterUnit,
     repeaterDeadlineValue,
     repeaterDeadlineUnit,
-  ] = cond<Array<string | undefined>>([
+  ] = cond<
+    | [
+        RepeaterType,
+        string,
+        RepeaterUnit,
+        string | undefined,
+        RepeaterUnit | undefined,
+      ]
+    | [undefined, undefined, undefined, undefined, undefined]
+  >([
     [
-      () => isValidRepeaterType(firstDelayRepeatType),
-      constant([
+      () =>
+        isValidRepeaterType(firstDelayRepeatType) &&
+        isValidRepeaterUnit(firstDelayRepeatUnit),
+      (): [
+        RepeaterType,
+        string,
+        RepeaterUnit,
+        string | undefined,
+        RepeaterUnit | undefined,
+      ] => [
         firstDelayRepeatType,
         firstDelayRepeatValue,
         firstDelayRepeatUnit,
         firstRepeaterDeadlineValue,
         firstRepeaterDeadlineUnit,
-      ]),
+      ],
     ],
     [
-      () => isValidRepeaterType(secondDelayRepeatType),
-      constant([
+      () =>
+        isValidRepeaterType(secondDelayRepeatType) &&
+        isValidRepeaterUnit(secondDelayRepeatUnit),
+      (): [
+        RepeaterType,
+        string,
+        RepeaterUnit,
+        string | undefined,
+        RepeaterUnit | undefined,
+      ] => [
         secondDelayRepeatType,
         secondDelayRepeatValue,
         secondDelayRepeatUnit,
         secondRepeaterDeadlineValue,
         secondRepeaterDeadlineUnit,
-      ]),
+      ],
     ],
     [
       stubTrue,
@@ -211,27 +242,33 @@ const timestampFromRegexMatch = (
     ],
   ])();
 
-  const [delayType, delayValue, delayUnit] = cond<Array<string | undefined>>([
+  const [delayType, delayValue, delayUnit] = cond<
+    [DelayType, string, DelayUnit] | [undefined, undefined, undefined]
+  >([
     [
-      () => isValidDelayType(firstDelayRepeatType),
-      constant([
+      () =>
+        isValidDelayType(firstDelayRepeatType) &&
+        isValidDelayUnit(firstDelayRepeatUnit),
+      (): [DelayType, string, DelayUnit] => [
         firstDelayRepeatType,
         firstDelayRepeatValue,
         firstDelayRepeatUnit,
-      ]),
+      ],
     ],
     [
-      () => isValidDelayType(secondDelayRepeatType),
-      constant([
+      () =>
+        isValidDelayType(secondDelayRepeatType) &&
+        isValidDelayUnit(secondDelayRepeatUnit),
+      (): [DelayType, string, DelayUnit] => [
         secondDelayRepeatType,
         secondDelayRepeatValue,
         secondDelayRepeatUnit,
-      ]),
+      ],
     ],
     [stubTrue, constant([undefined, undefined, undefined])],
   ])();
 
-  return {
+  const timestamp: OrgTimestampPart = {
     isActive: typeBracket === "<",
     withStartTime: !!timeStart,
     year,
@@ -251,6 +288,8 @@ const timestampFromRegexMatch = (
     repeaterDeadlineValue,
     repeaterDeadlineUnit,
   };
+
+  return makeOrgTimestampPartRecord(timestamp);
 };
 
 export const ORGMARKUPMAPPING: Record<string, OrgMarkupType> = {
@@ -399,7 +438,10 @@ export const parseMarkupAndCookies = (
   return lineParts;
 };
 
-const computeParseResults = (rawText: string, match: OrgSimpleToken): Org => {
+const computeParseResults = (
+  rawText: string,
+  match: OrgSimpleToken,
+): OrgElement => {
   switch (match.type) {
     case "link":
       const linkPart: OrgLink = {
@@ -696,7 +738,7 @@ export const _parsePlanningItems = (
   }
 };
 
-const createOrUpdateTimestamp = ({
+export const createOrUpdateTimestamp = ({
   type,
   timestamp,
   id,
@@ -707,10 +749,10 @@ const createOrUpdateTimestamp = ({
 }): OrgTimestampRecord => {
   const orgTimestamp: OrgTimestamp = {
     type,
-    timestamp: Map(timestamp),
+    timestamp,
     id: id || generateId(),
   };
-  return Map(orgTimestamp);
+  return makeOrgTimestampRecord(orgTimestamp);
 };
 
 const parsePropertyList = (
