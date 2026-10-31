@@ -1,11 +1,19 @@
+import { type ReadonlyNonEmptyArray } from "fp-ts/ReadonlyNonEmptyArray";
 import { repeat, partialRight, zipObject, pipe, add, concat } from "lodash/fp";
 import {
   type Option,
   none as optionNone,
   some as optionSome,
 } from "fp-ts/Option";
-import { unfold } from "../src/util/transformers";
 import { Map, Set as ImmutableSet, fromJS, List } from "immutable";
+import { unfold } from "../src/util/transformers";
+import type {
+  RepeaterUnit,
+  TimestampUnit,
+  RepeaterType,
+  DelayType,
+  DelayUnit,
+} from "../src/Types";
 
 const TESTSTATICFILEPREFIX: string = "org-everywhere_internal_";
 export const TESTFILEPATH: string =
@@ -51,8 +59,15 @@ export const TESTORGCAPTURETEMPLATESWITHCURSORSET: Set<string> = new Set(
   TESTORGCAPTURETEMPLATESWITHCURSOR,
 );
 
-export const TESTMARKUPOPTIONS: Array<string> = ["*", "/", "_", "~", "+", ""];
-export const TESTMARKUPTYPES: Array<string> = [
+export const TESTMARKUPOPTIONS: ReadonlyNonEmptyArray<string> = [
+  "*",
+  "/",
+  "_",
+  "~",
+  "+",
+  "",
+];
+export const TESTMARKUPTYPES: ReadonlyNonEmptyArray<string> = [
   "bold",
   "italic",
   "underline",
@@ -61,7 +76,7 @@ export const TESTMARKUPTYPES: Array<string> = [
   "none",
 ];
 
-export const TESTENTRYTYPES: Array<string> = [
+export const TESTENTRYTYPES: ReadonlyNonEmptyArray<string> = [
   "clock-entry",
   "log-repeat-entry",
   "log-done-note-entry",
@@ -81,14 +96,16 @@ export const INVERTEDTESTMARKUPOPTIONSMAPPING = zipObject(
   TESTMARKUPOPTIONS,
 );
 
-export const TESTCHECKBOXOPTIONS: Array<[boolean, Option<string>]> = [
+export const TESTCHECKBOXOPTIONS: ReadonlyNonEmptyArray<
+  [boolean, Option<string>]
+> = [
   [false, optionNone],
   [true, optionSome("-")],
   [true, optionSome("X")],
 ];
 
 // #n = numeric-priority, a# = alphabetic priority, -1
-export const TESTCHECKBOXSTYLEELEMENTS: Array<string> = [
+export const TESTCHECKBOXSTYLEELEMENTS: ReadonlyNonEmptyArray<string> = [
   "/",
   "%",
   "n#",
@@ -106,21 +123,39 @@ export const TESTCHECKBOXOPTIONSMAPPING: Record<string, string> = {
   X: "checkbox",
 };
 
-export const TESTTODOSLINESTARTERS: Array<string> = [
+export const TESTTODOSLINESTARTERS: ReadonlyNonEmptyArray<string> = [
   "#+TODO",
   "#+SEQ_TODO",
   "#+TYP_TODO",
 ];
 export const TESTNUMERICPRIORITIESRANGE: [number, number] = [1, 64];
-export const TESTPRIORITYOPTIONS: Array<string> = ["numeric", "alphabetic"];
+export const TESTPRIORITYOPTIONS: ReadonlyNonEmptyArray<string> = [
+  "numeric",
+  "alphabetic",
+];
 
-export const TESTORGLINKTYPES: Array<string> = ["id", "file", "http", "https"];
+export const TESTORGLINKTYPES: ReadonlyNonEmptyArray<string> = [
+  "id",
+  "file",
+  "http",
+  "https",
+];
 
-export const TESTBULLETTYPES: Array<string> = ["-", "+", "*"];
-export const TESTNUMERALSUFFIXES: Array<string> = [")", "."];
-export const TESTTODOS: Array<string> = ["TODO", "DONE", "WAITING", "CANCELED"];
-export const TESTDEFAULTODOSSEQUENCE: Array<string> = ["TODO", "DONE"];
-export const TESTTODOSEQUENCES: Array<Array<string>> = [
+export const TESTBULLETTYPES: ReadonlyNonEmptyArray<string> = ["-", "+", "*"];
+export const TESTNUMERALSUFFIXES: ReadonlyNonEmptyArray<string> = [")", "."];
+export const TESTTODOS: ReadonlyNonEmptyArray<string> = [
+  "TODO",
+  "DONE",
+  "WAITING",
+  "CANCELED",
+];
+export const TESTDEFAULTODOSSEQUENCE: ReadonlyNonEmptyArray<string> = [
+  "TODO",
+  "DONE",
+];
+export const TESTTODOSEQUENCES: ReadonlyNonEmptyArray<
+  ReadonlyNonEmptyArray<string>
+> = [
   TESTDEFAULTODOSSEQUENCE,
   ["TODO", "FEEDBACK", "VERIFY", "|", "DONE", "DELEGATED"],
   ["TODO", "|", "DONE"],
@@ -134,7 +169,7 @@ export const TESTTODOSEQUENCES: Array<Array<string>> = [
 ];
 
 export const TESTTODOSASSET: Set<string> = new Set(TESTTODOS);
-export const TESTHEADINGS: Array<string> = unfold(
+export const TESTHEADINGS: ReadonlyNonEmptyArray<string> = unfold(
   pipe([add(1), partialRight(repeat, ["*"])]),
   12,
 );
@@ -158,19 +193,22 @@ export const TESTRANDOMDAYRANGE: [number, number] = [0, TESTRANDOMDAYSMAX];
 export const TESTRANDOMWEEKRANGE: [number, number] = [0, TESTRANDOMWEEKSMAX];
 export const TESTRANDOMMONTHRANGE: [number, number] = [0, TESTRANDOMMONTHSMAX];
 export const TESTRANDOMYEARRANGE: [number, number] = [2000, 3000];
+export const TESTRANDOMMONTHSRANGE: [number, number] = [0, 11];
 
 export const ORGTIMESTAMPFORMATWITHOUTSTARTTIME: string = "yyyy-MM-dd EEE"; // '2025-06-16 Mon'
 export const ORGTIMESTAMPFORMATWITHSTARTTIME: string = "yyyy-MM-dd EEE HH:mm"; // '2025-06-16 Mon 02:03'
 
-export const TESTORGDURATIONUNITSWITHOUTHOURS: Array<string> = [
+export const TESTORGDURATIONUNITSWITHOUTHOURS: ReadonlyNonEmptyArray<TimestampUnit> =
+  ["d", "w", "m", "y"];
+export const TESTORGDURATIONUNITS: ReadonlyNonEmptyArray<TimestampUnit> = [
+  "h",
   "d",
   "w",
   "m",
   "y",
 ];
-export const TESTORGDURATIONUNITS: Array<string> = ["h", "d", "w", "m", "y"];
 
-export const TESTORGDURATIONUNITSSET: Set<string> = new Set([
+export const TESTORGDURATIONUNITSSET: Set<TimestampUnit> = new Set([
   "h",
   "d",
   "w",
@@ -178,45 +216,49 @@ export const TESTORGDURATIONUNITSSET: Set<string> = new Set([
   "y",
 ]);
 
-export const TESTREPEATERTYPES: Array<string> = ["++", ".+", "+"];
-export const TESTREPEATERTYPESSET: Set<string> = new Set(TESTREPEATERTYPES);
-
-export const TESTREPEATERUNITS: Array<string> = ["h", "d", "w", "m", "y"];
-export const TESTREPEATERUNITSWITHOUTHOURS: Array<string> = [
-  "d",
-  "w",
-  "m",
-  "y",
+export const TESTREPEATERTYPES: ReadonlyNonEmptyArray<RepeaterType> = [
+  "++",
+  ".+",
+  "+",
 ];
-export const TESTREPEATERUNITSSET: Set<string> = new Set(TESTREPEATERUNITS);
+export const TESTREPEATERTYPESSET: Set<RepeaterType> = new Set(
+  TESTREPEATERTYPES,
+);
+export const TESTREPEATERUNITS: ReadonlyNonEmptyArray<RepeaterUnit> =
+  TESTORGDURATIONUNITS;
+export const TESTREPEATERUNITSWITHOUTHOURS: ReadonlyNonEmptyArray<RepeaterUnit> =
+  TESTORGDURATIONUNITSWITHOUTHOURS;
+export const TESTREPEATERUNITSSET: Set<string> = TESTORGDURATIONUNITSSET;
 
-export const TESTDEADLINEUNITS: Array<string> = TESTREPEATERUNITS;
-export const TESTDEADLINEUNITSSET: Set<string> = TESTREPEATERUNITSSET;
+export const TESTDEADLINEUNITS: ReadonlyNonEmptyArray<string> =
+  TESTORGDURATIONUNITS;
+export const TESTDEADLINEUNITSSET: Set<string> = TESTORGDURATIONUNITSSET;
 
-export const TESTDELAYTYPES: Array<string> = ["-", "--"];
-export const TESTDELAYTYPESSET: Set<string> = new Set(TESTDELAYTYPES);
+export const TESTDELAYTYPES: ReadonlyNonEmptyArray<DelayType> = ["-", "--"];
+export const TESTDELAYTYPESSET: Set<DelayType> = new Set(TESTDELAYTYPES);
 
-export const TESTDELAYUNITS: Array<string> = TESTREPEATERUNITS;
-export const TESTDELAYUNITSSET: Set<string> = TESTREPEATERUNITSSET;
+export const TESTDELAYUNITS: ReadonlyNonEmptyArray<DelayUnit> =
+  TESTREPEATERUNITS;
+export const TESTDELAYUNITSSET: Set<DelayUnit> = TESTORGDURATIONUNITSSET;
 
-export const TESTPLANNINGITEMTYPES: Array<string> = [
+export const TESTPLANNINGITEMTYPES: ReadonlyNonEmptyArray<string> = [
   "DEADLINE",
   "SCHEDULED",
   "CLOSED",
 ];
 
-export const TESTIMESTAMPTYPES: Array<string> = [
+export const TESTIMESTAMPTYPES: ReadonlyNonEmptyArray<string> = [
   "TIMESTAMP_TITLE",
   "TIMESTAMP_DESCRIPTION",
   "TIMESTAMP_LOG_NOTES",
 ];
 
-export const TESTTIMESTAMPFORMATS: Array<string> = [
+export const TESTTIMESTAMPFORMATS: ReadonlyNonEmptyArray<string> = [
   ORGTIMESTAMPFORMATWITHOUTSTARTTIME,
   ORGTIMESTAMPFORMATWITHSTARTTIME,
 ];
 
-export const TESTTIMESTAMPBRACKETS: Array<[string, string]> = [
+export const TESTTIMESTAMPBRACKETS: ReadonlyNonEmptyArray<[string, string]> = [
   ["[", "]"],
   ["<", ">"],
 ];
@@ -230,7 +272,7 @@ export const TESTORGTIMESTAMPOBJECTISACTIVE = [true, false];
 export const TESTORGTIMESTAMPOBJECTWITHSTARTTIME = [true, false];
 export const TESTORGTIMESTAMPOBJECTWITHENDHOUR = [true, false];
 
-export const TESTINBUFFERSETTINGS: Array<string> = [
+export const TESTINBUFFERSETTINGS: ReadonlyNonEmptyArray<string> = [
   "#+ARCHIVE",
   "#+CATEGORY",
   "#+COLUMNS",
@@ -247,7 +289,7 @@ export const TESTINBUFFERSETTINGS: Array<string> = [
   "#+TYP_TODO",
 ];
 
-export const TESTHEADLINEKEYS: Array<string> = [
+export const TESTHEADLINEKEYS: ReadonlyNonEmptyArray<string> = [
   "headlineValue",
   "headlineLevel",
   "todo",
@@ -259,7 +301,10 @@ export const TESTHEADLINEKEYS: Array<string> = [
   "headlineProperties",
 ];
 
-export const TESTINBUFFERSETTINGSOBJECT: Record<string, Array<string>> = {
+export const TESTINBUFFERSETTINGSOBJECT: Record<
+  string,
+  ReadonlyNonEmptyArray<string>
+> = {
   archiveLocation: ["#+ARCHIVE"],
   category: ["#+CATEGORY"],
   columnsViewSettings: ["#+COLUMNS"],
@@ -274,7 +319,7 @@ export const TESTINBUFFERSETTINGSOBJECT: Record<string, Array<string>> = {
   todoKeywords: ["#+TODO", "#+TYP_TODO", "#+SEQ_TODO"],
 };
 
-export const TESTSTARTUPSETTINGS: Array<string> = [
+export const TESTSTARTUPSETTINGS: ReadonlyNonEmptyArray<string> = [
   "overview",
   "content",
   "showall",
@@ -330,7 +375,7 @@ export const TESTSTARTUPSETTINGS: Array<string> = [
   "nohidedrawers",
 ];
 
-export const TESTPUNCTUATION: Array<string> = [
+export const TESTPUNCTUATION: ReadonlyNonEmptyArray<string> = [
   ":",
   ";",
   ",",
@@ -346,7 +391,7 @@ export const TESTPUNCTUATION: Array<string> = [
   "#",
 ];
 
-export const TESTFILEEXTENSIONS: Array<string> = [
+export const TESTFILEEXTENSIONS: ReadonlyNonEmptyArray<string> = [
   "ada",
   "adb",
   "ads",

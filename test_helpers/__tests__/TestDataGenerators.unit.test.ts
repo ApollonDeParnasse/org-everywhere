@@ -1,18 +1,29 @@
 import { test, fc } from "@fast-check/vitest";
 import { describe, expect, assert } from "vitest";
-import { isMap, isRecord } from "immutable";
+import { isMap, isRecord, isList, get, getIn } from "immutable";
 import {
   forEach,
-  over,
   overSome,
-  pipe,
-  map,
   spread,
   isDate,
   isObject,
   isEmpty,
-  split,
+  isArray,
+  startsWith,
+  endsWith,
+  isNumber,
+  shuffle,
+  negate,
+  eq,
 } from "lodash/fp";
+import { pipe } from "fp-ts/function";
+import { split } from "fp-ts/string";
+import {
+  type ReadonlyNonEmptyArray,
+  map,
+  unzip,
+  flap,
+} from "fp-ts/ReadonlyNonEmptyArray";
 import {
   isWithinInterval,
   isBefore,
@@ -27,9 +38,26 @@ import {
   TESTDEADLINEUNITSSET,
   TESTDELAYTYPESSET,
   TESTDELAYUNITSSET,
+  TESTLOWERALPHACHARACTERRANGE,
+  TESTUPPERALPHACHARACTERRANGE,
+  TESTNONSPACESCHARACTERRANGE,
 } from "../Constants";
-import type { OrgTimestampPart, RepeaterType } from "../../src/Types";
-import { convertCharacterIntoCharacterCode } from "../../src/util/transformers";
+import type {
+  OrgTimestampPart,
+  RepeaterType,
+  OrgTableCellRecord,
+  OrgTableRowRecord,
+  OrgTableCellValue,
+  OrgText
+} from "../../src/Types";
+import { makeOrgTextRecord } from "../../src/Types";
+import {
+  convertCharacterIntoCharacterCode,
+  getFromRecord,
+  curriedGetFromRecord,
+  unfold,
+  mod,
+} from "../../src/util/transformers";
 import {
   getHourPartFromDate,
   getMinutePartFromDate,
@@ -42,8 +70,12 @@ import {
   assertIntegerInRangeExclusive,
   assertStrings,
   parseIntAndAssertIntegerInRangeInclusive,
+  assertNumbers,
 } from "../Asserters";
 import {
+  fcGenRandomIntegerBetweenZeroAnd,
+  fcArrayOfNIntegersInRange,
+  fcLinearRangeGenerator,
   fcGenRandomItemFromArray,
   fcGenRandomIntegerInRange,
   fcGenValidJSDateObjectString,
@@ -51,7 +83,7 @@ import {
   fcGenRandomCharacterGenerator,
   fcShuffledSubarray,
   fcShuffledArray,
-  fcNLengthUniqueStringArrayGenerator,
+  fcNLengthNonSpaceCharactersArrayGenerator,
   fcGenRandomColorObject,
   fcGenRandomObjectKeyValuePair,
   fcGenTimeRangeParts,
@@ -77,7 +109,74 @@ import {
   fcGenRandomRepeaterValue,
   fcGenRandomTimeString,
   fcGenRandomImmutableRecord,
+  fcGenOrgTableWithoutHlines,
+  defaultFCGenRandomOrgTableWithoutHlines,
+  fcGenOrgTableWithHlines,
+  defaultFCGenRandomOrgTableWithHlines,
+  defaultFCGenRandomOrgTable,
+  createTestOrgTableCellRecord,
+  createTestOrgTableRowRecord,
+  fcGenRandomArrayOfUpperAlphaStringsGenerator,
+  createTestOrgTableRecord,
+  flippedFCRandomItemFromArray,
+  fcNLengthLowerAlphaStringArrayGenerator,
+  createTestOrgTableStringWithoutHlines,
+  createTestOrgTableStringWithHlines,
+  fcNLengthArrayOfXGenerator,
+  createTestOrgTableHlineString,
+  fcNLengthStringGenerator,
+  fcArrayOfXNatNumbersWithMaxGenerator,
+  fcGenRandomItemFromArrayWithIndex,
+  createTestOrgTableRowStrings,
+  getColumnWidthsForTestTable,
+  nonZeroBoundedModularAdditionForCharacters,
+  fcGenRandomIntegerBetweenOneAnd,
+  fcNLengthStringGeneratorMV,
+  fcNLengthUpperAlphaStringArrayGenerator,
+  fcGenRandomArrayOfLowerAlphaStringsGenerator,
+  fcGenRandomStringGenerator,
+  fcGenRandomAlphaString,
+  fcGenRandomLengthLowerAlphaStringGenerator,
+  fcGenRandomLengthUpperAlphaStringGenerator,
 } from "../TestDataGenerators.ts";
+
+const upperAlpha = /[A-Z]/g;
+const lowerAlpha = /[a-z]/g;
+const alpha = /[A-z]/g;
+const isX = (re: RegExp) => (x: string) => isArray(x.match(re));
+const isLowerAlpha = isX(lowerAlpha);
+const isUpperAlpha = isX(upperAlpha);
+const isAlpha = isX(alpha);
+
+const testCellValueCreator = (
+  cellIndex: number,
+  _: fc.GeneratorValue,
+): [OrgTableCellValue, string] => {
+  const testText: OrgText = {
+    type: "text",
+    contents: cellIndex.toString()
+  };
+  return [makeOrgTextRecord(testText), cellIndex.toString()];
+};
+
+const testRowValues = (
+  fcGen: fc.GeneratorValue,
+  [expectedRowCount, expectedColumnCount]: [number, number],
+): ReadonlyNonEmptyArray<
+  ReadonlyNonEmptyArray<[OrgTableCellValue, string]>
+> => {
+  const testRows = pipe(
+    fcNLengthLowerAlphaStringArrayGenerator(fcGen, expectedColumnCount),
+    map((str: string): [OrgTableCellValue, string] => [str, str]),
+  );
+
+  return unfold(
+    (_: number): ReadonlyNonEmptyArray<[OrgTableCellValue, string]> => {
+      return shuffle(testRows);
+    },
+    expectedRowCount,
+  );
+};
 
 const isRepeaterType = (
   actualVal: any,
@@ -172,6 +271,117 @@ describe("TestDataGenerators test suite", () => {
           assert.isNumber(actualCharCode);
         },
       );
+
+      test.prop([fc.gen()])(
+        "nonZeroBoundedModularAdditionForCharacters",
+        (fcGen) => {
+          const testRange = fcGenRandomItemFromArray(fcGen, [
+            TESTNONSPACESCHARACTERRANGE,
+            TESTLOWERALPHACHARACTERRANGE,
+            TESTUPPERALPHACHARACTERRANGE,
+          ]);
+
+          const testCurrentNumber: number = fcGenRandomIntegerBetweenZeroAnd(
+            fcGen,
+            testRange.length,
+          );
+          const testStandardIncrease: number = fcGenRandomIntegerBetweenOneAnd(
+            fcGen,
+            testRange.length - 1,
+          );
+
+          const testGenerator =
+            nonZeroBoundedModularAdditionForCharacters(testRange);
+          const actualString = testGenerator(
+            testStandardIncrease,
+            testCurrentNumber,
+          );
+          assert.isString(actualString);
+          assert.lengthOf(actualString, 1);
+          expect(actualString).not.toBe(" ");
+        },
+      );
+      test.prop([fc.gen(), fc.integer({ min: 2, max: 25 })])(
+        "fcNLengthStringGeneratorMV",
+        (fcGen, testLength) => {
+          const [actualString, actualStringValues] = fcNLengthStringGeneratorMV(
+            testLength,
+            fcGen,
+          );
+          assert.isString(actualString);
+          assert.isArray(actualStringValues);
+          assert.isString(fcGenRandomItemFromArray(fcGen, actualStringValues));
+          assert.lengthOf(actualString, testLength);
+          expect(actualString).not.toBe(" ");
+          expect(actualString).not.toContain(" ");
+        },
+      );
+      test.prop([fc.gen(), fc.integer({ min: 2, max: 25 })])(
+        "fcNLengthStringGenerator",
+        (fcGen, testLength) => {
+          const actualString = fcNLengthStringGenerator(testLength, fcGen);
+          assert.isString(actualString);
+          assert.lengthOf(actualString, testLength);
+          expect(actualString).not.toBe(" ");
+          expect(actualString).not.toContain(" ");
+        },
+      );
+      test.prop([fc.gen()])(
+        "fcGenRandomLengthLowerAlphaStringGenerator",
+        (fcGen) => {
+          const actualString =
+            fcGenRandomLengthLowerAlphaStringGenerator(fcGen);
+
+          expect(
+            pipe(
+              actualString,
+              split(""),
+              flippedFCRandomItemFromArray(fcGen),
+              isLowerAlpha,
+            ),
+          ).toBeTruthy();
+        },
+      );
+
+      test.prop([fc.gen()])(
+        "fcGenRandomLengthUpperAlphaStringGenerator",
+        (fcGen) => {
+          const actualString =
+            fcGenRandomLengthUpperAlphaStringGenerator(fcGen);
+          expect(
+            pipe(
+              actualString,
+              split(""),
+              flippedFCRandomItemFromArray(fcGen),
+              isUpperAlpha,
+            ),
+          ).toBeTruthy();
+        },
+      );
+
+      test.prop([fc.gen()])("fcGenRandomAlphaString", (fcGen) => {
+        const actualString = fcGenRandomAlphaString(fcGen);
+        expect(
+          pipe(
+            actualString,
+            split(""),
+            flippedFCRandomItemFromArray(fcGen),
+            isAlpha,
+          ),
+        ).toBeTruthy();
+      });
+
+      test.prop([fc.gen()])("fcGenRandomStringGenerator", (fcGen) => {
+        const actualString = fcGenRandomStringGenerator(fcGen);
+        expect(
+          pipe(
+            actualString,
+            split(""),
+            flippedFCRandomItemFromArray(fcGen),
+            negate(eq(" ")),
+          ),
+        ).toBeTruthy();
+      });
 
       test.prop([
         fc.tuple(
@@ -271,6 +481,26 @@ describe("TestDataGenerators test suite", () => {
     });
 
     describe("Array generators suite", () => {
+      test.prop([
+        fc.integer({ min: 1, max: 25 }),
+        fc.integer({ min: 2, max: 100 }),
+        fc.gen(),
+      ])(
+        "fcNLengthArrayOfXGenerator",
+        (testArraySize, testRangeSize, fcGen) => {
+          const testRange: [number, number] = fcLinearRangeGenerator(
+            fcGen,
+            testRangeSize,
+          );
+          const [, rangeMax] = testRange;
+          const actualArray = fcNLengthArrayOfXGenerator(
+            mod(rangeMax),
+            testRange,
+          )(fcGen, testArraySize);
+          assert.lengthOf(actualArray, testArraySize);
+        },
+      );
+
       test.prop([fc.array(fc.string(), { minLength: 1 }), fc.gen()])(
         "fcShuffledSubarray",
         (testArray, fcGen) => {
@@ -293,10 +523,8 @@ describe("TestDataGenerators test suite", () => {
       test.prop([fc.array(fc.string(), { minLength: 1 }), fc.gen()])(
         "fcShuffledArray",
         (testArray, fcGen) => {
-          const actualShuffledArray: Array<string> = fcShuffledArray(
-            fcGen,
-            testArray,
-          );
+          const actualShuffledArray: ReadonlyNonEmptyArray<string> =
+            fcShuffledArray(fcGen, testArray);
           convertArraysToSetsAndAssertStrictEqual([
             actualShuffledArray,
             testArray,
@@ -304,12 +532,83 @@ describe("TestDataGenerators test suite", () => {
         },
       );
 
+      test.prop([
+        fc.integer({ min: 1 }),
+        fc.integer({ min: 1, max: 20 }),
+        fc.gen(),
+      ])("fcArrayOfNIntegersInRange", (testRangeSize, testCount, fcGen) => {
+        const testRange: [number, number] = fcLinearRangeGenerator(
+          fcGen,
+          testRangeSize,
+        );
+        const actualArray: ReadonlyNonEmptyArray<number> =
+          fcArrayOfNIntegersInRange(testRange, testCount, fcGen);
+        const actualRandomValue: number = fcGenRandomItemFromArray(
+          fcGen,
+          actualArray,
+        );
+        assert.lengthOf(actualArray, testCount);
+        assertIntegerInRangeExclusive(testRange, actualRandomValue);
+      });
+
       test.prop([fc.integer({ min: 1, max: 100 }), fc.gen()])(
-        "fcNLengthUniqueStringArrayGenerator",
-        (testStringLength, fcGen) => {
-          const actualStringArray: Array<string> =
-            fcNLengthUniqueStringArrayGenerator(fcGen, testStringLength);
-          expect(actualStringArray.length).toEqual(testStringLength);
+        "fcNLengthNonSpaceCharactersArrayGenerator",
+        (testLength, fcGen) => {
+          const actualStringArray: ReadonlyNonEmptyArray<string> =
+            fcNLengthNonSpaceCharactersArrayGenerator(fcGen, testLength);
+          expect(actualStringArray.length).toEqual(testLength);
+          assert.isString(fcGenRandomItemFromArray(fcGen, actualStringArray));
+        },
+      );
+      test.prop([fc.integer({ min: 1, max: 100 }), fc.gen()])(
+        "fcNLengthLowerAlphaStringArrayGenerator",
+        (testLength, fcGen) => {
+          const actualStringArray: ReadonlyNonEmptyArray<string> =
+            fcNLengthLowerAlphaStringArrayGenerator(fcGen, testLength);
+          expect(actualStringArray.length).toEqual(testLength);
+          expect(
+            pipe(
+              actualStringArray,
+              flippedFCRandomItemFromArray(fcGen),
+              isLowerAlpha,
+            ),
+          ).toBeTruthy();
+        },
+      );
+
+      test.prop([fc.integer({ min: 1, max: 100 }), fc.gen()])(
+        "fcNLengthUpperAlphaStringArrayGenerator",
+        (testLength, fcGen) => {
+          const actualStringArray: ReadonlyNonEmptyArray<string> =
+            fcNLengthUpperAlphaStringArrayGenerator(fcGen, testLength);
+          expect(actualStringArray.length).toEqual(testLength);
+          expect(
+            pipe(
+              actualStringArray,
+              flippedFCRandomItemFromArray(fcGen),
+              isUpperAlpha,
+            ),
+          ).toBeTruthy();
+        },
+      );
+
+      test.prop([fc.gen()])(
+        "fcGenRandomArrayOfLowerAlphaStringsGenerator",
+        (fcGen) => {
+          const actualStringArray: ReadonlyNonEmptyArray<string> =
+            fcGenRandomArrayOfLowerAlphaStringsGenerator(fcGen);
+          assert.isArray(actualStringArray);
+          assert.isString(fcGenRandomItemFromArray(fcGen, actualStringArray));
+        },
+      );
+
+      test.prop([fc.gen()])(
+        "fcGenRandomArrayOfUpperAlphaStringsGenerator",
+        (fcGen) => {
+          const actualStringArray: ReadonlyNonEmptyArray<string> =
+            fcGenRandomArrayOfUpperAlphaStringsGenerator(fcGen);
+          assert.isArray(actualStringArray);
+          assert.isString(fcGenRandomItemFromArray(fcGen, actualStringArray));
         },
       );
     });
@@ -321,9 +620,6 @@ describe("TestDataGenerators test suite", () => {
           const actualObj = fcGenObject(testKeysCount, fcGen);
           expect(isObject(actualObj)).toBeTruthy();
           assert.lengthOf(Object.keys(actualObj), testKeysCount);
-          expect(
-            fcGenRandomItemFromArray(Object.values(actualObj)),
-          ).toBeDefined();
         },
       );
       test.prop([fc.gen()])("fcGenRandomObject", (fcGen) => {
@@ -387,20 +683,23 @@ describe("TestDataGenerators test suite", () => {
         },
       );
 
-      test.prop([fc.gen()])("fcGenRandomListOfObjectKeyValuePairs", (fcGen) => {
-        const testObj = fcGenRandomObject(fcGen);
-        const actualPairs = fcGenRandomListOfObjectKeyValuePairs(
-          fcGen,
-          testObj,
-        );
+      test.prop([fc.gen()])(
+        "fcGenRandomListOfObjectKeyValuePairs",
+        (fcGen) => {
+          const testObj = fcGenRandomObject(fcGen);
+          const actualPairs = fcGenRandomListOfObjectKeyValuePairs(
+            fcGen,
+            testObj,
+          );
 
-        const [actualKey, actualValue] = fcGenRandomItemFromArray(
-          fcGen,
-          actualPairs,
-        );
+          const [actualKey, actualValue] = fcGenRandomItemFromArray(
+            fcGen,
+            actualPairs,
+          );
 
-        expect(testObj[actualKey]).toBe(actualValue);
-      });
+          expect(testObj[actualKey]).toBe(actualValue);
+        },
+      );
     });
 
     describe("Immutable Object generators suite", () => {
@@ -431,17 +730,19 @@ describe("TestDataGenerators test suite", () => {
           [0, 255],
           [actualR, actualG, actualB],
         );
-        assertIntegerInRangeExclusive([0, 1], actualAlpha);
+        assertIntegerInRangeExclusive(
+          [0, 1],
+          (isNumber(actualAlpha) && actualAlpha) || -1,
+        );
       });
     });
 
     describe("Timestamp generators suite", () => {
       test.prop([fc.gen()])("fcGenTimeRangeParts", (fcGen) => {
         const testDate = fcGenValidJSDateObject(fcGen);
-        const testTimeRangeStartParts: Array<string> = over([
-          getHourPartFromDate,
-          getMinutePartFromDate,
-        ])(testDate);
+        const testTimeRangeStartParts: ReadonlyNonEmptyArray<string> = flap(
+          testDate,
+        )([getHourPartFromDate, getMinutePartFromDate]);
         const actualTimeRangeParts = fcGenTimeRangeParts(
           testTimeRangeStartParts,
           fcGen,
@@ -450,7 +751,7 @@ describe("TestDataGenerators test suite", () => {
         expect(actualTimeRangeParts[0]).toBe(testTimeRangeStartParts[0]);
         expect(actualTimeRangeParts[1]).toBe(testTimeRangeStartParts[1]);
 
-        const testAsserters: Array<
+        const testAsserters: ReadonlyNonEmptyArray<
           (
             startHour: number,
             startMinute: number,
@@ -478,17 +779,20 @@ describe("TestDataGenerators test suite", () => {
           ): boolean => endHour === startHour && endMinute === startMinute,
         ];
 
-        const asserter = pipe([
-          map(parseInt),
-          overSome(map(spread)(testAsserters)),
-        ]);
+        const asserter = (actualValues: ReadonlyNonEmptyArray<string>) => {
+          return pipe(
+            actualValues,
+            map(parseInt),
+            overSome(map(spread)(testAsserters)),
+          );
+        };
 
         expect(asserter(actualTimeRangeParts)).toBeTruthy();
       });
 
       test.prop([fc.gen()])("fcGenRandomTimeString", (fcGen) => {
         const actualTime = fcGenRandomTimeString(fcGen);
-        const [actualHour, actualMinute] = split(":", actualTime);
+        const [actualHour, actualMinute] = split(":")(actualTime);
         parseIntAndAssertIntegerInRangeInclusive([0, 23], actualHour);
         parseIntAndAssertIntegerInRangeInclusive([0, 59], actualMinute);
       });
@@ -920,6 +1224,7 @@ describe("TestDataGenerators test suite", () => {
               startMinute: expect.any(String),
             });
 
+            // Ugly but honest
             if (withRepeater) {
               expect(
                 isRepeaterType(actualTimestampObject.repeaterType),
@@ -964,21 +1269,24 @@ describe("TestDataGenerators test suite", () => {
         });
       });
 
-      test.prop([fc.gen()])("fcGenRandomOrgTimestampPartRecord", (fcGen) => {
-        const [actualTimestamp, actualDate, actualText] =
-          fcGenRandomOrgTimestampPartRecord(fcGen);
-        expect(actualDate).toEqual(expect.any(Date));
-        assert.isString(actualText);
+      test.prop([fc.gen()])(
+        "fcGenRandomOrgTimestampPartRecord",
+        (fcGen) => {
+          const [actualTimestamp, actualDate, actualText] =
+            fcGenRandomOrgTimestampPartRecord(fcGen);
+          expect(actualDate).toEqual(expect.any(Date));
+          assert.isString(actualText);
 
-        expect(actualTimestamp.toJS()).toMatchObject({
-          isActive: expect.any(Boolean),
-          withStartTime: expect.any(Boolean),
-          year: expect.any(String),
-          month: expect.any(String),
-          day: expect.any(String),
-          dayName: expect.any(String),
-        });
-      });
+          expect(actualTimestamp.toJS()).toMatchObject({
+            isActive: expect.any(Boolean),
+            withStartTime: expect.any(Boolean),
+            year: expect.any(String),
+            month: expect.any(String),
+            day: expect.any(String),
+            dayName: expect.any(String),
+          });
+        },
+      );
 
       describe("fcGenOrgTimestampPartRecordWithRepeater", () => {
         const testRunner =
@@ -1063,6 +1371,477 @@ describe("TestDataGenerators test suite", () => {
           expect(testCurrentDate).toEqual(expect.any(Date));
         },
       );
+    });
+
+    describe("Table generators suite", () => {
+      describe("Table sub-element", () => {
+        describe("createTestOrgTableCellRecord", () => {
+          test.prop([fc.gen()])("basic test", (fcGen) => {
+            const [testValue] = fcGenRandomAlphaString(fcGen);
+	    const testTextObject: OrgText = {
+	      type: "text",
+	      contents: testValue
+	    }
+            const actualCell = createTestOrgTableCellRecord([
+              makeOrgTextRecord(testTextObject),
+              testValue,
+            ]);
+            expect(isRecord(actualCell)).toBeTruthy();
+            expect(actualCell.toJS()).toStrictEqual({
+              id: expect.any(Number),
+              type: "table-cell",
+              contents: [testTextObject],
+              rawContents: testValue,
+            });
+          });
+        });
+
+        describe("createTestOrgTableRowRecord", () => {
+          test.prop([fc.gen()])("with strings", (fcGen) => {
+            const testValues =
+              fcGenRandomArrayOfUpperAlphaStringsGenerator(fcGen);
+            const [testCells, expectedCells] = pipe(
+              testValues,
+              map((testVal: string) => {
+		const testTextObject: OrgText = {
+		  type: "text",
+		  contents: testVal
+		}
+                const testCell = createTestOrgTableCellRecord([
+                  makeOrgTextRecord(testTextObject),
+                  testVal,
+                ]);
+                return [testCell, testCell.toJS()];
+              }),
+              unzip<OrgTableCellRecord, Object>,
+            );
+            const actualRow = createTestOrgTableRowRecord(testCells);
+            expect(isRecord(actualRow)).toBeTruthy();
+            expect(actualRow.toJS()).toStrictEqual({
+              id: expect.any(Number),
+              type: "table-row",
+              contents: expectedCells,
+            });
+          });
+          test.prop([fc.gen()])("hline", (_) => {
+            const actualRow = createTestOrgTableRowRecord("hline");
+            expect(isRecord(actualRow)).toBeTruthy();
+            expect(actualRow.toJS()).toStrictEqual({
+              id: expect.any(Number),
+              type: "table-row",
+              contents: "hline",
+            });
+          });
+        });
+      });
+
+      describe("createTestOrgTableRecord", () => {
+        describe("just strings", () => {
+          test.prop([fc.gen(), fc.string()])("withoutHlines", (fcGen, testString) => {
+            const testValues =
+              fcGenRandomArrayOfUpperAlphaStringsGenerator(fcGen);
+            const testCells = map((testVal: string) => {
+	      const testTextObject: OrgText = {
+		type: "text",
+		contents: testVal
+	      }
+              return createTestOrgTableCellRecord([makeOrgTextRecord(testTextObject), testVal]);
+            })(testValues);
+
+            const testRow = createTestOrgTableRowRecord(testCells);
+            const testRows: ReadonlyNonEmptyArray<OrgTableRowRecord> = [
+              testRow,
+            ];
+            const expectedRows = [testRow.toJS()];
+
+            const actualTable = createTestOrgTableRecord(testRows, testString);
+            expect(isRecord(actualTable)).toBeTruthy();
+	    const actualTableObject = actualTable.toJS();
+            expect(actualTableObject).toStrictEqual({
+              id: expect.any(Number),
+              type: "table",
+              contents: expectedRows,
+              columnProperties: [],
+	      rawContents: expect.any(String)
+            });
+
+          });
+          test.prop([fc.gen(), fc.string()])("withHlines", (fcGen, testString) => {
+            const testValues =
+              fcGenRandomArrayOfUpperAlphaStringsGenerator(fcGen);
+            const testCells = map((testVal: string) => {
+	      const testTextObject: OrgText = {
+		type: "text",
+		contents: testVal
+	      }
+              return createTestOrgTableCellRecord([makeOrgTextRecord(testTextObject), testVal]);
+            })(testValues);
+
+            const testRow = createTestOrgTableRowRecord(testCells);
+            const testHline = createTestOrgTableRowRecord("hline");
+            const testRows: ReadonlyNonEmptyArray<OrgTableRowRecord> = [
+              testRow,
+              testHline,
+              testRow,
+            ];
+
+            const actualTable = createTestOrgTableRecord(testRows, testString);
+            expect(isRecord(actualTable)).toBeTruthy();
+            const actualTableObject = actualTable.toJS();
+            expect(actualTableObject).toMatchObject({
+              id: expect.any(Number),
+              type: "table",
+              columnProperties: [],
+            });
+            const [actualFirstRow, actualSecondRow, actualThirdRow] =
+              getFromRecord("contents", actualTable).toJS();
+            expect(actualFirstRow).toStrictEqual(testRow.toJS());
+            expect(actualSecondRow).toStrictEqual({
+              id: expect.any(Number),
+              type: "table-row",
+              contents: "hline",
+            });
+            expect(actualThirdRow).toStrictEqual(testRow.toJS());
+          });
+        });
+      });
+
+      describe("Table strings", () => {
+        describe("helpers", () => {
+          test.prop([
+            fc.gen(),
+            fc.tuple(
+              fc.integer({ min: 1, max: 10 }),
+              fc.integer({ min: 2, max: 10 }),
+            ),
+          ])(
+            "getColumnWidthsForTestTable",
+            (fcGen, testRowColumnCountTuple) => {
+              const [, testColumnCount] = testRowColumnCountTuple;
+              const testValues = testRowValues(fcGen, testRowColumnCountTuple);
+              const actualWidths: ReadonlyNonEmptyArray<number> =
+                getColumnWidthsForTestTable(testValues);
+              assert.lengthOf(actualWidths, testColumnCount);
+              const [testRowIndex, testColumnIndex] = map((x: number): number =>
+                fcGenRandomIntegerBetweenZeroAnd(fcGen, x),
+              )(testRowColumnCountTuple);
+              const expectedRandomValue =
+                testValues[testRowIndex][testColumnIndex];
+              const actualColumnWidth = actualWidths[testColumnIndex];
+              expect(actualColumnWidth).toBeGreaterThan(
+                expectedRandomValue.length,
+              );
+              expect(expectedRandomValue.length + 1).toBeLessThanOrEqual(
+                actualColumnWidth,
+              );
+            },
+          );
+          test.prop([
+            fc.gen(),
+            fc.tuple(
+              fc.integer({ min: 1, max: 10 }),
+              fc.integer({ min: 2, max: 10 }),
+            ),
+          ])(
+            "createTestOrgTableRowStrings",
+            (fcGen, testRowColumnCountTuple) => {
+              const [expectedRowCount] = testRowColumnCountTuple;
+
+              const testValues = testRowValues(fcGen, testRowColumnCountTuple);
+              const testColumnWidths = getColumnWidthsForTestTable(testValues);
+              const actualRows = createTestOrgTableRowStrings(
+                testValues,
+                testColumnWidths,
+              );
+
+              assert.lengthOf(actualRows, expectedRowCount);
+              const [testRowIndex, testColumnIndex] = map((x: number): number =>
+                fcGenRandomIntegerBetweenZeroAnd(fcGen, x),
+              )(testRowColumnCountTuple);
+              const expectedRandomValue =
+                testValues[testRowIndex][testColumnIndex][1];
+              const actualRandomValue = pipe(
+                actualRows,
+                (x: ReadonlyNonEmptyArray<string>): string => x[testRowIndex],
+                (x: string): string => x.slice(1, x.length - 1),
+                split("|"),
+                (x: ReadonlyNonEmptyArray<string>): string =>
+                  x[testColumnIndex],
+              );
+
+              expect(actualRandomValue.trim()).toBe(expectedRandomValue);
+            },
+          );
+
+          test.prop([fc.integer({ min: 2, max: 20 }), fc.gen()])(
+            "createTestOrgTableHlineString",
+            (testColumnCount, fcGen) => {
+              const testColumnWidths: ReadonlyNonEmptyArray<number> =
+                fcArrayOfNIntegersInRange([2, 100], testColumnCount, fcGen);
+              const actualHline = createTestOrgTableHlineString(testColumnWidths);
+              expect(startsWith("|", actualHline)).toBeTruthy();
+              expect(endsWith("|", actualHline)).toBeTruthy();
+              const [expectedLength, expectedIndex] =
+                fcGenRandomItemFromArrayWithIndex(fcGen, testColumnWidths);
+              const actualRandomSplitHlinePart = pipe(
+                actualHline,
+                (x: string): string => x.slice(1, x.length - 1),
+                split("+"),
+                (x: ReadonlyNonEmptyArray<string>): string => x[expectedIndex],
+              );
+              assert.lengthOf(actualRandomSplitHlinePart, expectedLength);
+            },
+          );
+        });
+
+        describe("createTestOrgTableStringWithoutHlines", () => {
+          test.prop([
+            fc.gen(),
+            fc.tuple(
+              fc.integer({ min: 1, max: 10 }),
+              fc.integer({ min: 2, max: 10 }),
+            ),
+          ])("just strings", (fcGen, testRowColumnCountTuple) => {
+            const [expectedRowCount, expectedColumnCount] =
+              testRowColumnCountTuple;
+
+            const testValues = testRowValues(fcGen, testRowColumnCountTuple);
+
+            const actualTable =
+              createTestOrgTableStringWithoutHlines(testValues);
+
+            const actualSplitTable: ReadonlyNonEmptyArray<string> =
+              split("\n")(actualTable);
+
+            assert.lengthOf(actualSplitTable, expectedRowCount);
+
+            const actualRandomRowValue = pipe(
+              actualSplitTable,
+              flippedFCRandomItemFromArray(fcGen),
+              (x: string): string => x.slice(1, x.length - 1),
+              split("|"),
+            );
+
+            assert.lengthOf(actualRandomRowValue, expectedColumnCount);
+          });
+        });
+        describe("createTestOrgTableStringWithHlines", () => {
+          test.prop([
+            fc.gen(),
+            fc.tuple(
+              fc.integer({ min: 1, max: 10 }),
+              fc.integer({ min: 2, max: 10 }),
+            ),
+          ])("string", (fcGen, testRowColumnCountTuple) => {
+            const [expectedRowCount, expectedColumnCount] =
+              testRowColumnCountTuple;
+
+            const testRows = pipe(
+              fcNLengthUpperAlphaStringArrayGenerator(
+                fcGen,
+                expectedColumnCount,
+              ),
+              map((str: string): [OrgTableCellValue, string] => [str, str]),
+            );
+            const testValues: ReadonlyNonEmptyArray<
+              ReadonlyNonEmptyArray<[OrgTableCellValue, string]>
+            > = unfold(
+              (
+                _: number,
+              ): ReadonlyNonEmptyArray<[OrgTableCellValue, string]> => {
+                return testRows;
+              },
+              expectedRowCount,
+            );
+
+            const actualTable = createTestOrgTableStringWithHlines(testValues);
+
+            const actualSplitTable: ReadonlyNonEmptyArray<string> =
+              split("\n")(actualTable);
+
+            expect(actualSplitTable.length).toBeGreaterThanOrEqual(
+              expectedRowCount,
+            );
+          });
+        });
+      });
+
+      describe("Without hlines", () => {
+        test.prop([
+          fc.gen(),
+          fc.tuple(
+            fc.integer({ min: 1, max: 10 }),
+            fc.integer({ min: 2, max: 10 }),
+          ),
+        ])("fcGenOrgTableWithoutHlines", (fcGen, testRowColumnCountTuple) => {
+          const [expectedRowCount, expectedColumnCount] =
+            testRowColumnCountTuple;
+          const [actualTable, actualTableRecord, actualTableValues] =
+            fcGenOrgTableWithoutHlines(
+              testCellValueCreator,
+              testRowColumnCountTuple,
+              fcGen,
+            );
+
+          expect(startsWith("|", actualTable)).toBeTruthy();
+          expect(endsWith("|", actualTable)).toBeTruthy();
+
+          expect(isRecord(actualTableRecord)).toBeTruthy();
+          const actualTableObject = actualTableRecord.toJS();
+          expect(actualTableObject).toStrictEqual({
+            id: expect.any(Number),
+            type: "table",
+            contents: expect.any(Array),
+            columnProperties: [],
+	    rawContents: expect.any(String)
+          });
+
+          const actualContentsValue = get(actualTableRecord, "contents");
+          const actualContents =
+            isList(actualContentsValue) && actualContentsValue.toArray();
+          expect(
+            isArray(actualContents) && actualContents.includes("hline"),
+          ).toBeFalsy();
+          expect(isArray(actualContents) && actualContents.length).toEqual(
+            expectedRowCount,
+          );
+          assert.lengthOf(actualTableValues, expectedRowCount);
+          assert.lengthOf(
+            fcGenRandomItemFromArray(fcGen, actualTableValues),
+            expectedColumnCount,
+          );
+        });
+
+        test.prop([fc.gen()])(
+          "defaultFCGenRandomOrgTableWithoutHlines",
+          (fcGen) => {
+            const [
+              actualTable,
+              actualTableRecord,
+              actualTableValues,
+              actualRowCount,
+              actualColumnCount,
+            ] = defaultFCGenRandomOrgTableWithoutHlines(fcGen);
+
+            assert.isString(actualTable);
+            expect(isRecord(actualTableRecord)).toBeTruthy();
+            const actualTableObject = actualTableRecord.toJS();
+            expect(actualTableObject).toStrictEqual({
+              id: expect.any(Number),
+              type: "table",
+              contents: expect.anything(),
+              columnProperties: [],
+	      rawContents: expect.any(String)
+            });
+
+            assertNumbers([actualRowCount, actualColumnCount]);
+            assert.isArray(actualTableValues);
+          },
+        );
+      });
+      describe("With hlines", () => {
+        test.prop([
+          fc.gen(),
+          fc.tuple(
+            fc.integer({ min: 1, max: 10 }),
+            fc.integer({ min: 2, max: 10 }),
+          ),
+        ])("fcGenOrgTableWithHlines", (fcGen, testRowColumnCountTuple) => {
+          const [expectedRowCount] = testRowColumnCountTuple;
+          const [actualTable, actualTableRecord, actualTableValues] =
+            fcGenOrgTableWithHlines(
+              testCellValueCreator,
+              testRowColumnCountTuple,
+              fcGen,
+            );
+
+          const actualSplitTable: ReadonlyNonEmptyArray<string> =
+            split("\n")(actualTable);
+
+          expect(startsWith("|", actualTable)).toBeTruthy();
+          expect(endsWith("|", actualTable)).toBeTruthy();
+          expect(actualSplitTable.length).toBeGreaterThanOrEqual(
+            expectedRowCount,
+          );
+
+          expect(isRecord(actualTableRecord)).toBeTruthy();
+          const actualTableObject = actualTableRecord.toJS();
+          expect(actualTableObject).toStrictEqual({
+            id: expect.any(Number),
+            type: "table",
+            contents: expect.any(Array),
+            columnProperties: [],
+	    rawContents: expect.any(String)
+          });
+
+          const actualContentsValue = get(actualTableRecord, "contents");
+          const actualContents =
+            isList(actualContentsValue) && actualContentsValue.toArray();
+
+          assert.isArray(actualContents);
+
+          expect(
+            isArray(actualContents) && actualContents.length,
+          ).toBeGreaterThanOrEqual(expectedRowCount);
+
+          expect(actualTableValues.length).toBeGreaterThanOrEqual(
+            expectedRowCount,
+          );
+
+          assert.lengthOf(actualTableValues, expectedRowCount);
+        });
+
+        test.prop([fc.gen()])(
+          "defaultFCGenRandomOrgTableWithHlines",
+          (fcGen) => {
+            const [
+              actualTable,
+              actualTableRecord,
+              actualTableValues,
+              actualRowCount,
+              actualColumnCount,
+            ] = defaultFCGenRandomOrgTableWithHlines(fcGen);
+
+            assert.isString(actualTable);
+            expect(isRecord(actualTableRecord)).toBeTruthy();
+            const actualTableObject = actualTableRecord.toJS();
+            expect(actualTableObject).toStrictEqual({
+              id: expect.any(Number),
+              type: "table",
+              contents: expect.anything(),
+              columnProperties: [],
+	      rawContents: expect.any(String)
+            });
+
+            assertNumbers([actualRowCount, actualColumnCount]);
+            assert.isArray(actualTableValues);
+          },
+        );
+      });
+      test.prop([fc.gen()])("defaultFCGenRandomOrgTable", (fcGen) => {
+        const [
+          actualTable,
+          actualTableRecord,
+          actualTableValues,
+          actualRowCount,
+          actualColumnCount,
+        ] = defaultFCGenRandomOrgTable(fcGen);
+
+        assert.isString(actualTable);
+        expect(startsWith("|", actualTable)).toBeTruthy();
+        expect(endsWith("|", actualTable)).toBeTruthy();
+        expect(isRecord(actualTableRecord)).toBeTruthy();
+        const actualTableObject = actualTableRecord.toJS();
+        expect(actualTableObject).toStrictEqual({
+          id: expect.any(Number),
+          type: "table",
+          contents: expect.anything(),
+          columnProperties: [],
+	  rawContents: expect.any(String)
+        });
+        assertNumbers([actualRowCount, actualColumnCount]);
+        assert.isArray(actualTableValues);
+      });
     });
   });
 });

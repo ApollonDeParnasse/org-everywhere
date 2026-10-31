@@ -4,27 +4,33 @@ import {
   over,
   add,
   partialRight,
-  pipe,
-  chunk,
+  flow,
   property,
   join,
   toString,
-  map,
   shuffle,
   size,
-  concat,
   subtract,
   first,
-  padCharsStart,
-  sortBy,
   merge,
   range,
   take,
   partial,
   zipObject,
+  isArray,
 } from "lodash/fp";
-import { pipe as fpipe, identity, flow } from "fp-ts/function";
-import { mapFst } from "fp-ts/Tuple";
+import { pipe, identity } from "fp-ts/function";
+import { mapFst, fst } from "fp-ts/Tuple";
+import { map as mapArray } from "fp-ts/Array";
+import {
+  map,
+  chunksOf,
+  type ReadonlyNonEmptyArray,
+  mapWithIndex,
+  intersperse,
+  flap,
+  head,
+} from "fp-ts/ReadonlyNonEmptyArray";
 import { match } from "ts-pattern";
 import {
   add as addDateUnits,
@@ -34,7 +40,7 @@ import {
   addHours,
   type Duration,
 } from "date-fns/fp";
-import { type MapOf, Map, Record as ImmutableRecord } from "immutable";
+import { type MapOf, Map, Record as ImmutableRecord, List } from "immutable";
 import type { ColorObject } from "color";
 import type {
   OrgTimestampPart,
@@ -45,10 +51,24 @@ import type {
   DelayUnit,
   OrgTimestampPartRecord,
   TimestampArgs,
+  OrgTableRecord,
+  OrgTableCellValue,
+  OrgTableRowRecord,
+  OrgTableCellRecord,
+  OrgTableCell,
+  OrgTableRow,
+  OrgTable,
 } from "../src/Types";
-import { makeOrgTimestampPartRecord } from "../src/Types";
+import {
+  makeOrgTimestampPartRecord,
+  makeOrgTableCellRecord,
+  makeOrgTableRowRecord,
+  makeOrgTableRecord,
+  makeOrgTextRecord
+} from "../src/Types";
 import {
   unfold,
+  curriedUnfold,
   unfoldAndShuffleArray,
   nonZeroBoundedModularAddition,
   minusOne,
@@ -58,6 +78,9 @@ import {
   addOne,
   floorDivision,
   unfoldAndTransformRangeChunkN,
+  curriedUnfoldAndShuffleArray,
+  intersperseWith,
+  mod,
 } from "../src/util/transformers";
 import {
   getTimestampPartsFromDate,
@@ -82,15 +105,23 @@ import {
   HOURS,
   MINUTES,
   YEARS,
+  TESTRANDOMMONTHSRANGE,
   TESTIMESTAMPTYPES,
 } from "./Constants";
 
-export const randomArrayValue = pipe([shuffle, first]);
-export const randomArrayIndex = pipe([range(0), randomArrayValue]);
-export const twoRandomArrayIndices = pipe([range(0), shuffle, take(2)]);
-export const threeRandomArrayIndices = pipe([range(0), shuffle, take(3)]);
-export const randomArrayIndexFromOne = pipe([range(1), randomArrayValue]);
-export const randomArrayIndexMinusLastIndex = pipe([
+const baseTestIDCreator = (): (() => number) => {
+  let nextId = 1;
+  return () => nextId++;
+};
+
+const testIDCreator = baseTestIDCreator();
+
+export const randomArrayValue = flow([shuffle, first]);
+export const randomArrayIndex = flow([range(0), randomArrayValue]);
+export const twoRandomArrayIndices = flow([range(0), shuffle, take(2)]);
+export const threeRandomArrayIndices = flow([range(0), shuffle, take(3)]);
+export const randomArrayIndexFromOne = flow([range(1), randomArrayValue]);
+export const randomArrayIndexMinusLastIndex = flow([
   minusOne,
   range(0),
   randomArrayValue,
@@ -105,17 +136,17 @@ export const getRandomIntegerInRange = ([min, max]: [
   return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled);
 };
 
-export const randomMinutePart = pipe([
+export const randomMinutePart = flow([
   partial(getRandomIntegerInRange, [MINUTES]),
   padTimePart,
 ]);
-export const randomHourPart = pipe([
+export const randomHourPart = flow([
   partial(getRandomIntegerInRange, [HOURS]),
   padTimePart,
 ]);
 
 export const randomYear = (): string =>
-  fpipe(getRandomIntegerInRange(YEARS), toString);
+  pipe(getRandomIntegerInRange(YEARS), toString);
 
 // fast-check
 
@@ -124,55 +155,97 @@ export const fcGenRandomBoolean = (fcGen: fc.GeneratorValue): boolean => {
 };
 
 // don't use with functions
-export const fcShuffledArray = curry(
-  <T>(fcGen: fc.GeneratorValue, array: Array<T>): Array<T> => {
+export const fcShuffledArray = <T>(
+  fcGen: fc.GeneratorValue,
+  array: ReadonlyNonEmptyArray<T>,
+): ReadonlyNonEmptyArray<T> => {
+  return fcGen(fc.shuffledSubarray, array, {
+    minLength: array.length,
+    maxLength: array.length,
+  });
+};
+
+export const curriedFCShuffledArray =
+  (fcGen: fc.GeneratorValue) =>
+  <T>(array: Array<T>): Array<T> => {
     return fcGen(fc.shuffledSubarray, array, {
       minLength: array.length,
       maxLength: array.length,
     });
-  },
-);
+  };
 
-export const fcShuffledSubarray = curry(
-  <T>(count: number, fcGen: fc.GeneratorValue, array: Array<T>): Array<T> => {
+export const fcShuffledSubarray = <T>(
+  count: number,
+  fcGen: fc.GeneratorValue,
+  array: Array<T>,
+): Array<T> => {
+  return fcGen(fc.shuffledSubarray, array, {
+    minLength: count,
+    maxLength: count,
+  });
+};
+
+export const curriedFCShuffledSubarray =
+  (count: number) =>
+  (fcGen: fc.GeneratorValue) =>
+  <T>(array: Array<T>): Array<T> => {
     return fcGen(fc.shuffledSubarray, array, {
       minLength: count,
       maxLength: count,
     });
-  },
-);
+  };
 
-export const fcGenRandomShuffledSubarray = curry(
-  <T>(fcGen: fc.GeneratorValue, array: Array<T>): Array<T> => {
+export const flippedCurriedFCShuffledSubarray =
+  <T>(fcGen: fc.GeneratorValue, array: Array<T>) =>
+  (count: number): Array<T> => {
+    return fcGen(fc.shuffledSubarray, array, {
+      minLength: count,
+      maxLength: count,
+    });
+  };
+
+export const curriedFCGenRandomShuffledSubarray =
+  <T>(array: Array<T>) =>
+  (fcGen: fc.GeneratorValue): Array<T> => {
     return fcGen(fc.shuffledSubarray, array, {
       minLength: 1,
       maxLength: array.length - 1,
     });
-  },
-);
+  };
 
-export const fcGenRandomItemFromArray = curry(
-  <T>(fcGen: fc.GeneratorValue, testArray: Array<T>): T => {
-    return fcGen(fc.constantFrom, ...shuffle(testArray));
-  },
-);
+export const fcGenRandomItemFromArray = <T>(
+  fcGen: fc.GeneratorValue,
+  testArray: ReadonlyNonEmptyArray<T>,
+): T => {
+  return fcGen(fc.constantFrom, ...shuffle(testArray));
+};
 
 export const curriedFCRandomItemFromArray =
-  <T>(testArray: Array<T>) =>
-  <T>(fcGen: fc.GeneratorValue): T => {
+  <T>(testArray: ReadonlyNonEmptyArray<T>) =>
+  (fcGen: fc.GeneratorValue): T => {
     return fcGen(fc.constantFrom, ...shuffle(testArray));
   };
 
-export const fcGetTwoRandomItemsFromArray = fcShuffledSubarray(2);
+export const flippedFCRandomItemFromArray =
+  (fcGen: fc.GeneratorValue) =>
+  <T>(testArray: ReadonlyNonEmptyArray<T>): T => {
+    return fcGen(fc.constantFrom, ...shuffle(testArray));
+  };
+
+export const fcGetTwoRandomItemsFromArray = curriedFCShuffledSubarray(2);
 
 export const fcNRandomArrayIndicesAsIntegers = curry(
-  (
+  <T>(
     count: number,
     fcGen: fc.GeneratorValue,
-    array: Array<any>,
+    array: Array<T>,
   ): Array<number> => {
-    return pipe([Object.keys, fcShuffledSubarray(count, fcGen), map(parseInt)])(
-      array,
+    return pipe(
+      Object.keys(array),
+      (indices: Array<string>): Array<string> => {
+        return fcShuffledSubarray(count, fcGen, indices);
+      },
+      mapArray(parseInt),
     );
   },
 );
@@ -180,13 +253,13 @@ export const fcNRandomArrayIndicesAsIntegers = curry(
 export const fcGetRandomArrayChunk = curry(
   <T>(
     fcGen: fc.GeneratorValue,
-    [testArray, testChunkSize]: [Array<T>, number],
-  ): T => {
-    return pipe([
-      chunk(testChunkSize),
-      fcGenRandomItemFromArrayWithIndex(fcGen),
-      first,
-    ])(testArray);
+    [testArray, testChunkSize]: [ReadonlyNonEmptyArray<T>, number],
+  ): ReadonlyNonEmptyArray<T> => {
+    return pipe(
+      testArray,
+      chunksOf(testChunkSize),
+      flippedFCRandomItemFromArray(fcGen),
+    );
   },
 );
 
@@ -196,9 +269,13 @@ export const fcGenRandomIntegerBetweenOneAndMaxSafeInteger = (
   fcGen: fc.GeneratorValue,
 ) => fcGen(fc.integer, { min: 1 });
 
-export const fcGenRandomIntegerAsString = pipe([fcGenRandomInteger, toString]);
+export const fcGenRandomIntegerAsString = flow([fcGenRandomInteger, toString]);
 
-export const fcGenRandomIntegerInRange = curry(
+export const fcGenRandomIntegerInRange = curry<
+  fc.GeneratorValue,
+  [number, number],
+  number
+>(
   (
     fcGen: fc.GeneratorValue,
     [rangeMin, rangeMax]: [number, number],
@@ -208,17 +285,21 @@ export const fcGenRandomIntegerInRange = curry(
   },
 );
 
-export const fcGenRandomIntegerBetweenZeroAnd = curry(
-  (fcGen: fc.GeneratorValue, rangeMax: number): number => {
-    return pipe([concat([0]), fcGenRandomIntegerInRange(fcGen)])(rangeMax);
-  },
-);
+export const fcGenRandomIntegerBetweenZeroAnd = curry<
+  fc.GeneratorValue,
+  number,
+  number
+>((fcGen: fc.GeneratorValue, rangeMax: number): number => {
+  return fcGenRandomIntegerInRange(fcGen, [0, rangeMax]);
+});
 
-export const fcGenRandomIntegerBetweenOneAnd = curry(
-  (fcGen: fc.GeneratorValue, rangeMax: number): number => {
-    return pipe([concat([1]), fcGenRandomIntegerInRange(fcGen)])(rangeMax);
-  },
-);
+export const fcGenRandomIntegerBetweenOneAnd = curry<
+  fc.GeneratorValue,
+  number,
+  number
+>((fcGen: fc.GeneratorValue, rangeMax: number): number => {
+  return fcGenRandomIntegerInRange(fcGen, [1, rangeMax]);
+});
 
 export const curriedFCRandomIntegerBetweenOneAnd =
   (rangeMax: number) =>
@@ -231,11 +312,13 @@ export const fcGenRandomIntegerBetweenOneAndTen = partialRight(
   [10],
 );
 
-export const fcGenRandomIntegerBetweenTwoAnd = curry(
-  (fcGen: fc.GeneratorValue, rangeMax: number): number => {
-    return pipe([concat([2]), fcGenRandomIntegerInRange(fcGen)])(rangeMax);
-  },
-);
+export const fcGenRandomIntegerBetweenTwoAnd = curry<
+  fc.GeneratorValue,
+  number,
+  number
+>((fcGen: fc.GeneratorValue, rangeMax: number): number => {
+  return fcGenRandomIntegerInRange(fcGen, [2, rangeMax]);
+});
 
 export const fcGenRandomIntegerBetweenTwoAndTen = partialRight(
   fcGenRandomIntegerBetweenTwoAnd,
@@ -245,6 +328,11 @@ export const fcGenRandomIntegerBetweenTwoAndTen = partialRight(
 export const fcGenRandomIntegerBetween1And25 = partialRight(
   fcGenRandomIntegerInRange,
   [[1, 25]],
+);
+
+export const fcGenRandomIntegerBetween2And25 = partialRight(
+  fcGenRandomIntegerInRange,
+  [[2, 25]],
 );
 
 export const fcGenRandomIntegerBetween0And1000 = partialRight(
@@ -287,69 +375,106 @@ export const defaultConvertFCGenIntoRandomGenBasedOnArgLength =
     return generator(randomNumber, fcGen, arg);
   };
 
-const convertFCGenWithBooleanIntoRandomGen =
-  <T>(generator: (randomBoolean: boolean, fcGen: fc.GeneratorValue) => T) =>
-  (fcGen: fc.GeneratorValue): T => {
-    const randomBoolean = fcGenRandomBoolean(fcGen);
-    return generator(randomBoolean, fcGen);
-  };
+// const convertFCGenWithBooleanIntoRandomGen =
+//   <T>(generator: (randomBoolean: boolean, fcGen: fc.GeneratorValue) => T) =>
+//   (fcGen: fc.GeneratorValue): T => {
+//     const randomBoolean = fcGenRandomBoolean(fcGen);
+//     return generator(randomBoolean, fcGen);
+//   };
 
-export const plusRandomNumberInRange = curry(
-  (range: [number, number], fcGen: fc.GeneratorValue, num: number): number => {
-    return pipe([fcGenRandomIntegerInRange, add(num)])(fcGen, range);
-  },
-);
+export const plusRandomNumberInRange = curry<
+  [number, number],
+  fc.GeneratorValue,
+  number,
+  number
+>((range: [number, number], fcGen: fc.GeneratorValue, num: number): number => {
+  return pipe(fcGenRandomIntegerInRange(fcGen, range), add(num));
+});
 
 export const plusRandomNumberBetweenZeroAnd100 = plusRandomNumberInRange([
   0, 100,
 ]);
 
 export const fcOneRandomArrayIndexAsInteger = curry(
-  (fcGen: fc.GeneratorValue, array: Array<any>): number => {
-    return pipe([size, concat([0]), fcGenRandomIntegerInRange(fcGen)])(array);
+  (fcGen: fc.GeneratorValue, array: ReadonlyNonEmptyArray<any>): number => {
+    return pipe(
+      array,
+      size,
+      (arraySize: number): [number, number] => [0, arraySize],
+      fcGenRandomIntegerInRange(fcGen),
+    );
   },
 );
 
-export const fcGenRandomItemFromArrayWithIndex = curry(
-  <T>(fcGen: fc.GeneratorValue, testArray: Array<T>): [T, number] => {
-    return pipe([
+export const fcGenRandomItemFromArrayWithIndex = <T>(
+  fcGen: fc.GeneratorValue,
+  testArray: ReadonlyNonEmptyArray<T>,
+): [T, number] => {
+  return pipe(
+    testArray,
+    fcOneRandomArrayIndexAsInteger(fcGen),
+    over([partialRight(property, [testArray]), identity]),
+  );
+};
+
+export const curriedFCGenRandomItemFromArrayWithIndex =
+  <T>(fcGen: fc.GeneratorValue) =>
+  (testArray: ReadonlyNonEmptyArray<T>): [T, number] => {
+    return pipe(
+      testArray,
       fcOneRandomArrayIndexAsInteger(fcGen),
       over([partialRight(property, [testArray]), identity]),
-    ])(testArray);
-  },
-);
+    );
+  };
 
-export const fcCallRandomFCGen = curry(
-  <T>(
-    arrayOfFCGens: Array<(fcGen: fc.GeneratorValue) => T>,
-    fcGen: fc.GeneratorValue,
-  ): T => {
+export const fcCallRandomFCGen = <T>(
+  arrayOfFCGens: ReadonlyNonEmptyArray<(fcGen: fc.GeneratorValue) => T>,
+  fcGen: fc.GeneratorValue,
+): T => {
+  // shuffledSubarray causes issues when given arrays of functions
+  const index: number = fcOneRandomArrayIndexAsInteger(fcGen, arrayOfFCGens);
+  return arrayOfFCGens[index](fcGen);
+};
+
+export const curriedFCCallRandomFCGen =
+  <T>(arrayOfFCGens: ReadonlyNonEmptyArray<(fcGen: fc.GeneratorValue) => T>) =>
+  (fcGen: fc.GeneratorValue): T => {
     // shuffledSubarray causes issues when given arrays of functions
     const index: number = fcOneRandomArrayIndexAsInteger(fcGen, arrayOfFCGens);
     return arrayOfFCGens[index](fcGen);
-  },
-);
+  };
 
-export const fcCallRandomFCGenWithArg = curry(
-  <A, B>(
-    arrayOfFCGens: Array<(arg: B, fcGen: fc.GeneratorValue) => A>,
-    arg: B,
-    fcGen: fc.GeneratorValue,
-  ): A => {
-    // shuffledSubarray causes issues when given arrays of functions
-    const index: number = fcOneRandomArrayIndexAsInteger(fcGen, arrayOfFCGens);
-    return arrayOfFCGens[index](arg, fcGen);
-  },
-);
+export const fcCallRandomFCGenWithArg = <A, B>(
+  arrayOfFCGens: ReadonlyNonEmptyArray<(arg: A, fcGen: fc.GeneratorValue) => B>,
+  arg: A,
+  fcGen: fc.GeneratorValue,
+): B => {
+  // shuffledSubarray causes issues when given arrays of functions
+  const index: number = fcOneRandomArrayIndexAsInteger(fcGen, arrayOfFCGens);
+  return arrayOfFCGens[index](arg, fcGen);
+};
+
+export const fcCallRandomFCGenWithTwoArgs = <A, B, C>(
+  arrayOfFCGens: ReadonlyNonEmptyArray<
+    (argOne: A, argTwo: B, fcGen: fc.GeneratorValue) => C
+  >,
+  argOne: A,
+  argTwo: B,
+  fcGen: fc.GeneratorValue,
+): C => {
+  // shuffledSubarray causes issues when given arrays of functions
+  const index: number = fcOneRandomArrayIndexAsInteger(fcGen, arrayOfFCGens);
+  return arrayOfFCGens[index](argOne, argTwo, fcGen);
+};
 
 export const fcGenRandomArrayChunkSize = curry(
-  <T>(fcGen: fc.GeneratorValue, array: Array<T>): number => {
+  <T>(fcGen: fc.GeneratorValue, array: ReadonlyNonEmptyArray<T>): number => {
     return fcGenRandomIntegerInRange(fcGen, [1, size(array)]);
   },
 );
 
 export const fcGenRandomArrayChunkOfRandomSize = curry(
-  <T>(fcGen: fc.GeneratorValue, array: Array<T>): number => {
+  <T>(fcGen: fc.GeneratorValue, array: ReadonlyNonEmptyArray<T>): number => {
     const chunkSize = fcGenRandomArrayChunkSize(fcGen, array);
     return fcGetRandomArrayChunk(fcGen, [array, chunkSize]);
   },
@@ -361,12 +486,13 @@ export const fcUnfoldRandomRangeChunk = curry(
     chunkSize: number,
     unfolder: <T>(index: number) => T,
     fcGen: fc.GeneratorValue,
-  ): [Array<T>, number] => {
-    const chunkNumber = pipe([
+  ): [ReadonlyNonEmptyArray<T>, number] => {
+    const chunkNumber = pipe(
+      rangeStart,
       subtract(rangeEnd),
       floorDivision(chunkSize),
       fcGenRandomIntegerBetweenZeroAnd(fcGen),
-    ])(rangeStart);
+    );
 
     return over([
       unfoldAndTransformRangeChunkN(chunkSize, unfolder, [
@@ -374,7 +500,7 @@ export const fcUnfoldRandomRangeChunk = curry(
         rangeEnd,
       ]),
       identity,
-    ])(chunkNumber) as [Array<T>, number];
+    ])(chunkNumber) as [ReadonlyNonEmptyArray<T>, number];
   },
 );
 
@@ -384,7 +510,7 @@ export const fcUnfoldRandomNaturalNumberRangeChunk = curry(
     chunkSize: number,
     unfolder: <T>(index: number) => T,
     fcGen: fc.GeneratorValue,
-  ): [Array<T>, number] => {
+  ): [ReadonlyNonEmptyArray<T>, number] => {
     return fcUnfoldRandomRangeChunk([0, rangeMax], chunkSize, unfolder, fcGen);
   },
 );
@@ -393,7 +519,7 @@ export const fcNRandomArrayIndicesAsStrings = curry(
   <T>(
     fcGen: fc.GeneratorValue,
     count: number,
-    array: Array<T>,
+    array: ReadonlyNonEmptyArray<T>,
   ): Array<string> => {
     return fcGen(fc.shuffledSubarray, Object.keys(array), {
       minLength: count,
@@ -437,10 +563,11 @@ export const fcGenRandomFloatBetweenZeroAndOneExclusive = (
 export const fcArrayOfNFloatsBetweenZeroAndOne = (
   fcGen: fc.GeneratorValue,
   floatCount: number,
-): Array<number> => {
-  return unfold((_: number) =>
-    fcGenRandomFloatBetweenZeroAndOneExclusive(fcGen),
-  )(floatCount);
+): ReadonlyNonEmptyArray<number> => {
+  return unfold(
+    (_: number) => fcGenRandomFloatBetweenZeroAndOneExclusive(fcGen),
+    floatCount,
+  );
 };
 
 export const fcGenRandomDoubleInRange = curry(
@@ -459,14 +586,37 @@ export const fcGenRandomDoubleBetweenZeroAndOne = fcGenRandomDoubleInRange(
   DOUBLEBETWEENZEROAND1RANGE,
 );
 
-export const fcNLengthArrayOfDoublesInRange = curry(
+export const fcNLengthArrayOfDoublesInRange = curry<
+  [number, number],
+  number,
+  fc.GeneratorValue,
+  ReadonlyNonEmptyArray<number>
+>(
   (
     range: [number, number],
     arrayLength: number,
     fcGen: fc.GeneratorValue,
-  ): Array<number> => {
+  ): ReadonlyNonEmptyArray<number> => {
     return unfold(
       (_: number) => fcGenRandomDoubleInRange(range, fcGen),
+      arrayLength,
+    );
+  },
+);
+
+export const fcArrayOfNIntegersInRange = curry<
+  [number, number],
+  number,
+  fc.GeneratorValue,
+  ReadonlyNonEmptyArray<number>
+>(
+  (
+    range: [number, number],
+    arrayLength: number,
+    fcGen: fc.GeneratorValue,
+  ): ReadonlyNonEmptyArray<number> => {
+    return unfold(
+      (_: number) => fcGenRandomIntegerInRange(fcGen, range),
       arrayLength,
     );
   },
@@ -490,10 +640,11 @@ export const fcGenRandomEvenIntegerInRange = curry(
 
 export const fcGenRandomCharacterGenerator = curry(
   (range: [number, number], fcGen: fc.GeneratorValue): string => {
-    return pipe([
+    return pipe(
+      range,
       fcGenRandomIntegerInRange(fcGen),
       convertCharacterCodeIntoCharacter,
-    ])(range);
+    );
   },
 );
 
@@ -509,12 +660,13 @@ export const fcGenRandomLowerAlphaChar = fcGenRandomCharacterGenerator(
   TESTLOWERALPHACHARACTERRANGE,
 );
 
-export const fcTestLinearRangeGenerator = curry(
+export const fcLinearRangeGenerator = curry(
   (fcGen: fc.GeneratorValue, rangeSize: number): [number, number] => {
-    return pipe([
+    return pipe(
+      fcGen,
       fcGenRandomInteger,
       convertRangeSizeAndMinIntoRange(rangeSize),
-    ])(fcGen);
+    );
   },
 );
 
@@ -523,26 +675,28 @@ export const fcTestLinearRangeWithMinimumGenerator = curry(
     fcGen: fc.GeneratorValue,
     [rangeMin, rangeSize]: [number, number],
   ): [number, number] => {
-    return pipe([
-      convertRangeSizeAndMinIntoRange,
+    return pipe(
+      convertRangeSizeAndMinIntoRange(rangeSize, rangeMin),
       fcGenRandomIntegerInRange(fcGen),
       convertRangeSizeAndMinIntoRange(rangeSize),
-    ])(rangeSize, rangeMin);
+    );
   },
 );
 
+// can't curry this
 export const fcNLengthUniqueXArrayGenerator = curry(
-  <A extends T, T extends <T>(x: number) => T>(
-    valueTransformer: A,
+  <T>(
+    valueTransformer: <T>(x: number) => T,
     fcGen: fc.GeneratorValue,
     arraySize: number,
-  ): Array<number> => {
-    return pipe([
+  ): ReadonlyNonEmptyArray<T> => {
+    return pipe(
+      fcGen,
       fcGenRandomInteger,
-      add,
-      unfoldAndShuffleArray(arraySize),
-      map(valueTransformer),
-    ])(fcGen);
+      (a: number) => (b: number) => a + b,
+      curriedUnfoldAndShuffleArray<number>(arraySize),
+      map<number, T>(valueTransformer),
+    );
   },
 );
 
@@ -553,47 +707,42 @@ export const fcNLengthUniqueStringIntegerArrayGenerator =
   fcNLengthUniqueXArrayGenerator(toString);
 
 export const fcNLengthUniqueStringNatNumberArrayGenerator =
-  fcNLengthUniqueXArrayGenerator(pipe([Math.abs, toString]));
+  fcNLengthUniqueXArrayGenerator(flow([Math.abs, toString]));
 
-export const fcListOfXNatNumbersWithMaxGenerator = curry(
+export const fcArrayOfXNatNumbersWithMaxGenerator = curry(
   (
     fcGen: fc.GeneratorValue,
     maxValue: number,
     arraySize: number,
-  ): Array<number> => {
+  ): ReadonlyNonEmptyArray<number> => {
     const randomNat: number = fcGenRandomNaturalNumberWithMax(maxValue, fcGen);
     return unfoldAndShuffleArray(arraySize)(
-      pipe([add(randomNat), simpleModularArithmetic(addOne, maxValue)]),
+      flow([add(randomNat), simpleModularArithmetic(addOne, maxValue)]),
     );
   },
 );
 
-export const fcNLengthArrayOfXGenerator = curry(
-  <T>(
-    unfolder: (index: number) => T,
-    range: [number, number],
-    fcGen: fc.GeneratorValue,
-    arraySize: number,
-  ): Array<T> => {
-    return pipe([
-      fcGenRandomIntegerInRange(fcGen),
-      unfolder,
-      unfoldAndShuffleArray(arraySize),
-    ])(range);
-  },
-);
+export const fcNLengthArrayOfXGenerator =
+  <T>(unfolder: (index: number) => T, range: [number, number]) =>
+  (fcGen: fc.GeneratorValue, arraySize: number): ReadonlyNonEmptyArray<T> => {
+    const randomStart = fcGenRandomIntegerInRange(fcGen, range);
+    const values = unfold(
+      (index: number): T => unfolder(index + randomStart),
+      arraySize,
+    );
+    return fcShuffledArray(fcGen, values);
+  };
 
-export const nonZeroBoundedModularAdditionForCharacters = (
-  range: [number, number],
-) =>
-  curry((standardIncrease: number, currentNumber: number) =>
-    pipe([
-      curry((startingIndex: number, currentNumber: number): number =>
-        nonZeroBoundedModularAddition(range, 1, startingIndex + currentNumber),
-      ),
-      convertCharacterCodeIntoCharacter,
-    ])(standardIncrease, currentNumber),
-  );
+export const nonZeroBoundedModularAdditionForCharacters =
+  (range: [number, number]) =>
+  (standardIncrease: number, currentNumber: number) => {
+    const nextChar = nonZeroBoundedModularAddition(
+      range,
+      1,
+      standardIncrease + currentNumber,
+    );
+    return convertCharacterCodeIntoCharacter(nextChar);
+  };
 
 export const nonZeroBoundedModularAdditionForTESTNONSPACESCHARACTERRANGE =
   nonZeroBoundedModularAdditionForCharacters(TESTNONSPACESCHARACTERRANGE);
@@ -602,84 +751,98 @@ export const nonZeroBoundedModularAdditionForLOWERALPHACHARACTERRANGE =
 export const nonZeroBoundedModularAdditionForUPPERALPHACHARACTERRANGE =
   nonZeroBoundedModularAdditionForCharacters(TESTUPPERALPHACHARACTERRANGE);
 
-export const fcNLengthUniqueStringArrayGenerator = fcNLengthArrayOfXGenerator(
-  nonZeroBoundedModularAdditionForTESTNONSPACESCHARACTERRANGE,
-  TESTNONSPACESCHARACTERRANGE,
-);
+export const fcNLengthNonSpaceCharactersArrayGenerator = (
+  fcGen: fc.GeneratorValue,
+  count: number,
+): ReadonlyNonEmptyArray<string> => {
+  return fcNLengthArrayOfXGenerator(
+    (index: number): string =>
+      nonZeroBoundedModularAdditionForTESTNONSPACESCHARACTERRANGE(1, index),
+    TESTNONSPACESCHARACTERRANGE,
+  )(fcGen, count);
+};
+
+export const fcNLengthLowerAlphaStringArrayGenerator = (
+  fcGen: fc.GeneratorValue,
+  count: number,
+): ReadonlyNonEmptyArray<string> => {
+  return fcNLengthArrayOfXGenerator(
+    (index: number): string =>
+      nonZeroBoundedModularAdditionForLOWERALPHACHARACTERRANGE(1, index),
+    TESTLOWERALPHACHARACTERRANGE,
+  )(fcGen, count);
+};
+
+export const fcNLengthUpperAlphaStringArrayGenerator = (
+  fcGen: fc.GeneratorValue,
+  count: number,
+): ReadonlyNonEmptyArray<string> => {
+  return fcNLengthArrayOfXGenerator(
+    (index: number): string =>
+      nonZeroBoundedModularAdditionForUPPERALPHACHARACTERRANGE(1, index),
+    TESTUPPERALPHACHARACTERRANGE,
+  )(fcGen, count);
+};
+
+export const fcNLengthStringGeneratorMV = (
+  stringLength: number,
+  fcGen: fc.GeneratorValue,
+): [string, ReadonlyNonEmptyArray<string>] => {
+  const strings = fcNLengthNonSpaceCharactersArrayGenerator(
+    fcGen,
+    stringLength,
+  );
+  return [join("", strings), strings];
+};
 
 export const fcNLengthStringGenerator = (
-  fcGen: fc.GeneratorValue,
   stringLength: number,
-): [string, Array<string>] => {
-  return pipe([
-    fcNLengthUniqueStringArrayGenerator,
-    over([join(""), identity]),
-  ])(fcGen, stringLength);
-};
-
-export const fcGenRandomStringGenerator = (
   fcGen: fc.GeneratorValue,
 ): string => {
-  return pipe([
-    fcGenRandomIntegerBetweenTwoAnd(fcGen),
-    fcNLengthUniqueStringArrayGenerator(fcGen),
-    join(""),
-  ])(8);
+  return pipe(fcNLengthStringGeneratorMV(stringLength, fcGen), fst);
 };
 
-export const fcNLengthUniqueLowerAlphaStringArrayGenerator =
-  fcNLengthArrayOfXGenerator(
-    nonZeroBoundedModularAdditionForLOWERALPHACHARACTERRANGE,
-    TESTLOWERALPHACHARACTERRANGE,
-  );
+export const fcGenRandomStringGenerator = defaultConvertFCGenIntoRandomGen(
+  fcNLengthStringGenerator,
+);
 
 export const fcGenRandomArrayOfLowerAlphaStringsGenerator =
-  flippedConvertFCGenIntoRandomGen(
-    fcNLengthUniqueLowerAlphaStringArrayGenerator,
-  );
+  flippedConvertFCGenIntoRandomGen(fcNLengthLowerAlphaStringArrayGenerator);
 
-export const fcGenRandomLengthLowerAlphaStringGenerator = pipe([
+export const fcGenRandomLengthLowerAlphaStringGenerator = flow([
   fcGenRandomArrayOfLowerAlphaStringsGenerator,
   join(""),
 ]);
 
-export const fcNLengthUniqueUpperAlphaStringArrayGenerator =
-  fcNLengthArrayOfXGenerator(
-    nonZeroBoundedModularAdditionForUPPERALPHACHARACTERRANGE,
-    TESTUPPERALPHACHARACTERRANGE,
-  );
-
 export const fcGenRandomArrayOfUpperAlphaStringsGenerator =
-  flippedConvertFCGenIntoRandomGen(
-    fcNLengthUniqueUpperAlphaStringArrayGenerator,
-  );
+  flippedConvertFCGenIntoRandomGen(fcNLengthUpperAlphaStringArrayGenerator);
 
-export const fcGenRandomLengthUpperAlphaStringGenerator = pipe([
+export const fcGenRandomLengthUpperAlphaStringGenerator = flow([
   fcGenRandomArrayOfUpperAlphaStringsGenerator,
   join(""),
 ]);
 
-export const fcGenRandomAlphaString = fcCallRandomFCGen([
+export const fcGenRandomAlphaString = curriedFCCallRandomFCGen([
   fcGenRandomLengthUpperAlphaStringGenerator,
   fcGenRandomLengthLowerAlphaStringGenerator,
 ]);
 
 // Objects
 export const fcGenRandomObjectKey = curry(
-  (fcGen: fc.GeneratorValue, object: Record<string, any>): string => {
-    return pipe([Object.keys, fcGenRandomItemFromArray(fcGen)])(object);
+  <T>(fcGen: fc.GeneratorValue, object: Record<string, T>): string => {
+    return pipe(object, Object.keys, flippedFCRandomItemFromArray(fcGen));
   },
 );
 
 export const fcGenRandomObjectValue = curry(
   <T>(fcGen: fc.GeneratorValue, object: Record<string, T>): T => {
-    return fpipe(Object.values(object), fcGenRandomItemFromArray(fcGen));
+    return pipe(object, Object.values, flippedFCRandomItemFromArray(fcGen));
   },
 );
 
 export const fcGenRandomObjectKeyValuePair = curry(
   <T>(fcGen: fc.GeneratorValue, object: Record<string, T>): [string, T] => {
-    return fpipe(Object.entries(object), fcGenRandomItemFromArray(fcGen));
+    return pipe(object, Object.entries, flippedFCRandomItemFromArray(fcGen));
   },
 );
 
@@ -688,8 +851,8 @@ export const fcGenListOfNObjectKeys = curry(
     pairs: number,
     fcGen: fc.GeneratorValue,
     object: Record<string, T>,
-  ): Array<[string, T]> => {
-    return fpipe(Object.keys(object), fcShuffledSubarray(pairs, fcGen));
+  ): Array<string> => {
+    return pipe(Object.keys(object), curriedFCShuffledSubarray(pairs)(fcGen));
   },
 );
 
@@ -702,7 +865,10 @@ export const fcGenListOfNObjectKeyValuePairs = curry(
     fcGen: fc.GeneratorValue,
     object: Record<string, T>,
   ): Array<[string, T]> => {
-    return fpipe(Object.entries(object), fcShuffledSubarray(pairs, fcGen));
+    return pipe(
+      Object.entries(object),
+      curriedFCShuffledSubarray(pairs)(fcGen),
+    );
   },
 );
 
@@ -715,7 +881,7 @@ export const fcGenObject = (
   keysCount: number,
   fcGen: fc.GeneratorValue,
 ): Record<string, any> => {
-  const keys = fcNLengthUniqueStringArrayGenerator(fcGen, keysCount);
+  const keys = fcNLengthNonSpaceCharactersArrayGenerator(fcGen, keysCount);
   const values = fcGen(fc.array, fc.anything(), {
     minLength: keysCount,
     maxLength: keysCount,
@@ -727,7 +893,7 @@ export const fcGenRandomObject = defaultConvertFCGenIntoRandomGen(fcGenObject);
 export const fcGenRandomImmutableMap = (
   fcGen: fc.GeneratorValue,
 ): [MapOf<Record<string, any>>, Record<string, any>] => {
-  return fpipe(
+  return pipe(
     fcGenRandomObject(fcGen),
     (x: Record<string, any>): [Record<string, any>, Record<string, any>] => [
       identity(x),
@@ -747,7 +913,7 @@ export const fcGenRandomImmutableRecord = (
     const defaultMaker = ImmutableRecord(object);
     return defaultMaker(object);
   };
-  return fpipe(
+  return pipe(
     fcGenRandomObject(fcGen),
     (x: Record<string, any>): [Record<string, any>, Record<string, any>] => [
       identity(x),
@@ -757,45 +923,14 @@ export const fcGenRandomImmutableRecord = (
   );
 };
 
-export const fcShuffledSubArrayOfTemplateVariables = fcShuffledSubarray(
-  TESTORGCAPTURETEMPLATES,
-);
-export const fcGenCaptureTemplateString = (
-  fcGen: fc.GeneratorValue,
-): string => {
-  const templates: Array<string> = fcShuffledSubArrayOfTemplateVariables(fcGen);
-  return join(" ", templates);
-};
-
-export const fcGenCaptureTemplateStringWithCursor = pipe([
-  fcGenCaptureTemplateString,
-  (template: string) => `${template} %?`,
-]);
-
-export const fcGenOrgHeadingAsString = curry(
-  (headingLevel: number, fcGen: fc.GeneratorValue): [string, string] => {
-    const headingStars: string = createHeadingStars(headingLevel);
-    const headingValue: string = fcGenRandomStringGenerator(fcGen);
-    const heading: string = `${headingStars} ${headingValue}`;
-    return [heading, headingValue];
-  },
-);
-
-export const fcGenRandomOrgHeadingAsString = defaultConvertFCGenIntoRandomGen(
-  fcGenOrgHeadingAsString,
-);
-
-export const fcGenRandomInBufferSetting = partialRight(fcShuffledSubarray, [
-  TESTINBUFFERSETTINGS,
-]);
-
 export const fcGenRandomColorObjectArray = (
   fcGen: fc.GeneratorValue,
 ): [number, number, number] => {
-  return unfold(
-    (_: number): number => fcGenRandomIntegerInRange(fcGen, [0, 255]),
-    3,
-  );
+  return [
+    fcGenRandomIntegerInRange(fcGen, [0, 255]),
+    fcGenRandomIntegerInRange(fcGen, [0, 255]),
+    fcGenRandomIntegerInRange(fcGen, [0, 255]),
+  ];
 };
 
 export const fcGenRandomColorObject = (
@@ -812,7 +947,10 @@ export const fcGenRandomColorObject = (
 };
 
 export const fcNLengthArrayOfRandomColorObjects = curry(
-  (count: number, fcGen: fc.GeneratorValue): Array<ColorObject> => {
+  (
+    count: number,
+    fcGen: fc.GeneratorValue,
+  ): ReadonlyNonEmptyArray<ColorObject> => {
     return unfold(
       (_: number): ColorObject => fcGenRandomColorObject(fcGen),
       count,
@@ -823,25 +961,33 @@ export const fcNLengthArrayOfRandomColorObjects = curry(
 export const fcTwoRandomColorObjects = fcNLengthArrayOfRandomColorObjects(2);
 
 // Dates
-const cleanTestDate = curry((withStartTime: boolean, testDate: Date): Date => {
-  if (withStartTime) {
-    // no seconds or milliseconds
+
+export const fcRandomYear = partialRight(fcGenRandomIntegerInRange, [YEARS]);
+export const fcRandomMonthIndex = partialRight(fcGenRandomIntegerInRange, [
+  TESTRANDOMMONTHSRANGE,
+]);
+
+const cleanTestDate = curry<boolean, Date, Date>(
+  (withStartTime: boolean, testDate: Date): Date => {
+    if (withStartTime) {
+      // no seconds or milliseconds
+      return new Date(
+        testDate.getFullYear(),
+        testDate.getMonth(),
+        testDate.getDate(),
+        testDate.getHours(),
+        testDate.getMinutes(),
+      );
+    }
+
+    // no hours, minutes, seconds or milliseconds
     return new Date(
       testDate.getFullYear(),
       testDate.getMonth(),
       testDate.getDate(),
-      testDate.getHours(),
-      testDate.getMinutes(),
     );
-  }
-
-  // no hours, minutes, seconds or milliseconds
-  return new Date(
-    testDate.getFullYear(),
-    testDate.getMonth(),
-    testDate.getDate(),
-  );
-});
+  },
+);
 
 export const fcGenValidJSDateObject = (
   fcGen: fc.GeneratorValue,
@@ -856,7 +1002,7 @@ export const fcGenValidJSDateObject = (
   return cleanTestDate(withStartTime, testDate);
 };
 
-export const fcGenValidJSDateObjectString = pipe([
+export const fcGenValidJSDateObjectString = flow([
   fcGenValidJSDateObject,
   (x: Date): string => x.toDateString(),
 ]);
@@ -883,7 +1029,7 @@ const fcGenDuration = (
 export const fcGenValidJSDateObjectRange = (
   withStartTime: boolean,
   fcGen: fc.GeneratorValue,
-): Array<Date> => {
+): ReadonlyNonEmptyArray<Date> => {
   const startDate: Date = fcGenValidJSDateObject(fcGen, withStartTime);
   const durationToAdd = fcGenDuration(withStartTime, fcGen);
   const endDate: Date = addDateUnits(durationToAdd, startDate);
@@ -904,6 +1050,8 @@ export const fcGenValidJSDateObjectInRange = (
   const testDate = addFunc(unitsToAdd, start);
   return cleanTestDate(withStartTime, testDate);
 };
+
+// OrgElements
 
 // Time
 const fcGenRandomMinutes = curriedFCRandomIntegerBetweenOneAnd(60);
@@ -951,7 +1099,7 @@ export const fcGenRandomRepeaterValue = (
   withStartTime: boolean,
   fcGen: fc.GeneratorValue,
 ): number => {
-  return pipe([
+  return flow([
     fcGenRandomRepeaterUnit,
     (unit: string): number => fcGenRepeaterValue(unit, fcGen),
   ])(withStartTime, fcGen);
@@ -971,25 +1119,26 @@ export const fcGenRandomDelayType =
 export const fcGenRandomDelayUnit = fcGenRandomRepeaterUnit;
 export const fcGenDelayValue = fcGenRepeaterValue;
 
-export const fcGenRandomTimeString = pipe([
+export const fcGenRandomTimeString = flow([
   over([fcGenRandomHours, fcGenRandomMinutes]),
   map(padTimePart),
   join(":"),
 ]);
 
-export const fcGenRandomTimeStringMV = pipe([
+export const fcGenRandomTimeStringMV = flow([
   over([fcGenRandomHours, fcGenRandomMinutes]),
   map(padTimePart),
   over([join(":"), identity]),
 ]);
 
 export const fcGenTimeRangeParts = (
-  [startHour, startMinute]: Array<string>,
+  [startHour, startMinute]: ReadonlyNonEmptyArray<string>,
   fcGen: fc.GeneratorValue,
-): Array<string> => {
-  const [startHourAsNumber, startMinuteAsNumber]: Array<number> = map(parseInt)(
-    [startHour, startMinute],
-  );
+): ReadonlyNonEmptyArray<string> => {
+  const [
+    startHourAsNumber,
+    startMinuteAsNumber,
+  ]: ReadonlyNonEmptyArray<number> = map(parseInt)([startHour, startMinute]);
   const endHourAsNumber: number = fcGenRandomIntegerInRange(fcGen, [
     startHourAsNumber,
     24,
@@ -1006,7 +1155,7 @@ export const fcGenTimeRangeParts = (
   })();
 
   const [endHour, endMinute] = map((timePart: number): string =>
-    fpipe(timePart, toString, padTimePart),
+    pipe(timePart, toString, padTimePart),
   )([endHourAsNumber, endMinuteAsNumber]);
 
   return [startHour, startMinute, endHour, endMinute];
@@ -1029,7 +1178,7 @@ export const fcGenOrgTimestampPartObject = (
 
   const [startHour, startMinute, endHour, endMinute]:
     | [string, string, undefined, undefined]
-    | Array<string> = withEndTime
+    | ReadonlyNonEmptyArray<string> = withEndTime
     ? fcGenTimeRangeParts(startTimeParts, fcGen)
     : [startTimeParts[0], startTimeParts[1], undefined, undefined];
 
@@ -1366,7 +1515,7 @@ export const fcGenRandomOrgTimestampPartRecordWithRepeater = (
     (_: number): boolean => fcGenRandomBoolean(fcGen),
     2,
   );
-  const REPEATERFUNCS: Array<
+  const REPEATERFUNCS: ReadonlyNonEmptyArray<
     (
       {
         withStartTime,
@@ -1386,3 +1535,318 @@ export const fcGenRandomOrgTimestampPartRecordWithRepeater = (
     fcGen,
   );
 };
+
+export const fcShuffledSubArrayOfTemplateVariables =
+  curriedFCGenRandomShuffledSubarray(TESTORGCAPTURETEMPLATES);
+
+export const fcGenCaptureTemplateString = (
+  fcGen: fc.GeneratorValue,
+): string => {
+  return pipe(fcGen, fcShuffledSubArrayOfTemplateVariables, join(" "));
+};
+
+export const fcGenCaptureTemplateStringWithCursor = flow([
+  fcGenCaptureTemplateString,
+  (template: string) => `${template} %?`,
+]);
+
+export const fcGenOrgHeadingAsString = curry(
+  (headingLevel: number, fcGen: fc.GeneratorValue): [string, string] => {
+    const headingStars: string = createHeadingStars(headingLevel);
+    const [headingValue] = fcGenRandomStringGenerator(fcGen);
+    const heading: string = `${headingStars} ${headingValue}`;
+    return [heading, headingValue];
+  },
+);
+
+export const fcGenRandomOrgHeadingAsString = defaultConvertFCGenIntoRandomGen(
+  fcGenOrgHeadingAsString,
+);
+
+export const fcGenRandomInBufferSetting = partialRight(fcShuffledSubarray, [
+  TESTINBUFFERSETTINGS,
+]);
+
+type CellValueCreator = (
+  cellIndex: number,
+  fcGen: fc.GeneratorValue,
+) => [OrgTableCellValue, string];
+
+type TableGenerator = (
+  cellValueCreator: CellValueCreator,
+  rowColumnCounts: [number, number],
+  fcGen: fc.GeneratorValue,
+) => [
+  string,
+  OrgTableRecord,
+  ReadonlyNonEmptyArray<ReadonlyNonEmptyArray<[OrgTableCellValue, string]>>,
+];
+
+export const createTestOrgTableCellRecord = ([value, rawContents]: [
+  OrgTableCellValue,
+  string,
+]): OrgTableCellRecord => {
+  const cellObject: OrgTableCell = {
+    id: testIDCreator(),
+    type: "table-cell",
+    contents: List([value]),
+    rawContents,
+  };
+
+  return makeOrgTableCellRecord(cellObject);
+};
+
+export const createTestOrgTableRowRecord = (
+  contents: ReadonlyNonEmptyArray<OrgTableCellRecord> | "hline",
+): OrgTableRowRecord => {
+  const rowObject: OrgTableRow = {
+    id: testIDCreator(),
+    type: "table-row",
+    contents: isArray(contents) ? List([...contents]) : "hline",
+  };
+
+  return makeOrgTableRowRecord(rowObject);
+};
+
+export const createTestOrgTableRecord = (
+  rows: ReadonlyNonEmptyArray<OrgTableRowRecord>,
+  rawContents: string,
+): OrgTableRecord => {
+  const tableObject: OrgTable = {
+    id: testIDCreator(),
+    type: "table",
+    contents: List(rows),
+    rawContents,
+    columnProperties: List(),
+  };
+
+  return makeOrgTableRecord(tableObject);
+};
+
+export const convertCellValuesToRows = (
+  columnCount: number,
+  cellValues: ReadonlyNonEmptyArray<[OrgTableCellValue, string]>,
+): ReadonlyNonEmptyArray<OrgTableRowRecord> => {
+  return pipe(
+    cellValues,
+    map(createTestOrgTableCellRecord),
+    chunksOf(columnCount),
+    map(createTestOrgTableRowRecord),
+  );
+};
+
+export const getColumnWidthsForTestTable = (
+  values: ReadonlyNonEmptyArray<
+    ReadonlyNonEmptyArray<[OrgTableCellValue, string]>
+  >,
+): ReadonlyNonEmptyArray<number> => {
+  const [columnCount, rowCount]: ReadonlyNonEmptyArray<number> = flap(values)([
+    (x) => pipe(x, head, size),
+    size,
+  ]);
+
+  return unfold((columnIndex: number): number => {
+    const cellValueSizes = unfold((rowIndex: number): number => {
+      return values[rowIndex][columnIndex][1].length;
+    }, rowCount);
+    return Math.max(...cellValueSizes) + 2;
+  }, columnCount);
+};
+
+export const createTestOrgTableRowString =
+  (columnWidths: ReadonlyNonEmptyArray<number>) =>
+  (row: ReadonlyNonEmptyArray<[OrgTableCellValue, string]>): string => {
+    return pipe(
+      row,
+      mapWithIndex(
+        (index: number, [, cellValue]: [OrgTableCellValue, string]): string => {
+          // center align ony
+          const spacesCnt: number =
+            (columnWidths[index] - cellValue.length) / 2;
+          return pipe(
+            spacesCnt,
+            curriedUnfold((_: number): string => " "),
+            join(""),
+            (spaces: string): string => `${spaces}${cellValue}${spaces}`,
+          );
+        },
+      ),
+      join("|"),
+      (value: string): string => `|${value}|`,
+    );
+  };
+
+export const createTestOrgTableRowStrings = curry(
+  (
+    values: ReadonlyNonEmptyArray<
+      ReadonlyNonEmptyArray<[OrgTableCellValue, string]>
+    >,
+    columnWidths: ReadonlyNonEmptyArray<number>,
+  ): ReadonlyNonEmptyArray<string> => {
+    return map(createTestOrgTableRowString(columnWidths))(values);
+  },
+);
+
+export const createTestOrgTableHlineString = (
+  columnWidths: ReadonlyNonEmptyArray<number>,
+): string => {
+  return pipe(
+    columnWidths,
+    map((columnWidth: number): string => {
+      return pipe(
+        columnWidth,
+        curriedUnfold((_: number): string => "-"),
+        join(""),
+      );
+    }),
+    join("+"),
+    (x: string): string => `|${x}|`,
+  );
+};
+
+export const createTestOrgTableStringWithoutHlines = (
+  values: ReadonlyNonEmptyArray<
+    ReadonlyNonEmptyArray<[OrgTableCellValue, string]>
+  >,
+): string => {
+  return pipe(
+    values,
+    getColumnWidthsForTestTable,
+    createTestOrgTableRowStrings(values),
+    join("\n"),
+  );
+};
+
+export const createTestOrgTableStringWithHlines = (
+  values: ReadonlyNonEmptyArray<
+    ReadonlyNonEmptyArray<[OrgTableCellValue, string]>
+  >,
+): string => {
+  const columnWidths: ReadonlyNonEmptyArray<number> =
+    getColumnWidthsForTestTable(values);
+  const rowStrings: ReadonlyNonEmptyArray<string> =
+    createTestOrgTableRowStrings(values)(columnWidths);
+
+  const hline: string = createTestOrgTableHlineString(columnWidths);
+  return pipe(rowStrings, intersperse(hline), join("\n"));
+};
+
+export const fcGenOrgTableHelper = (
+  cellValueCreator: CellValueCreator,
+  [rows, columns]: [number, number],
+  fcGen: fc.GeneratorValue,
+): [
+  ReadonlyNonEmptyArray<OrgTableRowRecord>,
+  ReadonlyNonEmptyArray<ReadonlyNonEmptyArray<[OrgTableCellValue, string]>>,
+] => {
+  const totalCells = rows * columns;
+  const cellValues = unfold((index: number): [OrgTableCellValue, string] => {
+    return cellValueCreator(index, fcGen);
+  }, totalCells);
+  const tableRows = convertCellValuesToRows(columns, cellValues);
+  return [tableRows, chunksOf(columns)(cellValues)];
+};
+
+export const fcGenOrgTableWithoutHlines = (
+  cellValueCreator: CellValueCreator,
+  rowColumnCountTuple: [number, number],
+  fcGen: fc.GeneratorValue,
+): [
+  string,
+  OrgTableRecord,
+  ReadonlyNonEmptyArray<ReadonlyNonEmptyArray<[OrgTableCellValue, string]>>,
+] => {
+  const [tableRows, tableValues] = fcGenOrgTableHelper(
+    cellValueCreator,
+    rowColumnCountTuple,
+    fcGen,
+  );
+  const table = createTestOrgTableStringWithoutHlines(tableValues);
+  const tableRecord = createTestOrgTableRecord(tableRows, table);
+
+  return [table, tableRecord, tableValues];
+};
+
+export const fcGenOrgTableWithHlines = (
+  cellValueCreator: CellValueCreator,
+  rowColumnCountTuple: [number, number],
+  fcGen: fc.GeneratorValue,
+): [
+  string,
+  OrgTableRecord,
+  ReadonlyNonEmptyArray<ReadonlyNonEmptyArray<[OrgTableCellValue, string]>>,
+] => {
+  const [tableRows, tableValues] = fcGenOrgTableHelper(
+    cellValueCreator,
+    rowColumnCountTuple,
+    fcGen,
+  );
+  const table: string = createTestOrgTableStringWithHlines(tableValues);
+  const tableRecord: OrgTableRecord = pipe(
+    tableRows,
+    intersperseWith(
+      (): OrgTableRowRecord => createTestOrgTableRowRecord("hline"),
+    ),
+    (rows: ReadonlyNonEmptyArray<OrgTableRowRecord>): OrgTableRecord => createTestOrgTableRecord(rows, table),
+  );
+
+  return [table, tableRecord, tableValues];
+};
+
+export const defaultCreateRandomFCGenOrgTableGenerator =
+  (tableGenerator: TableGenerator) =>
+  (
+    fcGen: fc.GeneratorValue,
+  ): [
+    string,
+    OrgTableRecord,
+    ReadonlyNonEmptyArray<ReadonlyNonEmptyArray<[OrgTableCellValue, string]>>,
+    number,
+    number,
+  ] => {
+    const rowColumnCountTuple: [number, number] = [
+      fcGenRandomIntegerBetween2And25(fcGen),
+      fcGenRandomIntegerBetween2And25(fcGen),
+    ];
+
+    const [, columnCount] = rowColumnCountTuple;
+
+    const cellValues = fcNLengthUpperAlphaStringArrayGenerator(
+      fcGen,
+      columnCount,
+    );
+
+    const cellValueCreator = (
+      index: number,
+      _: fc.GeneratorValue,
+    ): [OrgTableCellValue, string] => {
+      return pipe(
+        index,
+        mod(columnCount),
+        (index: number): [OrgTableCellValue, string] => [
+          makeOrgTextRecord({
+	    contents:cellValues[index],
+	    type: "text"
+	  }),
+          cellValues[index],
+        ],
+      );
+    };
+
+    const result: [
+      string,
+      OrgTableRecord,
+      ReadonlyNonEmptyArray<ReadonlyNonEmptyArray<[OrgTableCellValue, string]>>,
+    ] = tableGenerator(cellValueCreator, rowColumnCountTuple, fcGen);
+    return [...result, ...rowColumnCountTuple];
+  };
+
+export const defaultFCGenRandomOrgTableWithoutHlines =
+  defaultCreateRandomFCGenOrgTableGenerator(fcGenOrgTableWithoutHlines);
+
+export const defaultFCGenRandomOrgTableWithHlines =
+  defaultCreateRandomFCGenOrgTableGenerator(fcGenOrgTableWithHlines);
+export const defaultFCGenRandomOrgTable = curriedFCCallRandomFCGen([
+  defaultFCGenRandomOrgTableWithHlines,
+  defaultFCGenRandomOrgTableWithoutHlines,
+]);
