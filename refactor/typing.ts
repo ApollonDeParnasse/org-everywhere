@@ -1,5 +1,5 @@
 import {
-  pipe,
+  flow,
   map,
   reduce,
   cond,
@@ -32,7 +32,7 @@ import {
   uniq,
   isString,
 } from "lodash/fp";
-import { pipe as fpipe } from "fp-ts/function";
+import { pipe } from "fp-ts/function";
 import { match, P } from "ts-pattern";
 import { UnionType } from "typescript";
 import {
@@ -239,7 +239,7 @@ const ISLISTOFHEADERS = [
 ];
 
 const getActionType = (node: Node): string => {
-  return pipe([
+  return flow([
     filter(
       (descendant: PropertyAssignment): boolean =>
         descendant.getName() == "type",
@@ -362,7 +362,7 @@ const tryToConvertStringIntoType = cond([
   [overSome(ISTYPETYPEARGS), capitalize],
   [
     overSome(ISTYPETYPEMAPOFARGS),
-    pipe([capitalize, (x: string) => `MapOf<${x}>`]),
+    flow([capitalize, (x: string) => `MapOf<${x}>`]),
   ],
   [stubTrue, constant(null)],
 ]);
@@ -400,7 +400,7 @@ const convertShorthandPropertyAssignmentIntoType = (
 const convertActionValueIntoWriter = (
   node: ObjectLiteralExpression,
 ): WriterFunction => {
-  const properties: Array<PropertySignatureStructure> = pipe([
+  const properties: Array<PropertySignatureStructure> = flow([
     map((node: Node): PropertySignatureStructure | undefined => {
       if (Node.isPropertyAssignment(node)) {
         return convertPropertyAssignmentIntoType(node);
@@ -450,7 +450,7 @@ const createTypesForActionsInFile = (
   sourceFile: SourceFile,
   typeName: string,
 ): TypeAliasDeclarationStructure => {
-  const typesWriter: WriterFunction = pipe([
+  const typesWriter: WriterFunction = flow([
     collectActions,
     convertActionsIntoUnionType,
   ])(sourceFile);
@@ -588,7 +588,7 @@ const createTypeForValue = (type: Type): string => {
     },
   )(typeNode.getDescendantsOfKind(SyntaxKind.QualifiedName) ?? []);
 
-  const importTypeReplacers: Array<string> = pipe([
+  const importTypeReplacers: Array<string> = flow([
     map((importType: ImportTypeNode): string | undefined => {
       const qualifier = importType.getQualifier()?.getText();
       if (!qualifier) return;
@@ -611,9 +611,9 @@ const createTypeForValue = (type: Type): string => {
 const createObjectBindingPatternType = (
   node: ObjectBindingPattern,
 ): WriterFunction => {
-  const properties: Array<PropertySignatureStructure> = pipe([
+  const properties: Array<PropertySignatureStructure> = flow([
     map((binding: BindingElement): PropertySignatureStructure | undefined => {
-      const name = pipe([split(" "), first, trim])(binding.getText());
+      const name = flow([split(" "), first, trim])(binding.getText());
       const type = getTypeForNode(binding);
       if (!type) return;
       return {
@@ -631,7 +631,7 @@ const createObjectBindingPatternType = (
 };
 
 const createTupleBindingPatternType = (node: ArrayBindingPattern): string => {
-  return pipe([
+  return flow([
     map(getTypeForNode),
     compact,
     join(", "),
@@ -812,14 +812,14 @@ export const isUpperAlphaCharacter = (x: string): boolean => !!x.match(/[A-Z]/);
 const isReduxActionType = overEvery([
   startsWith('"'),
   endsWith('"'),
-  pipe([slice(1, -1), remove(eq("_")), every(isUpperAlphaCharacter)]),
+  flow([slice(1, -1), remove(eq("_")), every(isUpperAlphaCharacter)]),
 ]);
 
 const getReduxReducerTypesFromSwitchCase = (
   sourceFile: SourceFile,
 ): Array<string> => {
   const cases = sourceFile.getDescendantsOfKind(SyntaxKind.CaseClause);
-  return pipe([
+  return flow([
     filter((caseClause: CaseClause) =>
       isReduxActionType(caseClause.getExpression().getText()),
     ),
@@ -898,7 +898,7 @@ const convertActionTypeIntoObj = (
     if (!actionTypeName) return;
     return [actionTypeName, typeNode.getText()];
   };
-  return pipe([map(typeNodeToTuple), compact, Object.fromEntries])(
+  return flow([map(typeNodeToTuple), compact, Object.fromEntries])(
     node.getTypeNodes(),
   );
 };
@@ -919,7 +919,7 @@ const convertReducerCaseClausesIntoObj = (
     if (func.getExpression().getText() == "inFile")
       return func.getArguments()[0].getText();
   };
-  return pipe([
+  return flow([
     filter((caseClause: CaseClause) =>
       isReduxActionType(caseClause.getExpression().getText()),
     ),
@@ -988,7 +988,7 @@ const reducersForOrgFiles = async (): Promise<void> => {
   const sourceFile: SourceFile = project.addSourceFileAtPath(
     "./src/reducers/org.ts",
   );
-  const inFileFunctions: Set<string> = pipe([
+  const inFileFunctions: Set<string> = flow([
     getInFileFunctionNames,
     (x: Array<string>): Set<string> => new Set(x),
   ])();
@@ -1023,7 +1023,7 @@ const shiftPropertiesFromTypeXToTypeY = async (
     "./src/reducers/org.ts",
   );
   const typesFile = project.addSourceFileAtPath("./src/types.ts");
-  const inFileFunctions: Set<string> = pipe([
+  const inFileFunctions: Set<string> = flow([
     getInFileFunctionNames,
     arrayToSet,
   ])();
@@ -1037,7 +1037,7 @@ const shiftPropertiesFromTypeXToTypeY = async (
       variable.getDescendantsOfKind(SyntaxKind.CallExpression),
     );
   };
-  const inFileState: Set<string> = pipe([filterMap, flatten, arrayToSet])(
+  const inFileState: Set<string> = flow([filterMap, flatten, arrayToSet])(
     inFileStateFilter,
     sourceFile.getDescendantsOfKind(SyntaxKind.VariableDeclaration),
   );
@@ -1066,7 +1066,7 @@ const shiftPropertiesFromTypeXToTypeY = async (
     return true;
   }, typeAliasXProps);
 
-  const typeAliasYPropStructNames = pipe([
+  const typeAliasYPropStructNames = flow([
     map((property: PropertySignatureStructure): string => property.name),
     arrayToSet,
   ])(typeAliasYPropStructs);
@@ -1313,7 +1313,7 @@ const addRecordTypeForTypeToFile =
 // const project = new Project({});
 // const sourceFile = project.addSourceFileAtPath("src/types.ts")
 // const typeAliasDecls: Array<TypeAliasDeclaration> = sourceFile.getDescendantsOfKind(SyntaxKind.TypeAliasDeclaration)
-// const x = fpipe(
+// const x = pipe(
 //   typeAliasDecls,
 //   curriedFilterMap((typeAlias: TypeAliasDeclaration): string | undefined => {
 //     const name = typeAlias.getName()
@@ -1355,7 +1355,7 @@ const createRecordTypesForTypesInFile = async (
     }
   })(typesFile.getTypeAliases());
 
-  const validTypeAliasDeclarations: Array<string> = fpipe(
+  const validTypeAliasDeclarations: Array<string> = pipe(
     typesFile.getTypeAliases(),
     curriedFilterMap((alias: TypeAliasDeclaration): string | undefined => {
       return alias.getFirstChildByKind(SyntaxKind.TypeLiteral)
@@ -1386,7 +1386,7 @@ const createRecordTypesForTypesInFile = async (
 //   })(typeLiteral.getProperties())
 // }
 
-// fpipe(
+// pipe(
 //   typesFile.getDescendantsOfKind(SyntaxKind.TypeAliasDeclaration),
 //   flatMap(maybeGetProps),
 //   arrayToSet,
@@ -1414,12 +1414,12 @@ const createRecordTypesForTypesInFile = async (
 //     .run()
 
 const typeNodeIsSubRecordType = (node: TypeNode): boolean => {
-  return fpipe(node, (node: Node) => node.getText(), isSubRecordType);
+  return pipe(node, (node: Node) => node.getText(), isSubRecordType);
 };
 
 const getReplacementForTypeNode = (typeNode: TypeNode): string => {
   if (Node.isUnionTypeNode(typeNode)) {
-    return fpipe(
+    return pipe(
       typeNode.getTypeNodes(),
       map(getReplacementForTypeNode),
       join(" | "),
@@ -1447,7 +1447,7 @@ const getReplacementForTypeNode = (typeNode: TypeNode): string => {
 
   // List<MapOf<Search>>  -> List<SearchRecord>
   if (overSome([eq("Map"), eq("List")])(typeName) && typeArgs.length > 0) {
-    const newTypeArgs: string = fpipe(
+    const newTypeArgs: string = pipe(
       typeArgs,
       map(getReplacementForTypeNode),
       join(", "),

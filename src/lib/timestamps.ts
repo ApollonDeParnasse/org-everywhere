@@ -29,14 +29,14 @@ import {
   map,
   merge,
   reduce,
-  pipe,
   zip,
   split,
   isString,
   constant,
 } from "lodash/fp";
-import { pipe as fpipe } from "fp-ts/function";
+import { pipe } from "fp-ts/function";
 import { flap } from "fp-ts/Array";
+import { type ReadonlyNonEmptyArray } from "fp-ts/ReadonlyNonEmptyArray";
 import {
   curriedSetRecord,
   curriedGetFromRecord,
@@ -86,7 +86,9 @@ export const getHourPartFromDate = (date: Date): string =>
 export const getMinutePartFromDate = (date: Date): string =>
   padTimePart(date.getMinutes().toString());
 
-export const getTimestampPartsFromDate = (date: Date): Array<string> => {
+export const getTimestampPartsFromDate = (
+  date: Date,
+): ReadonlyNonEmptyArray<string> => {
   return flap(date)([
     getYearFromDate,
     getMonthFromDate,
@@ -99,7 +101,7 @@ export const getTimestampPartsFromDate = (date: Date): Array<string> => {
 
 export const getCurrentDate = (): Date => new Date();
 const getXFromCurrentDate = (func: (date: Date) => string) => (): string =>
-  fpipe(getCurrentDate(), func);
+  func(getCurrentDate());
 export const getYearFromCurrentDate = getXFromCurrentDate(getYearFromDate);
 export const getMonthFromCurrentDate = getXFromCurrentDate(getMonthFromDate);
 export const getDayFromCurrentDate = getXFromCurrentDate(getDayFromDate);
@@ -657,7 +659,7 @@ export const getNextRepeatDate = (
       }
 
       const [newHours, newMinutes] = flap(currentDate)([getHours, getMinutes]);
-      return fpipe(newDate, setHours(newHours), setMinutes(newMinutes));
+      return pipe(newDate, setHours(newHours), setMinutes(newMinutes));
     })
     .exhaustive();
 };

@@ -64,12 +64,14 @@ export const assertIntersection = curry(
   },
 );
 
-export const assertIntegerInRangeInclusive = curry(
-  ([min, max]: [number, number], integer: number) => {
-    expect(integer).toBeGreaterThanOrEqual(min);
-    expect(integer).toBeLessThanOrEqual(max);
-  },
-);
+export const assertIntegerInRangeInclusive = curry<
+  [number, number],
+  number,
+  void
+>(([min, max]: [number, number], integer: number): void => {
+  expect(integer).toBeGreaterThanOrEqual(min);
+  expect(integer).toBeLessThanOrEqual(max);
+});
 
 export const convertArraysToSetsAndAssertIsSubset = pipe([
   convertArrayOfArraysToArrayOfSets,
@@ -128,22 +130,30 @@ export const assertArrayOfIntegersInRangeInclusive = curry(
   },
 );
 
-export const assertIntegerInRangeExclusive = curry(
-  ([min, max]: [number, number], integer: number) => {
+export const assertIntegerInRangeExclusive = (
+  [min, max]: [number, number],
+  integer: number,
+): void => {
+  expect(integer).toBeGreaterThanOrEqual(min);
+  expect(integer).toBeLessThan(max);
+};
+
+export const curriedAssertIntegerInRangeExclusive =
+  ([min, max]: [number, number]) =>
+  (integer: number): void => {
     expect(integer).toBeGreaterThanOrEqual(min);
     expect(integer).toBeLessThan(max);
-  },
-);
+  };
 
 export const assertArrayOfIntegersInRangeExclusive = curry(
   (range: [number, number], integers: Array<number>) => {
-    forEach(assertIntegerInRangeExclusive(range))(integers);
+    forEach(curriedAssertIntegerInRangeExclusive(range))(integers);
   },
 );
 
 export const assertMeanInRangeExclusive = curry(
   (range: [number, number], integers: Array<number>): void => {
-    pipe([mean, assertIntegerInRangeExclusive(range)])(integers);
+    pipe([mean, curriedAssertIntegerInRangeExclusive(range)])(integers);
   },
 );
 

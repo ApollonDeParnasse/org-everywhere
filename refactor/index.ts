@@ -1,5 +1,5 @@
 import {
-  pipe,
+  flow,
   filter,
   map,
   forEach,
@@ -139,7 +139,7 @@ const addImports = (
   if (!(namedImports && namedImports.length > 0)) {
     return;
   }
-  const [lodashImports, utilitiesImports] = pipe([
+  const [lodashImports, utilitiesImports] = flow([
     reduce(reducer, []),
     over([
       filter(([, module]: [string, string]) => module == "lodash"),

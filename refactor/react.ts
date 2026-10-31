@@ -4,7 +4,7 @@ import plugin from "react-declassify";
 import {
   find,
   map,
-  pipe,
+  flow,
   reduce,
   isEmpty,
   startsWith,
@@ -113,11 +113,11 @@ const convertFunctionExpressionIntoArrowFunction = (
   };
 };
 
-const convertFunctionExpressionIntoArrowFunctionString = pipe([
+const convertFunctionExpressionIntoArrowFunctionString = flow([
   convertFunctionExpressionIntoArrowFunction,
   printStructure,
 ]);
-const convertFunctionDeclarationIntoArrowFunctionString = pipe([
+const convertFunctionDeclarationIntoArrowFunctionString = flow([
   convertFunctionDeclarationIntoArrowFunction,
   printStructure,
 ]);
@@ -202,7 +202,7 @@ const convertClassComponentIntoFunction = async (
   if (!result || !result.code) return;
 
   const { code } = result;
-  const newSourceFile = pipe([
+  const newSourceFile = flow([
     replaceSourceFileText,
     replaceFunctionDeclarationsWithArrowFunctions,
     replaceTopLevelFunctionExpressionWithArrowFunction,
@@ -257,7 +257,7 @@ const simplifyHandleFunction =
   (
     variableDecl: VariableDeclaration,
   ): [string, VariableDeclarationStructure] => {
-    const newName = pipe([
+    const newName = flow([
       (oldName: string) => oldName.slice(6, oldName.length),
       (x: string) => x[0].toLowerCase() + x.slice(1),
     ])(variableDecl.getName());
@@ -379,7 +379,7 @@ const simplifyTimestampEventHandler = (
       const callExpr = node.getFirstDescendantByKind(SyntaxKind.CallExpression);
       if (!callExpr || callExpr.getExpression().getText() !== "onChange")
         return node.getText();
-      const codeToReturn = pipe([map((arg: Node) => arg.getText()), join(",")])(
+      const codeToReturn = flow([map((arg: Node) => arg.getText()), join(",")])(
         callExpr.getArguments(),
       );
       return `return ${codeToReturn}`;
@@ -396,7 +396,7 @@ const simplifyTimestampEventHandler = (
   const simplifiedStatements: Array<string> = ((): Array<string> => {
     if (!bodyArrowFunc)
       return [`onChange(${newName}(${join(", ", onChangeArgs)}))`];
-    const simplifiedBodyArrowFunc = pipe([
+    const simplifiedBodyArrowFunc = flow([
       copyArrowFunction,
       (x: ArrowFunction): ArrowFunction =>
         x.setBodyText(`onChange(${newName}(${join(", ", onChangeArgs)}))`),
