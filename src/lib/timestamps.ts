@@ -29,14 +29,13 @@ import {
   map,
   merge,
   reduce,
-  zip,
   split,
   isString,
   constant,
 } from "lodash/fp";
+
 import { pipe } from "fp-ts/function";
-import { flap } from "fp-ts/Array";
-import { type ReadonlyNonEmptyArray } from "fp-ts/ReadonlyNonEmptyArray";
+import { type ReadonlyNonEmptyArray, flap, zip } from "fp-ts/ReadonlyNonEmptyArray";
 import {
   curriedSetRecord,
   curriedGetFromRecord,
@@ -55,6 +54,7 @@ import type {
   RepeaterUnit,
   StartOrEnd,
   TimestampArgs,
+  DelayUnit
 } from "../Types";
 import { makeOrgTimestampPartRecord } from "../Types";
 import {
@@ -157,10 +157,13 @@ export const subtractTimestampUnitFromDate = (
   }
 };
 
-export const getTimestampPartsFromDateWithKeyNames = pipe([
-  getTimestampPartsFromDate,
-  zip(ORGTIMESTAMPDATEKEYNAMES),
-]);
+export const getTimestampPartsFromDateWithKeyNames = (date: Date): ReadonlyArray<readonly [string, string]>  => {
+  return pipe(
+    date,
+    getTimestampPartsFromDate,
+    zip(ORGTIMESTAMPDATEKEYNAMES),
+  );
+}
 
 // Validators
 export const isValidRepeaterUnit = (
@@ -726,10 +729,12 @@ export const dateDuration = (
   return intervalStart > intervalEnd ? `-${durationString}` : durationString;
 };
 
-export const dateDurationForClockString = pipe([
-  dateDuration,
-  padCharsStart(" ", 5),
-]);
+export const dateDurationForClockString = (intervalStart: Date, intervalEnd: Date): string => {
+  return pipe(
+    dateDuration(intervalStart, intervalEnd),
+    padCharsStart(" ", 5),
+  );
+}
 
 export const createTimestampDuration =
   (func: (intervalStart: Date, intervalEnd: Date) => string) =>

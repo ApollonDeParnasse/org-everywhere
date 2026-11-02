@@ -760,43 +760,47 @@ describe("timestamp unit tests", () => {
         expect(get(actualTimestamp, "endMinute")).toBe(expectedEndMinute);
       });
 
-      test.prop([fc.gen(), fc.boolean()])("activeToggle", (fcGen, isActive) => {
-        const [timestamp] = fcGenOrgTimestampPartRecord({ isActive }, fcGen);
-        const actualTimestamp = activeToggle(timestamp);
-        expect(get(actualTimestamp, "isActive")).toBe(!isActive);
-      });
+      test.prop([fc.gen(), fc.boolean()])(
+        "activeToggle",
+        (fcGen, isActive) => {
+          const [timestamp] = fcGenOrgTimestampPartRecord({ isActive }, fcGen);
+          const actualTimestamp = activeToggle(timestamp);
+          expect(get(actualTimestamp, "isActive")).toBe(!isActive);
+        },
+      );
     });
 
     describe("timestampDuration", () => {
       describe("positive duration", () => {
-        test.prop([fc.boolean(), fc.integer({ min: 1, max: 10000 }), fc.gen()])(
-          "withoutStartTime",
-          (isActive, randomDays, fcGen) => {
-            const testStartDate: Date = fcGenValidJSDateObject(fcGen, false);
-            // no minutes since there is no start date
-            const randomHours = HOURSINADAY * randomDays;
-            const testEndDate: Date = pipe([addHours(randomHours)])(
-              testStartDate,
-            );
+        test.prop([
+          fc.boolean(),
+          fc.integer({ min: 1, max: 10000 }),
+          fc.gen(),
+        ])("withoutStartTime", (isActive, randomDays, fcGen) => {
+          const testStartDate: Date = fcGenValidJSDateObject(fcGen, false);
+          // no minutes since there is no start date
+          const randomHours = HOURSINADAY * randomDays;
+          const testEndDate: Date = pipe([addHours(randomHours)])(
+            testStartDate,
+          );
 
-            const testStartTimestamp = timestampPartRecordForDate(
-              { isActive, withStartTime: false },
-              testStartDate,
-            );
-            const testEndTimestamp = timestampPartRecordForDate(
-              { isActive, withStartTime: false },
-              testEndDate,
-            );
+          const testStartTimestamp = timestampPartRecordForDate(
+            { isActive, withStartTime: false },
+            testStartDate,
+          );
+          const testEndTimestamp = timestampPartRecordForDate(
+            { isActive, withStartTime: false },
+            testEndDate,
+          );
 
-            const expectedDuration = `${randomHours.toString()}:00`;
+          const expectedDuration = `${randomHours.toString()}:00`;
 
-            const actualDuration = timestampDuration(
-              testStartTimestamp,
-              testEndTimestamp,
-            );
-            expect(actualDuration).toBe(expectedDuration);
-          },
-        );
+          const actualDuration = timestampDuration(
+            testStartTimestamp,
+            testEndTimestamp,
+          );
+          expect(actualDuration).toBe(expectedDuration);
+        });
 
         test.prop([
           fc.boolean(),
@@ -829,34 +833,35 @@ describe("timestamp unit tests", () => {
       });
 
       describe("negative duration", () => {
-        test.prop([fc.boolean(), fc.integer({ min: 1, max: 10000 }), fc.gen()])(
-          "withoutStartTime",
-          (isActive, randomDays, fcGen) => {
-            const testStartDate: Date = fcGenValidJSDateObject(fcGen, false);
-            // no minutes since there is no start date
-            const randomHours = HOURSINADAY * randomDays;
-            const testEndDate: Date = pipe([addHours(randomHours)])(
-              testStartDate,
-            );
+        test.prop([
+          fc.boolean(),
+          fc.integer({ min: 1, max: 10000 }),
+          fc.gen(),
+        ])("withoutStartTime", (isActive, randomDays, fcGen) => {
+          const testStartDate: Date = fcGenValidJSDateObject(fcGen, false);
+          // no minutes since there is no start date
+          const randomHours = HOURSINADAY * randomDays;
+          const testEndDate: Date = pipe([addHours(randomHours)])(
+            testStartDate,
+          );
 
-            const testEndTimestamp = timestampPartRecordForDate(
-              { isActive, withStartTime: false },
-              testEndDate,
-            );
-            const testStartTimestamp = timestampPartRecordForDate(
-              { isActive, withStartTime: false },
-              testStartDate,
-            );
+          const testEndTimestamp = timestampPartRecordForDate(
+            { isActive, withStartTime: false },
+            testEndDate,
+          );
+          const testStartTimestamp = timestampPartRecordForDate(
+            { isActive, withStartTime: false },
+            testStartDate,
+          );
 
-            const expectedDuration = `${randomHours.toString()}:00`;
+          const expectedDuration = `${randomHours.toString()}:00`;
 
-            const actualDuration = timestampDuration(
-              testStartTimestamp,
-              testEndTimestamp,
-            );
-            expect(actualDuration).toBe(expectedDuration);
-          },
-        );
+          const actualDuration = timestampDuration(
+            testStartTimestamp,
+            testEndTimestamp,
+          );
+          expect(actualDuration).toBe(expectedDuration);
+        });
 
         test.prop([
           fc.boolean(),
