@@ -1,4 +1,4 @@
-const parseQueryString = (str) => {
+const parseQueryString = (str: unknown): Record<string, string> => {
   var ret = Object.create(null);
 
   if (typeof str !== "string") {

@@ -1,5 +1,4 @@
-import React, { PureComponent } from "react";
-
+import React, { useMemo } from "react";
 import { Provider } from "react-redux";
 import Store from "./store";
 import parseQueryString from "./util/parse_query_string";
@@ -9,12 +8,9 @@ import {
   subscribeToChanges,
   getPersistedField,
 } from "./util/settings_persister";
-
 import runAllMigrations from "./migrations";
 import { BrowserRouter } from "react-router-dom";
-
 import { DragDropContext } from "react-beautiful-dnd";
-
 import { reorderCaptureTemplate } from "./actions/capture";
 import {
   reorderTags,
@@ -26,31 +22,27 @@ import {
   setDisappearingLoadingMessage,
   restoreStaticFile,
 } from "./actions/base";
-
 import createDropboxSyncBackendClient from "./sync_backend_clients/dropbox_sync_backend_client";
 import createWebDAVSyncBackendClient from "./sync_backend_clients/webdav_sync_backend_client";
 import createGitLabSyncBackendClient, {
   createGitlabOAuth,
 } from "./sync_backend_clients/gitlab_sync_backend_client";
-
 import "./base.css";
-
 import Turnout from "./components/Turnout";
-
 import {
   listenToBrowserButtons,
   syncOnBecomingVisible,
   listenToNetworkConnectionEvents,
 } from "./lib/initial_setup";
-
-import { bindAll } from "lodash";
 import { Map } from "immutable";
-
 import { configure } from "react-hotkeys";
+import type { OAuth2AuthCodePKCE } from "@bity/oauth2-auth-code-pkce";
 // do handle hotkeys even if they come from within 'input', 'select' or 'textarea'
-configure({ ignoreTags: [] });
+configure({
+  ignoreTags: [],
+});
 
-const handleGitLabAuthResponse = async (oauthClient) => {
+const handleGitLabAuthResponse = async (oauthClient: OAuth2AuthCodePKCE): Promise<void> => {
   let success = false;
   try {
     success = await oauthClient.isReturningFromAuthServer();
@@ -64,7 +56,6 @@ const handleGitLabAuthResponse = async (oauthClient) => {
     alert("Unexpected sign in error, please try again");
     return;
   }
-
   const syncClient = createGitLabSyncBackendClient(oauthClient);
   const isAccessible = await syncClient.isProjectAccessible();
   if (!isAccessible) {
@@ -74,12 +65,52 @@ const handleGitLabAuthResponse = async (oauthClient) => {
   }
 };
 
-export default class App extends PureComponent {
-  constructor(props) {
-    super(props);
+type InitialCaptureState = {
+  capturePath: string;
+  captureTemplateName: string;
+  captureContent: string;
+  customCaptureVariables: Map<string, string>
+}
 
+const getInitialCaptureState = (): InitialCaptureState | null => {
+  const CUSTOM_VARIABLE_PREFIX = "captureVariable_";
+  const queryStringContents = parseQueryString(window.location.search);
+  if (Object.keys(queryStringContents).length === 0) {
+    return null
+  }
+  console.log("query: ", queryStringContents)
+  const { captureFile, captureTemplateName, captureContent } =
+    queryStringContents;
+  const capturePath = captureFile.startsWith("/")
+    ? captureFile
+    : `/${captureFile}`;
+
+  const captureVars: Array<[string, string]> = Object.entries(queryStringContents)
+    .map(([key, value]: [string, string]): [string, string] | null => {
+      if (key.startsWith(CUSTOM_VARIABLE_PREFIX)) {
+        return [key.substring(CUSTOM_VARIABLE_PREFIX.length), value];
+      }
+      return null;
+    })
+    .filter((item) => !!item)
+
+  const customCaptureVariables: Map<string, string> = Map(captureVars)
+
+  if (!!captureFile && !!captureTemplateName) {
+    return {
+      capturePath,
+      captureTemplateName,
+      captureContent,
+      customCaptureVariables
+    }
+  }
+  return null
+}
+
+const App = () => {
+
+  const store = useMemo(() => {
     runAllMigrations();
-
     const initialState = readInitialState();
 
     const authenticatedSyncService = getPersistedField(
@@ -124,50 +155,29 @@ export default class App extends PureComponent {
       }
     }
 
-    const queryStringContents = parseQueryString(window.location.search);
-    const { captureFile, captureTemplateName, captureContent } =
-      queryStringContents;
-    if (!!captureFile && !!captureTemplateName) {
-      const capturePath = captureFile.startsWith("/")
-        ? captureFile
-        : `/${captureFile}`;
-      const customCaptureVariables = Map(
-        Object.entries(queryStringContents)
-          .map(([key, value]) => {
-            const CUSTOM_VARIABLE_PREFIX = "captureVariable_";
-            if (key.startsWith(CUSTOM_VARIABLE_PREFIX)) {
-              return [key.substring(CUSTOM_VARIABLE_PREFIX.length), value];
-            }
 
-            return null;
-          })
-          .filter((item) => !!item),
-      );
+    const initialCaptureState = getInitialCaptureState()
+    if (initialCaptureState) {
       initialState.org.present = initialState.org.present.set(
         "pendingCapture",
-        Map({
-          capturePath,
-          captureTemplateName,
-          captureContent,
-          customCaptureVariables,
-        }),
+        Map(initialCaptureState),
       );
     }
 
-    this.store = Store(initialState);
-    this.store.subscribe(subscribeToChanges(this.store));
+    const store = Store(initialState);
+    store.subscribe(subscribeToChanges(store));
 
     if (!!client) {
       client.isSignedIn().then((isSignedIn) => {
         if (isSignedIn) {
-          loadSettingsFromConfigFile(this.store.dispatch, this.store.getState);
+          loadSettingsFromConfigFile(store.dispatch, store.getState);
         } else {
-          this.store.dispatch(signOut());
+          store.dispatch(signOut());
         }
       });
     } else {
-      if (!!this.store.getState().org.present.get("pendingCapture")) {
-        this.store.dispatch(
+      if (!!store.getState().org.present.get("pendingCapture")) {
+        store.dispatch(
           setDisappearingLoadingMessage(
             `You need to sign in before you can use capture templates`,
             5000,
@@ -177,48 +187,45 @@ export default class App extends PureComponent {
     }
 
     // Load static files.
-    this.store.dispatch(restoreStaticFile("sample"));
+    store.dispatch(restoreStaticFile("sample"));
 
-    listenToBrowserButtons(this.store);
-    syncOnBecomingVisible(this.store);
-    listenToNetworkConnectionEvents(this.store);
+    listenToBrowserButtons(store);
+    syncOnBecomingVisible(store);
+    listenToNetworkConnectionEvents(store);
+    return store
+  }, [])
 
-    bindAll(this, ["handleDragEnd"]);
-  }
-
-  handleDragEnd(result) {
+  const handleDragEnd = (result) => {
     if (!result.destination) {
       return;
     }
-
     if (result.type === "TAG") {
-      this.store.dispatch(
+      store.dispatch(
         reorderTags(result.source.index, result.destination.index),
       );
     } else if (result.type === "PROPERTY-LIST") {
-      this.store.dispatch(
+      store.dispatch(
         reorderPropertyList(result.source.index, result.destination.index),
       );
     } else if (result.type === "CAPTURE-TEMPLATE") {
-      this.store.dispatch(
+      store.dispatch(
         reorderCaptureTemplate(result.source.index, result.destination.index),
       );
     } else if (result.type === "FILE-SETTING") {
-      this.store.dispatch(
+      store.dispatch(
         reorderFileSetting(result.source.index, result.destination.index),
       );
     }
   }
 
-  render() {
-    return (
-      <DragDropContext onDragEnd={this.handleDragEnd}>
-        <BrowserRouter basename={"/org-everywhere"}>
-          <Provider store={this.store}>
-            <Turnout />
-          </Provider>
-        </BrowserRouter>
-      </DragDropContext>
-    );
-  }
-}
+  return (
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <BrowserRouter basename={"/org-everywhere"}>
+        <Provider store={store}>
+          <Turnout />
+        </Provider>
+      </BrowserRouter>
+    </DragDropContext>
+  );
+};
+export default App;
