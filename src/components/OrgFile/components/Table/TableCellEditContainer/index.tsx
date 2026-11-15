@@ -5,6 +5,7 @@ import React, {
   type FocusEvent,
   type MouseEvent,
 } from "react";
+import { useUnmount } from "usehooks-ts"
 import { FaPlus } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { getCurrentJSDateAsOrgTimestampString } from "../../../../../lib/timestamps";
@@ -39,11 +40,8 @@ const CellEditContainer = ({
     }
   }, [selectedCellId, isCellSelected, cellId, currentCellValue]);
 
-  useEffect(
-    () => () => {
-      handleTableCellValueUpdate(cellId, currentCellValue);
-    },
-    [cellId, currentCellValue],
+  useUnmount(
+    () => handleTableCellValueUpdate(cellId, currentCellValue)
   );
 
   const handleTableCellValueUpdate = (cellId: number, newValue: string) => {
